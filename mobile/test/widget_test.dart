@@ -3,11 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lexmemoria/main.dart';
 import 'package:lexmemoria/store.dart';
+import 'package:lexmemoria/persistence.dart';
 
 void main() {
   testWidgets('guest can open library without signing in', (tester) async {
     SharedPreferences.setMockInitialValues({});
-    final store = await AppStore.load();
+    final store = await AppStore.load(persistence: PreferencesPersistence(await SharedPreferences.getInstance()));
     await tester.pumpWidget(LexMemoria(store: store));
     await tester.pumpAndSettle();
     final explore = find.text('Explorar sin cuenta');

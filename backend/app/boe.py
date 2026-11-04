@@ -4,6 +4,7 @@ import random
 import time
 from datetime import datetime, timezone
 from defusedxml import ElementTree as ET
+from defusedxml.common import DefusedXmlException
 import httpx
 from sqlalchemy import select
 from .db import Record, Audit, uid, now
@@ -13,7 +14,11 @@ PARSER = 'boe-xml-1'
 
 
 class SourceError(Exception):
-    pass
+    def __init__(self, message, *, retryable=False, payload=None, source_url=None):
+        super().__init__(message)
+        self.retryable = retryable
+        self.payload = payload
+        self.source_url = source_url
 
 
 class BoeClient:
@@ -23,22 +28,33 @@ class BoeClient:
         self.sleep = sleep
 
     def get(self, path):
+        url = BASE + path
         for attempt in range(4):
             try:
-                r = self.client.get(BASE + path)
-                if r.status_code == 429 or r.status_code >= 500:
-                    if attempt < 3:
-                        self.sleep(min(60, 2 ** attempt + random.random()))
-                        continue
-                r.raise_for_status()
-                ET.fromstring(r.content)
-                self.sleep(.25)
-                return r.content
-            except (httpx.HTTPError, ET.ParseError, ValueError) as exc:
-                if attempt == 3 or isinstance(exc, ET.ParseError):
-                    raise SourceError('BOE no disponible o XML no válido') from exc
-                self.sleep(2 ** attempt)
-        raise SourceError('BOE sin respuesta')
+                response = self.client.get(url)
+            except httpx.RequestError as exc:
+                if attempt == 3:
+                    raise SourceError('BOE no disponible', retryable=True, source_url=url) from exc
+                self.sleep(2 ** attempt + random.random())
+                continue
+            transient = response.status_code == 429 or response.status_code >= 500
+            if transient and attempt < 3:
+                retry_after = response.headers.get('Retry-After', '')
+                delay = min(60, int(retry_after)) if retry_after.isdigit() else 2 ** attempt + random.random()
+                self.sleep(max(.25, delay))
+                continue
+            try:
+                response.raise_for_status()
+            except httpx.HTTPStatusError as exc:
+                raise SourceError('BOE no disponible', retryable=transient,
+                                  payload=response.content, source_url=url) from exc
+            try:
+                ET.fromstring(response.content)
+            except (ET.ParseError, DefusedXmlException, ValueError) as exc:
+                raise SourceError('XML de BOE no válido; cuarentena', payload=response.content, source_url=url) from exc
+            self.sleep(.25)
+            return response.content
+        raise SourceError('BOE no disponible', retryable=True, source_url=url)
 
     def catalogue(self, offset=0, limit=100):
         if not 0 <= offset or not 1 <= limit <= 1000:
@@ -132,7 +148,7 @@ def import_norm(session, client, official_id):
         session.rollback()
         run = session.get(Record, run.id)
         run.data = {**run.data, 'status': 'quarantined', 'error': type(exc).__name__, 'finishedAt': now(),
-                    'rawXml': payload.decode(errors='replace') if payload else None,
+                    'rawXml': (payload or getattr(exc, 'payload', None)).decode(errors='replace') if (payload or getattr(exc, 'payload', None)) else None,
                     'rawMetadata': meta.decode(errors='replace') if meta else None}
         session.commit()
         raise

@@ -44,6 +44,13 @@ class Token(Base):
     kind: Mapped[str] = mapped_column(default='access')
 
 
+class RecoveryCode(Base):
+    __tablename__ = 'recovery_codes'
+    digest: Mapped[str] = mapped_column(primary_key=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey('accounts.id'), unique=True, index=True)
+    created_at: Mapped[str] = mapped_column(default=now)
+
+
 class Mutation(Base):
     __tablename__ = 'mutations'
     __table_args__ = (UniqueConstraint('user_id', 'key'),)

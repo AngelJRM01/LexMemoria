@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select, delete
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import StaleDataError
-from .db import connect, Record, Account, Token, Mutation, Audit, now, uid
+from .db import connect, Record, Account, Token, RecoveryCode, Mutation, Audit, now, uid
 from .learning import schedule, score
 from .temporal import civil_date, resolve_block
 
@@ -72,7 +72,7 @@ def create_app(database_url=None):
         return user
 
     def pack(r):
-        return {'id': r.id, 'revision': r.revision, **r.data}
+        return {**r.data, 'id': r.id, 'revision': r.revision}
 
     def own(s, id, user, kind=None):
         r = s.get(Record, id)
@@ -113,6 +113,38 @@ def create_app(database_url=None):
         user = s.get(Account, t.user_id)
         s.delete(t)
         return issue(s, user)
+
+    def new_recovery(s, user):
+        s.execute(delete(RecoveryCode).where(RecoveryCode.user_id == user.id))
+        raw = secrets.token_urlsafe(32)
+        s.add(RecoveryCode(digest=hashlib.sha256(raw.encode()).hexdigest(), user_id=user.id))
+        s.commit()
+        return raw
+
+    @app.post('/v1/auth/recovery-code')
+    def recovery_code(user=Depends(identity), s=Depends(db)):
+        return {'recoveryCode': new_recovery(s, user), 'oneTime': True,
+                'warning': 'Guárdalo fuera del dispositivo. Sustituye al código anterior y solo se muestra ahora.'}
+
+    class RecoveryInput(BaseModel):
+        recoveryCode: str = Field(min_length=20, max_length=128)
+
+    @app.post('/v1/auth/recover')
+    def recover(body: RecoveryInput, s=Depends(db)):
+        code = s.get(RecoveryCode, hashlib.sha256(body.recoveryCode.encode()).hexdigest())
+        if not code:
+            raise HTTPException(401, 'Código de recuperación no válido o ya utilizado')
+        user = s.get(Account, code.user_id)
+        # Consume once with an atomic conditional delete, including concurrent attempts.
+        consumed = s.execute(delete(RecoveryCode).where(RecoveryCode.digest == code.digest))
+        if consumed.rowcount != 1:
+            s.rollback()
+            raise HTTPException(401, 'Código de recuperación no válido o ya utilizado')
+        s.execute(delete(Token).where(Token.user_id == user.id))
+        replacement = secrets.token_urlsafe(32)
+        s.add(RecoveryCode(digest=hashlib.sha256(replacement.encode()).hexdigest(), user_id=user.id))
+        session = issue(s, user)
+        return {**session, 'recoveryCode': replacement}
 
     @app.post('/v1/auth/logout')
     def logout(user=Depends(identity), s=Depends(db)):
@@ -176,9 +208,13 @@ def create_app(database_url=None):
                 'impact': 'possible', 'legalInterpretation': False}
 
     @app.get('/v1/legal-updates')
-    def updates(cursor: str = '', s=Depends(db)):
-        return {'items': [pack(r) for r in s.scalars(select(Record).where(
-            Record.kind == 'legal_event', Record.id > cursor).order_by(Record.id).limit(100))]}
+    def updates(cursor: str = '', limit: int = 50, s=Depends(db)):
+        if not 1 <= limit <= 100:
+            raise HTTPException(422, 'Límite entre 1 y 100')
+        rows = list(s.scalars(select(Record).where(
+            Record.kind == 'legal_event', Record.id > cursor).order_by(Record.id).limit(limit + 1)))
+        return {'items': [pack(r) for r in rows[:limit]],
+                'nextCursor': rows[limit - 1].id if len(rows) > limit else None}
 
     class DeckInput(BaseModel):
         title: str = Field(min_length=1, max_length=160)
@@ -262,7 +298,7 @@ def create_app(database_url=None):
         state_id = user.id + ':' + c.id
         r = s.get(Record, state_id)
         # Do not trust a client-provided interval or ease.
-        state = schedule(r.data if r else {}, body.rating, body.occurredAt)
+        state = {**schedule(r.data if r else {}, body.rating, body.occurredAt), 'cardId': c.id}
         if r:
             if datetime.fromisoformat(r.data['reviewedAt']) > body.occurredAt:
                 raise HTTPException(409, 'Revisión anterior al estado sincronizado; resolver conflicto')
@@ -315,7 +351,7 @@ def create_app(database_url=None):
     @app.get('/v1/account/export')
     def export(user=Depends(identity), s=Depends(db)):
         return {'schemaVersion': 1, 'exportedAt': now(), 'userId': user.id,
-                'records': [{'kind': r.kind, **pack(r)} for r in s.scalars(select(Record).where(Record.owner == user.id))]}
+                'records': [{**pack(r), 'kind': r.kind} for r in s.scalars(select(Record).where(Record.owner == user.id))]}
 
     @app.delete('/v1/account')
     def erase(confirmation: str, user=Depends(identity), s=Depends(db)):
@@ -324,6 +360,7 @@ def create_app(database_url=None):
         s.execute(delete(Record).where(Record.owner == user.id))
         s.execute(delete(Mutation).where(Mutation.user_id == user.id))
         s.execute(delete(Token).where(Token.user_id == user.id))
+        s.execute(delete(RecoveryCode).where(RecoveryCode.user_id == user.id))
         s.delete(s.get(Account, user.id))
         s.commit()
         return {'deleted': True, 'backupRetention': 'Configure según política antes de producción'}

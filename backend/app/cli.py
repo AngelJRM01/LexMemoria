@@ -1,29 +1,38 @@
 import argparse
-from datetime import datetime
-from zoneinfo import ZoneInfo
-from .db import connect, Record, now
+import json
+from pathlib import Path
+from .db import connect
 from .boe import BoeClient, import_norm
+from .jobs import enqueue, batch_status, run_worker, retry_quarantined
+from .monitor import watch_day, madrid_day, backfill
 
-p = argparse.ArgumentParser()
-p.add_argument('command', choices=['import', 'watch'])
-p.add_argument('value', nargs='?')
-a = p.parse_args()
-_, factory = connect()
-with factory() as s:
+
+def main():
+    p = argparse.ArgumentParser(description='LexMemoria · importación y vigilancia BOE')
+    sub = p.add_subparsers(dest='command', required=True)
+    cmd = sub.add_parser('import'); cmd.add_argument('id')
+    cmd = sub.add_parser('watch'); cmd.add_argument('day', nargs='?')
+    cmd = sub.add_parser('enqueue'); cmd.add_argument('file'); cmd.add_argument('--key')
+    cmd = sub.add_parser('worker'); cmd.add_argument('--batch'); cmd.add_argument('--limit', type=int, default=20)
+    cmd = sub.add_parser('batch'); cmd.add_argument('id')
+    cmd = sub.add_parser('retry'); cmd.add_argument('id')
+    cmd = sub.add_parser('backfill'); cmd.add_argument('start'); cmd.add_argument('end')
+    args = p.parse_args()
+    _, factory = connect()
     client = BoeClient()
-    if a.command == 'import':
-        print(import_norm(s, client, a.value))
-    else:
-        day = a.value or datetime.now(ZoneInfo('Europe/Madrid')).strftime('%Y%m%d')
-        key = 'daily:' + day
-        old = s.get(Record, key)
-        if old and old.data.get('status') == 'complete':
-            print('Ya ejecutado para este día civil de Madrid')
-        else:
-            raw = client.daily(day)
-            r = old or Record(id=key, kind='daily_run')
-            r.data = {'day': day, 'status': 'complete', 'rawXml': raw.decode(), 'finishedAt': now(),
-                      'scope': 'Sumario descargado; clasificación de impacto pendiente'}
-            s.add(r)
-            s.commit()
-            print(key)
+    with factory() as s:
+        if args.command == 'import': result = import_norm(s, client, args.id)
+        elif args.command == 'watch': result = watch_day(s, client, args.day or madrid_day())
+        elif args.command == 'enqueue':
+            ids = [line.strip() for line in Path(args.file).read_text().splitlines() if line.strip() and not line.startswith('#')]
+            result = enqueue(s, ids, args.key)
+        elif args.command == 'worker': result = run_worker(factory, client, args.limit, args.batch)
+        elif args.command == 'batch': result = batch_status(s, args.id)
+        elif args.command == 'retry': retry_quarantined(s, args.id); result = {'requeued': args.id}
+        else: result = backfill(s, client, args.start, args.end)
+    # Raw XML and private data stay in the database, not in operation logs.
+    if isinstance(result, dict) and 'rawXml' in result: result = {k: v for k, v in result.items() if k != 'rawXml'}
+    print(json.dumps(result, ensure_ascii=False))
+
+
+if __name__ == '__main__': main()

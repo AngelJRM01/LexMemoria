@@ -9,12 +9,13 @@ Aplicación Flutter para estudiar Derecho español en Universidad y Oposiciones,
 - Inventario de 20 referencias BOE. Búsqueda tolerante a tildes, materias, marcadores y seguimiento local. Las referencias **no incluyen textos descargados ni material jurídico certificado**.
 - Descarga de normas importadas desde una API configurable, lectura offline, notas privadas, copia de referencias, voz mediante plataforma, selector histórico, consulta por fecha efectiva que rechaza metadatos ambiguos y comparación textual de párrafos.
 - Tarjetas personales QA, cloze, verdadero/falso, ordenación, caso y test; creación desde artículo; importación CSV con previsualización, límites y validación completa antes de guardar.
+- Almacén SQLCipher en Android/iOS con clave separada en Keychain/Keystore; migración verificada desde preferencias. La versión web conserva preferencias locales sin este cifrado. La integración nativa está pendiente de ejecución.
 - Repaso con cuatro grados, programación SM-2 adaptada `sm2-1`, eventos persistentes, bloqueo por revisión normativa, sesión guardada, borradores y deshacer local.
 - Plan de estudio con cola que respeta descansos y vacaciones, previsión semanal, fecha de examen y asignaturas personales. Simulacro cronometrado con banco congelado, respuestas guardadas, penalización y corrección al finalizar. El contenido no se presenta como examen oficial.
 - Historial, progreso por mazo, exportación/restauración JSON, consentimientos separados y borrado local confirmado.
-- Identidad remota opcional con tokens en almacenamiento seguro, subida de tarjetas/revisiones con identificadores estables y conflictos explícitos, exportación/borrado remoto. **No hay recuperación de identidad, OAuth/email ni fusión multidispositivo completa.**
+- Identidad remota opcional con tokens en almacenamiento seguro, subida de tarjetas/revisiones con identificadores estables y conflictos explícitos, exportación/borrado remoto. Recuperación con código de un solo uso y descarga de tarjetas, estados e historial; los conflictos se conservan. OAuth/email y resolución avanzada de conflictos siguen pendientes.
 - Backend con SQLite para desarrollo o PostgreSQL mediante `DATABASE_URL`, API OpenAPI, sesiones de 15 minutos, refresh rotatorio, revocación, control de propietario, ETag y claves de idempotencia.
-- Conector BOE XML con timeout/reintentos, SHA-256, XML original, versiones inmutables, publicación transaccional, cuarentena y bloqueo conservador de tarjetas afectadas. CLI de importación y captura diaria por fecha civil de Madrid.
+- Conector BOE XML con timeout/reintentos, SHA-256, XML original, versiones inmutables, publicación transaccional, cuarentena y bloqueo conservador de tarjetas afectadas. Cola persistente de importación con lotes, backoff, leases y reanudación; vigilancia diaria y backfill por fecha civil de Madrid, con eventos de publicación deduplicados.
 - API editorial con separación de autor y revisores, doble aprobación y acceso deshabilitado por defecto hasta configurar MFA. **No equivale a un backoffice de producción ni a una pasarela MFA implementada.**
 
 Consulta [la matriz de requisitos](docs/matriz-requisitos.md), [el estado de validación](docs/VALIDACION.md) y [las limitaciones](docs/PENDIENTES.md). No hay contenido marcado como verificado sin revisión humana.
@@ -54,7 +55,18 @@ cd backend
 /workspace/lexmemoria-venv/bin/python -m app.cli watch 20261104
 ```
 
-Requiere acceso HTTPS a `www.boe.es`. Importar no certifica vigencia ni crea tarjetas verificadas. El comando `watch` conserva el sumario del día de Madrid y evita duplicar una fecha completada; **la clasificación de reformas, backfill, actualización masiva de consolidados y envío push no están completos**. Los fallos no sustituyen la última versión válida.
+Requiere acceso HTTPS a `www.boe.es`. Importar no certifica vigencia ni crea tarjetas verificadas. El comando `watch` conserva y estructura el sumario, genera eventos pendientes de análisis y evita duplicar una fecha completada. `backfill` recupera rangos de hasta 31 días; `enqueue`/`worker` procesan lotes reanudables. La clasificación jurídica de reformas y el envío push siguen pendientes. Los fallos no sustituyen la última versión válida.
+
+Procesar el inventario inicial sin inventar cobertura:
+
+```bash
+cd backend
+/workspace/lexmemoria-venv/bin/python -m app.cli enqueue ../docs/normas-iniciales.txt
+/workspace/lexmemoria-venv/bin/python -m app.cli worker --limit 20
+/workspace/lexmemoria-venv/bin/python -m app.cli backfill 2026-11-01 2026-11-04
+```
+
+La cola conserva errores, XML de cuarentena y checkpoints por trabajo. `batch ID` informa los contadores; `retry ID` requiere corregir antes la causa del fallo. No ejecuta publicaciones editoriales automáticamente.
 
 CSV de tarjetas: UTF-8 con encabezados `pregunta,respuesta`, máximo 2 MB y 2000 tarjetas. No se evalúa HTML ni se ejecutan fórmulas. Anki `.apkg` no está implementado.
 

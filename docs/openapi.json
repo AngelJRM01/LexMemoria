@@ -73,6 +73,80 @@
         }
       }
     },
+    "/v1/auth/recovery-code": {
+      "post": {
+        "summary": "Recovery Code",
+        "operationId": "recovery_code_v1_auth_recovery_code_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/recover": {
+      "post": {
+        "summary": "Recover",
+        "operationId": "recover_v1_auth_recover_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/auth/logout": {
       "post": {
         "summary": "Logout",
@@ -373,6 +447,16 @@
               "type": "string",
               "default": "",
               "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
             }
           }
         ],
@@ -1307,6 +1391,21 @@
           "data"
         ],
         "title": "PrivateInput"
+      },
+      "RecoveryInput": {
+        "properties": {
+          "recoveryCode": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 20,
+            "title": "Recoverycode"
+          }
+        },
+        "type": "object",
+        "required": [
+          "recoveryCode"
+        ],
+        "title": "RecoveryInput"
       },
       "Refresh": {
         "properties": {

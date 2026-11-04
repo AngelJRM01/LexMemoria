@@ -38,6 +38,9 @@ class _LibraryPageState extends State<LibraryPage> {
           const SizedBox(height: 12), Text(n['short'] ?? n['title'], style: Theme.of(context).textTheme.titleLarge), const SizedBox(height: 8),
           Text(n['id'], style: const TextStyle(fontSize: 12)), const SizedBox(height: 12),
           Badge(n['units'] != null ? 'Importada · revisión pendiente' : 'Texto pendiente de importar', warning: true)]))))),
+      if (widget.store.data['catalogueCursor'] != null) OutlinedButton.icon(
+        onPressed: widget.store.syncing ? null : () => perform(context, () => widget.store.fetchCatalogue(nextPage: true)),
+        icon: const Icon(Icons.expand_more), label: const Text('Cargar más normas')),
     ]);
   }
 }
@@ -165,18 +168,54 @@ class _ComparePageState extends State<ComparePage> {
   }
 }
 
-class UpdatesPage extends StatelessWidget {
+class UpdatesPage extends StatefulWidget {
   final AppStore store;
   const UpdatesPage({super.key, required this.store});
   @override
-  Widget build(BuildContext context) => PageBody(children: [Text('Legislación viva', style: Theme.of(context).textTheme.headlineMedium), const SizedBox(height: 8),
-    const Text('Publicación, vigencia y revisión son momentos distintos.'), const SizedBox(height: 24),
-    const EmptyState(icon: Icons.notifications_none, title: 'Sin eventos normativos descargados', detail: 'La vigilancia requiere el servicio BOE configurado. No se afirma que tus normas estén actualizadas por ausencia de avisos.'),
-    const Section('Normas que sigues'),
-    ...store.catalogue.where((n) => store.has('follows', n['id'])).map((n) => ListTile(leading: const Icon(Icons.bookmark_outline), title: Text(n['short'] ?? n['title']),
-      subtitle: const Text('Seguimiento local · notificaciones remotas pendientes'), onTap: () => push(context, NormPage(store: store, id: n['id'])))),
-    const Section('Preferencias de avisos'),
-    SwitchListTile(value: store.data['internalAlerts'] ?? true, title: const Text('Avisos dentro de la aplicación'), onChanged: (v) { store.data['internalAlerts'] = v; store.save(); }),
-    const Text('Las notificaciones push no están activadas. Requieren Firebase/APNs y consentimiento del sistema.', style: TextStyle(fontSize: 12)),
-  ]);
+  State<UpdatesPage> createState() => _UpdatesPageState();
+}
+class _UpdatesPageState extends State<UpdatesPage> {
+  bool loading = false, followedOnly = false;
+  String filter = 'Todos';
+  Future<void> refresh({bool next = false}) async {
+    if (loading) return;
+    setState(() => loading = true);
+    await perform(context, () => widget.store.fetchUpdates(nextPage: next), success: 'Novedades guardadas para consulta offline');
+    if (mounted) setState(() => loading = false);
+  }
+  @override
+  Widget build(BuildContext context) {
+    final store = widget.store;
+    final events = store.list('legalUpdates').where((e) =>
+      (!followedOnly || store.has('follows', e['normId'] ?? e['officialId'] ?? '')) &&
+      (filter == 'Todos' || (filter == 'Pendientes' ? e['editorialState'] != 'approved' : e['type'] == 'consolidation_available'))).toList();
+    events.sort((a, b) => (b['detectedAt'] ?? '').toString().compareTo((a['detectedAt'] ?? '').toString()));
+    return PageBody(children: [
+      Text('Legislación viva', style: Theme.of(context).textTheme.headlineMedium), const SizedBox(height: 8),
+      const Text('Publicación, vigencia y revisión son momentos distintos.'), const SizedBox(height: 16),
+      Wrap(spacing: 8, runSpacing: 8, children: ['Todos', 'Pendientes', 'Consolidados'].map((v) => ChoiceChip(label: Text(v), selected: filter == v,
+        onSelected: (_) => setState(() => filter = v))).toList()),
+      Row(children: [FilterChip(label: const Text('Normas seguidas'), selected: followedOnly, onSelected: (v) => setState(() => followedOnly = v)),
+        const Spacer(), IconButton(tooltip: 'Actualizar novedades', onPressed: loading ? null : refresh, icon: const Icon(Icons.sync))]),
+      if (loading) const LinearProgressIndicator(),
+      if (store.data['lastUpdatesSync'] != null) Text('Última descarga: ${store.data['lastUpdatesSync']}', style: const TextStyle(fontSize: 12)),
+      const SizedBox(height: 20),
+      if (events.isEmpty) const EmptyState(icon: Icons.notifications_none, title: 'Sin novedades para estos filtros', detail: 'Sincroniza con el servidor o cambia los filtros. La ausencia de avisos no acredita que todas tus normas estén actualizadas.'),
+      ...events.map((event) => Padding(padding: const EdgeInsets.only(bottom: 16), child: Paper(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Badge(event['type'] == 'consolidation_available' ? 'Consolidación disponible' : 'Documento publicado', warning: true), const SizedBox(height: 12),
+        Text(event['title'] ?? event['normId'] ?? event['officialId'] ?? 'Evento normativo', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 8), Text('Impacto: ${event['impact']} · revisión: ${event['editorialState']}'),
+        Text('Publicación: ${event['publicationDate'] ?? 'no determinada'}'), Text('Efecto: ${event['effectiveFrom'] ?? 'pendiente de análisis'}'),
+        const SizedBox(height: 12), const Text('No se ha inferido automáticamente la vigencia ni la afectación jurídica.'),
+        if (event['sourceUrl'] != null) TextButton.icon(onPressed: () => openSource(context, event['sourceUrl']), icon: const Icon(Icons.open_in_new), label: const Text('Consultar fuente')),
+      ])))),
+      if (store.data['updatesCursor'] != null) OutlinedButton(onPressed: loading ? null : () => refresh(next: true), child: const Text('Cargar más novedades')),
+      const Section('Normas que sigues'),
+      ...store.catalogue.where((n) => store.has('follows', n['id'])).map((n) => ListTile(leading: const Icon(Icons.bookmark_outline), title: Text(n['short'] ?? n['title']),
+        subtitle: const Text('Seguimiento local'), onTap: () => push(context, NormPage(store: store, id: n['id'])))),
+      const Section('Preferencias de avisos'),
+      SwitchListTile(value: store.data['internalAlerts'] ?? true, title: const Text('Avisos dentro de la aplicación'), onChanged: (v) { store.data['internalAlerts'] = v; store.save(); }),
+      const Text('Las notificaciones push requieren Firebase/APNs y consentimiento del sistema.', style: TextStyle(fontSize: 12)),
+    ]);
+  }
 }

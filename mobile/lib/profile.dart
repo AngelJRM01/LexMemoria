@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
 import 'store.dart';
@@ -38,13 +39,21 @@ class ProfilePage extends StatelessWidget {
     const Section('Servidor y sincronización'),
     TextFormField(initialValue: store.data['apiUrl'] ?? '', keyboardType: TextInputType.url, decoration: const InputDecoration(labelText: 'URL de API HTTPS', hintText: 'https://api.tu-dominio.es'),
       onChanged: (v) { store.data['apiUrl'] = v.trim(); store.save(); }), const SizedBox(height: 12),
-    const Text('La identidad opcional permite subir tarjetas y revisiones con reintentos idempotentes. Los tokens se guardan en Keychain/Keystore. La recuperación de cuenta en otro móvil aún no está disponible.', style: TextStyle(fontSize: 12)),
+    const Text('La identidad opcional permite sincronizar tarjetas y revisiones. Guarda un código de recuperación para usar otro dispositivo. Los tokens se guardan en Keychain/Keystore; los conflictos no sobrescriben tus datos.', style: TextStyle(fontSize: 12)),
     const SizedBox(height: 12),
     Wrap(spacing: 8, runSpacing: 8, children: [
       if (store.data['remoteUserId'] == null) OutlinedButton(onPressed: () => perform(context, RemoteSync(store).activate, success: 'Identidad remota creada en este dispositivo'), child: const Text('Activar identidad remota'))
       else ...[FilledButton.icon(onPressed: () => perform(context, RemoteSync(store).upload, success: 'Tarjetas y revisiones sincronizadas'), icon: const Icon(Icons.sync), label: const Text('Subir progreso')),
+        OutlinedButton.icon(onPressed: () => perform(context, RemoteSync(store).pull, success: 'Progreso descargado; revisa los conflictos si los hay'), icon: const Icon(Icons.cloud_download_outlined), label: const Text('Descargar progreso')),
+        TextButton(onPressed: () => push(context, RecoveryPage(store: store, create: true)), child: const Text('Crear código de recuperación')),
         TextButton(onPressed: () => perform(context, RemoteSync(store).disconnect, success: 'Sesión remota revocada'), child: const Text('Desconectar'))],
     ]),
+    const SizedBox(height: 8), TextButton(onPressed: () => push(context, RecoveryPage(store: store)), child: const Text('Recuperar mi identidad con un código')),
+    if (store.list('syncConflicts').isNotEmpty) Paper(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Badge('Sincronización pendiente de resolver', warning: true), const SizedBox(height: 10),
+      Text('${store.list('syncConflicts').length} conflictos conservados. No se han sustituido tarjetas ni revisiones locales.'),
+      ...store.list('syncConflicts').map((v) => ListTile(title: Text(v['kind'] == 'pending_reviews' ? 'Revisiones locales sin subir' : 'Tarjeta editada en dos dispositivos'), subtitle: Text(v['cardId']))),
+    ])),
     const Section('Privacidad y control'),
     Paper(padding: EdgeInsets.zero, child: Column(children: [
       SwitchListTile(value: store.data['analyticsConsent'] ?? false, title: const Text('Consentimiento de analítica opcional'), subtitle: const Text('No hay proveedor de analítica conectado.'), onChanged: (v) { store.data['analyticsConsent'] = v; store.save(); }),
@@ -99,10 +108,49 @@ class PrivacyPage extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Privacidad, fuentes y alcance')), body: PageBody(children: [
     Text('Tu estudio es tuyo.', style: Theme.of(context).textTheme.headlineMedium), const SizedBox(height: 20),
     const Paper(child: Text('Esta versión guarda datos en el almacenamiento local de la aplicación. No se envían notas ni respuestas a proveedores de IA. No hay publicidad ni analítica conectada. Las preferencias no implican suscripción a ningún servicio.')),
-    const Section('Datos y conservación'), const Text('Se guardan perfiles, tarjetas, notas, respuestas de simulacros e historial hasta que los borres. El almacenamiento local no incorpora cifrado adicional: evita guardar datos especialmente sensibles. Exportar o compartir crea una copia bajo tu control.'),
+    const Section('Datos y conservación'), const Text('Se guardan perfiles, tarjetas, notas, respuestas de simulacros e historial hasta que los borres. En Android/iOS se utiliza SQLCipher con clave separada en Keychain/Keystore; en web se usan preferencias locales sin este cifrado adicional. Evita guardar datos especialmente sensibles. Exportar o compartir crea una copia bajo tu control.'),
     const Section('Conexiones'), const Text('Al sincronizar se consulta la API que configures. Al abrir una fuente sales al navegador y se aplica la privacidad del sitio de destino. El backend de desarrollo permite identidades invitadas; no incluye recuperación por email ni OAuth.'),
     const Section('Fuentes y contenido'), const Text('Las referencias iniciales son un inventario de normas del BOE, no una declaración de cobertura, vigencia o revisión jurídica. Los textos consolidados son informativos. Las tarjetas personales no son contenido editorial verificado.'),
     TextButton(onPressed: () => openSource(context, 'https://www.boe.es/datosabiertos/api/api.php'), child: const Text('API y condiciones del BOE')),
     const Section('Antes de publicación'), const Text('Deben identificarse responsable del tratamiento, contacto, base jurídica, proveedores, plazos y condiciones comerciales; verificar licencias, revisión editorial y derechos de las tiendas. Esta pantalla describe el comportamiento actual y no sustituye los textos legales de producción.'),
+  ]));
+}
+
+class RecoveryPage extends StatefulWidget {
+  final AppStore store;
+  final bool create;
+  const RecoveryPage({super.key, required this.store, this.create = false});
+  @override
+  State<RecoveryPage> createState() => _RecoveryPageState();
+}
+class _RecoveryPageState extends State<RecoveryPage> {
+  final input = TextEditingController();
+  String? generated;
+  bool busy = false;
+  @override
+  void dispose() { input.dispose(); super.dispose(); }
+  Future<void> submit() async {
+    if (!widget.create && input.text.trim().length < 20) { toast(context, 'Introduce el código completo.'); return; }
+    setState(() => busy = true);
+    await perform(context, () async {
+      final remote = RemoteSync(widget.store);
+      final code = widget.create ? await remote.recoveryCode() : await remote.recover(input.text);
+      if (mounted) setState(() => generated = code);
+    });
+    if (mounted) setState(() => busy = false);
+  }
+  @override
+  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: Text(widget.create ? 'Código de recuperación' : 'Recuperar identidad')), body: PageBody(children: [
+    Text('Continúa en otro dispositivo.', style: Theme.of(context).textTheme.headlineMedium), const SizedBox(height: 20),
+    if (generated == null) ...[
+      Text(widget.create ? 'Se generará un código de un solo uso. Sustituye al anterior; guárdalo fuera de este dispositivo.' : 'Introduce el código que guardaste. Recuperar la identidad cierra las sesiones anteriores y genera un código nuevo.'),
+      if (!widget.create) ...[const SizedBox(height: 20), TextField(controller: input, obscureText: true, autocorrect: false, enableSuggestions: false, decoration: const InputDecoration(labelText: 'Código de recuperación'))],
+      const SizedBox(height: 24), FilledButton(onPressed: busy ? null : submit, child: Text(busy ? 'Procesando…' : widget.create ? 'Generar código nuevo' : 'Recuperar y cerrar otras sesiones')),
+    ] else ...[
+      const Badge('Guarda ahora el código nuevo'), const SizedBox(height: 16), Paper(child: SelectableText(generated!)), const SizedBox(height: 16),
+      const Text('Este código permite acceder a tu identidad. Solo se muestra en esta pantalla y no se incluye en las copias de datos.'),
+      TextButton.icon(onPressed: () => perform(context, () => Clipboard.setData(ClipboardData(text: generated!)), success: 'Código copiado'), icon: const Icon(Icons.copy), label: const Text('Copiar código')),
+      if (!widget.create) FilledButton(onPressed: () => perform(context, RemoteSync(widget.store).pull, success: 'Tarjetas e historial descargados'), child: const Text('Descargar mis tarjetas y progreso')),
+    ],
   ]));
 }

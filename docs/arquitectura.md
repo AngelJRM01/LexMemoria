@@ -20,7 +20,7 @@ flowchart TD
 - Publicación editorial requiere dos actores distintos del autor. La ruta está deshabilitada por defecto. Falta verificar una pasarela MFA real y firmar auditoría antes de habilitarla en producción.
 - Los eventos de revisión se insertan con clave única por usuario. Repetir el mismo evento devuelve el mismo resultado; reutilizar la clave con otro contenido devuelve 409. Los estados se programan en servidor, sin aceptar estabilidad/intervalos inventados por el cliente.
 - Subidas de mazos y tarjetas usan IDs estables por usuario y dispositivo. Reintentar no duplica; cambiar contenido con el mismo ID requiere resolver el conflicto. Los secretos de sesión se guardan aparte, nunca en exportaciones.
-- El cliente no elimina una revisión local al fallar la red. Marca cada revisión solo después de confirmación. La sincronización actual es de subida, no una reconciliación completa entre dispositivos.
+- El cliente no elimina una revisión local al fallar la red. Marca cada revisión solo después de confirmación. La sincronización permite subida y descarga de tarjetas, historial y estados; conserva explícitamente conflictos de contenido y revisiones locales pendientes. No fusiona notas o planes ni resuelve automáticamente ediciones divergentes.
 - Un intento de examen guarda sus preguntas/revisiones y penalización antes de responder. El servidor oculta soluciones hasta entregar. La app local conserva las soluciones porque debe corregir sin conexión: no es un entorno de examen supervisado.
 - No hay cobros reales. La promoción de servidor dura 30 días y nunca se transforma en suscripción. El endpoint de pagos devuelve 503 hasta integrar validación oficial.
 
@@ -28,7 +28,7 @@ flowchart TD
 
 `records` contiene agregados de norma, versión, tarjeta, mazo, intento, perfil, nota y revisión; `accounts`, `tokens`, `mutations` y `audit` separan identidad, autenticación, deduplicación y decisiones. Es una implementación inicial, distinta del esquema normalizado objetivo del documento.
 
-Los datos locales educativos están en preferencias JSON. Esto permite un arranque simple y tests del almacén, pero exige migrar a SQLite/cifrado antes de corpus grandes o información sensible. No se afirma que `SharedPreferences` garantice recuperación tras cualquier fallo físico. El código no imprime tokens ni respuestas privadas.
+En Android/iOS los datos educativos se guardan como un snapshot transaccional JSON dentro de SQLCipher, con clave independiente en Keychain/Keystore y migración que comprueba la escritura antes de retirar el original. Web conserva preferencias JSON sin este cifrado. La integración nativa está pendiente de ejecución. Queda normalizar tablas y consultas para corpus grandes. No se afirma que `SharedPreferences` garantice recuperación tras cualquier fallo físico. El código no imprime tokens ni respuestas privadas.
 
 ## Fechas
 
