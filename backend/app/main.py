@@ -14,6 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import StaleDataError
 from .db import connect, Record, Account, Token, Mutation, Audit, now, uid
 from .learning import schedule, score
+from .temporal import civil_date, resolve_block
 
 
 def create_app(database_url=None):
@@ -144,11 +145,20 @@ def create_app(database_url=None):
             Record.kind == 'norm_version', Record.data['normId'].as_string() == id).order_by(Record.created_at))]}
 
     @app.get('/v1/library/norms/{id}/units')
-    def units(id: str, version: str, s=Depends(db)):
+    def units(id: str, version: str, asOf: str | None = None, s=Depends(db)):
         r = s.get(Record, version)
         if not r or r.kind != 'norm_version' or r.data['normId'] != id:
             raise HTTPException(404, 'Versión no disponible')
-        return {'version': version, 'items': r.data['blocks'], 'informative': True}
+        result = {'version': version, 'items': r.data['blocks'], 'informative': True}
+        if asOf is not None:
+            try:
+                target = civil_date(asOf)
+            except (ValueError, TypeError):
+                raise HTTPException(422, 'asOf debe ser una fecha civil AAAA-MM-DD válida')
+            result['asOf'] = target.isoformat()
+            result['resolvedUnits'] = [resolve_block(b, target) for b in r.data['blocks']]
+            result['unresolvedCount'] = sum(b['selectedVersion'] is None for b in result['resolvedUnits'])
+        return result
 
     @app.get('/v1/library/units/{id}/compare')
     def compare(id: str, old: str, new: str, s=Depends(db)):

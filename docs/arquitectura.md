@@ -32,7 +32,7 @@ Los datos locales educativos están en preferencias JSON. Esto permite un arranq
 
 ## Fechas
 
-Instantes de API en UTC; el cron CLI obtiene su fecha civil en `Europe/Madrid`. La lectura conserva fechas de publicación y efecto separadas según BOE, pero no calcula derecho aplicable en casos ambiguos ni vigencias parciales. Los vencimientos móviles se guardan UTC y se agrupan en calendario local para estadísticas.
+Instantes de API en UTC; el cron CLI obtiene su fecha civil en `Europe/Madrid`. La lectura conserva fechas de publicación y efecto separadas según BOE, y selecciona la redacción por fecha efectiva explícita cuando los metadatos lo permiten; rechaza fechas incompletas, intervalos contradictorios y textos en conflicto. No calcula derecho aplicable en casos ambiguos ni vigencias parciales. Los vencimientos móviles se guardan UTC y se agrupan en calendario local para estadísticas.
 
 ## Servicios aún no conectados
 

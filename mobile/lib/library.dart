@@ -95,6 +95,7 @@ class ReaderPage extends StatefulWidget {
 }
 class _ReaderPageState extends State<ReaderPage> {
   int version = 0;
+  DateTime? studyDate;
   final tts = FlutterTts();
   @override
   void initState() { super.initState(); version = (widget.unit['versions'] as List).length - 1; }
@@ -103,20 +104,28 @@ class _ReaderPageState extends State<ReaderPage> {
   @override
   Widget build(BuildContext context) {
     final versions = widget.unit['versions'] as List;
-    final v = Json.from(versions[version]);
-    final reference = '${widget.norm['id']} · ${widget.unit['title']} · fecha de efecto ${v['effectiveFrom'] ?? 'no determinada'}';
-    return Scaffold(appBar: AppBar(title: const Text('Lector jurídico'), actions: [IconButton(tooltip: 'Copiar referencia', icon: const Icon(Icons.copy), onPressed: () => perform(context, () => Clipboard.setData(ClipboardData(text: reference)), success: 'Referencia copiada'))]),
+    final selection = studyDate == null ? null : resolveLegalVersions(versions.map((v) => Json.from(v)).toList(), studyDate!);
+    final unavailable = selection != null && selection['selectedIndex'] == null;
+    final selectedIndex = selection?['selectedIndex'] as int? ?? version;
+    final v = Json.from(versions[selectedIndex]);
+    final reference = unavailable ? 'Sin redacción seleccionable para ${civilDate(studyDate!)}' : '${widget.norm['id']} · ${widget.unit['title']} · fecha de efecto ${v['effectiveFrom'] ?? 'no determinada'}';
+    return Scaffold(appBar: AppBar(title: const Text('Lector jurídico'), actions: [IconButton(tooltip: 'Copiar referencia', icon: const Icon(Icons.copy), onPressed: unavailable ? null : () => perform(context, () => Clipboard.setData(ClipboardData(text: reference)), success: 'Referencia copiada'))]),
       body: PageBody(children: [Badge(widget.norm['short'] ?? widget.norm['id']), const SizedBox(height: 18),
         Text(widget.unit['title'], style: Theme.of(context).textTheme.headlineMedium), const SizedBox(height: 20),
-        DropdownButtonFormField<int>(initialValue: version, isExpanded: true, decoration: const InputDecoration(labelText: 'Versión histórica · fecha de efecto según fuente'),
-          items: List.generate(versions.length, (i) => DropdownMenuItem(value: i, child: Text(versions[i]['effectiveFrom'] ?? 'Fecha no determinada'))), onChanged: (i) => setState(() => version = i!)),
+        DropdownButtonFormField<int>(key: ValueKey('version:$version:$studyDate'), initialValue: selectedIndex, isExpanded: true, decoration: const InputDecoration(labelText: 'Versión histórica · fecha de efecto según fuente'),
+          items: List.generate(versions.length, (i) => DropdownMenuItem(value: i, child: Text(versions[i]['effectiveFrom'] ?? 'Fecha no determinada'))), onChanged: (i) => setState(() { version = i!; studyDate = null; })),
+        const SizedBox(height: 12), OutlinedButton.icon(onPressed: () async {
+          final date = await showDatePicker(context: context, initialDate: studyDate ?? DateTime.now(), firstDate: DateTime(1800), lastDate: DateTime.now().add(const Duration(days: 3650)));
+          if (date != null) setState(() => studyDate = date);
+        }, icon: const Icon(Icons.history), label: Text(studyDate == null ? 'Consultar una fecha de estudio' : 'Fecha de estudio: ${civilDate(studyDate!)}')),
+        if (selection != null) Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: Text(selection['reason'])),
         const SizedBox(height: 16), const Badge('Consolidación informativa · sin revisión editorial', warning: true), const SizedBox(height: 24),
-        Paper(child: SelectableText(v['text'] ?? '', style: const TextStyle(fontSize: 18, height: 1.85))), const SizedBox(height: 16),
+        unavailable ? const EmptyState(title: 'Redacción no resoluble para esta fecha', detail: 'Consulta la fuente oficial o elige manualmente una versión histórica. No se ha inferido una respuesta.') : Paper(child: SelectableText(v['text'] ?? '', style: const TextStyle(fontSize: 18, height: 1.85))), const SizedBox(height: 16),
         Wrap(spacing: 8, runSpacing: 8, children: [
-          OutlinedButton.icon(onPressed: () => perform(context, () async { await tts.setLanguage('es-ES'); await tts.speak(v['text']); }), icon: const Icon(Icons.volume_up_outlined), label: const Text('Escuchar')),
+          OutlinedButton.icon(onPressed: unavailable ? null : () => perform(context, () async { await tts.setLanguage('es-ES'); await tts.speak(v['text']); }), icon: const Icon(Icons.volume_up_outlined), label: const Text('Escuchar')),
           OutlinedButton.icon(onPressed: () => tts.stop(), icon: const Icon(Icons.stop), label: const Text('Detener')),
           OutlinedButton.icon(onPressed: () => push(context, ComparePage(unit: widget.unit)), icon: const Icon(Icons.compare_arrows), label: const Text('Comparar')),
-          FilledButton.icon(onPressed: () => push(context, CardEditor(store: widget.store, norm: widget.norm, unit: widget.unit)), icon: const Icon(Icons.add), label: const Text('Crear tarjeta')),
+          FilledButton.icon(onPressed: unavailable ? null : () => push(context, CardEditor(store: widget.store, norm: widget.norm, unit: widget.unit)), icon: const Icon(Icons.add), label: const Text('Crear tarjeta')),
         ]), const Section('Notas privadas'),
         TextFormField(initialValue: (widget.store.data['notes'] as Map? ?? {})['${widget.norm['id']}:${widget.unit['id']}'] ?? '', minLines: 3, maxLines: 10,
           decoration: const InputDecoration(labelText: 'Tus notas se guardan solo en este dispositivo'), onChanged: (text) {

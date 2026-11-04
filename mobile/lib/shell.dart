@@ -84,6 +84,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final due = store.due().length;
+    final restDay = !isStudyDay(DateTime.now(), store.profile);
     final today = store.list('reviews').where((r) => civilDate(DateTime.parse(r['occurredAt']).toLocal()) == civilDate(DateTime.now())).length;
     final goal = (store.profile['dailyGoal'] as num? ?? 20).toInt();
     final downloaded = store.catalogue.where((n) => n['units'] != null).length;
@@ -93,11 +94,11 @@ class HomePage extends StatelessWidget {
       const SizedBox(height: 16), Wrap(spacing: 8, runSpacing: 8, children: [Badge(store.mode), Badge(store.profile['subject'] ?? 'Estudio libre'), const Badge('Modo local')]),
       const SizedBox(height: 24), Container(padding: const EdgeInsets.all(24), decoration: BoxDecoration(color: ink, borderRadius: BorderRadius.circular(20)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('TU SESIÓN DE HOY', style: TextStyle(color: Color(0xff99c8d6), letterSpacing: 1.5, fontSize: 12)),
-          const SizedBox(height: 18), Text('$due tarjetas por repasar', style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 18), Text(restDay ? 'Hoy tienes descanso' : '$due tarjetas por repasar', style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w700)),
           const SizedBox(height: 8), Text('$today de $goal revisiones de tu objetivo', style: const TextStyle(color: Color(0xffd2deed))),
           const SizedBox(height: 18), ClipRRect(borderRadius: BorderRadius.circular(8), child: LinearProgressIndicator(value: (today / goal).clamp(0, 1), minHeight: 6, color: const Color(0xff53d3b7), backgroundColor: Colors.white24)),
           const SizedBox(height: 24), FilledButton.icon(style: FilledButton.styleFrom(backgroundColor: const Color(0xffd4f5e9), foregroundColor: ink),
-            onPressed: () => due > 0 ? push(context, ReviewPage(store: store, queue: store.due())) : navigate(1), icon: const Icon(Icons.play_arrow_rounded), label: Text(due > 0 ? 'Comenzar repaso' : 'Crear mi primer mazo'))])),
+            onPressed: () => restDay ? push(context, PlannerPage(store: store)) : due > 0 ? push(context, ReviewPage(store: store, queue: store.due())) : navigate(1), icon: const Icon(Icons.play_arrow_rounded), label: Text(restDay ? 'Consultar mi plan' : due > 0 ? 'Comenzar repaso' : 'Crear mi primer mazo'))])),
       const Section('Tu camino de estudio'),
       Paper(child: Column(children: [ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.calendar_month_outlined, color: teal), title: const Text('Planifica con calma'),
         subtitle: const Text('Objetivos, descansos y fecha de examen'), trailing: const Icon(Icons.chevron_right), onTap: () => push(context, PlannerPage(store: store))),

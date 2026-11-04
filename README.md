@@ -7,10 +7,10 @@ Aplicación Flutter para estudiar Derecho español en Universidad y Oposiciones,
 - Cliente móvil Android/iOS y proyecto web adaptable, interfaz en español, cinco destinos, modo oscuro y tipografía del sistema.
 - Onboarding Universidad/Oposiciones/Ambos, acceso local sin registro, cambio de itinerario conservando datos.
 - Inventario de 20 referencias BOE. Búsqueda tolerante a tildes, materias, marcadores y seguimiento local. Las referencias **no incluyen textos descargados ni material jurídico certificado**.
-- Descarga de normas importadas desde una API configurable, lectura offline, notas privadas, copia de referencias, voz mediante plataforma, selector histórico y comparación textual de párrafos.
+- Descarga de normas importadas desde una API configurable, lectura offline, notas privadas, copia de referencias, voz mediante plataforma, selector histórico, consulta por fecha efectiva que rechaza metadatos ambiguos y comparación textual de párrafos.
 - Tarjetas personales QA, cloze, verdadero/falso, ordenación, caso y test; creación desde artículo; importación CSV con previsualización, límites y validación completa antes de guardar.
 - Repaso con cuatro grados, programación SM-2 adaptada `sm2-1`, eventos persistentes, bloqueo por revisión normativa, sesión guardada, borradores y deshacer local.
-- Plan de estudio, fecha de examen, descansos y asignaturas personales. Simulacro cronometrado con banco congelado, respuestas guardadas, penalización y corrección al finalizar. El contenido no se presenta como examen oficial.
+- Plan de estudio con cola que respeta descansos y vacaciones, previsión semanal, fecha de examen y asignaturas personales. Simulacro cronometrado con banco congelado, respuestas guardadas, penalización y corrección al finalizar. El contenido no se presenta como examen oficial.
 - Historial, progreso por mazo, exportación/restauración JSON, consentimientos separados y borrado local confirmado.
 - Identidad remota opcional con tokens en almacenamiento seguro, subida de tarjetas/revisiones con identificadores estables y conflictos explícitos, exportación/borrado remoto. **No hay recuperación de identidad, OAuth/email ni fusión multidispositivo completa.**
 - Backend con SQLite para desarrollo o PostgreSQL mediante `DATABASE_URL`, API OpenAPI, sesiones de 15 minutos, refresh rotatorio, revocación, control de propietario, ETag y claves de idempotencia.

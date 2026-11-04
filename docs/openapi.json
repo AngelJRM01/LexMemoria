@@ -265,6 +265,22 @@
               "type": "string",
               "title": "Version"
             }
+          },
+          {
+            "name": "asOf",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Asof"
+            }
           }
         ],
         "responses": {

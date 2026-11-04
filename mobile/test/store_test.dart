@@ -53,4 +53,14 @@ void main() {
     expect(s.list('reviews').length, 1);
   });
 
+  test('due queue obeys rest and vacation without deleting history', () async {
+    final s = await AppStore.load();
+    await s.addCard(StudyCard(id: 'rest-card', deck: 'D', front: 'Q', back: 'A'));
+    await s.setProfile({'restDays': [7], 'vacations': [{'start': '2026-11-09', 'end': '2026-11-10'}]});
+    expect(s.due(at: DateTime(2026, 11, 8)), isEmpty);
+    expect(s.due(at: DateTime(2026, 11, 9)), isEmpty);
+    expect(s.due(at: DateTime(2026, 11, 11)).single.id, 'rest-card');
+    expect(s.cards.length, 1);
+  });
+
 }

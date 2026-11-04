@@ -31,11 +31,23 @@ class AppStore extends ChangeNotifier {
     return initialCatalogue().map((n) => <String, dynamic>{...n, ...?cached.remove(n['id'])}).toList()..addAll(cached.values);
   }
   Json state(String id) => Json.from((data['states'] as Map? ?? {})[id] ?? {});
-  List<StudyCard> due({String? deck}) => cards.where((c) {
-    final when = state(c.id)['dueAt'];
-    return !c.blocked && (deck == null || c.deck == deck) &&
-      (when == null || !DateTime.parse(when).isAfter(DateTime.now()));
-  }).take((profile['dailyGoal'] as num? ?? 20).toInt()).toList();
+  List<StudyCard> due({String? deck, DateTime? at, bool includeRest = false}) {
+    final now = at ?? DateTime.now();
+    if (!includeRest && !isStudyDay(now, profile)) return [];
+    final queue = cards.where((c) {
+      final when = DateTime.tryParse(state(c.id)['dueAt'] ?? '');
+      return !c.blocked && (deck == null || c.deck == deck) && (when == null || !when.isAfter(now));
+    }).toList();
+    queue.sort((a, b) {
+      final sa = state(a.id), sb = state(b.id);
+      if (sa.isEmpty != sb.isEmpty) return sa.isEmpty ? 1 : -1;
+      final due = (sa['dueAt'] as String? ?? '').compareTo(sb['dueAt'] as String? ?? '');
+      if (due != 0) return due;
+      final lapses = (sb['lapses'] as num? ?? 0).compareTo(sa['lapses'] as num? ?? 0);
+      return lapses == 0 ? a.id.compareTo(b.id) : lapses;
+    });
+    return queue.take((profile['dailyGoal'] as num? ?? 20).toInt().clamp(1, 200)).toList();
+  }
   Future<void> save() {
     final snapshot = jsonEncode(data);
     _write = _write.catchError((_) {}).then((_) async {

@@ -10,7 +10,7 @@ Esta entrega contiene código funcional del servidor y código cliente pendiente
 
 ## Implementación restante
 
-- Corpus real de 20 normas importado/cotejado, índices jerárquicos completos y ELI, versiones parciales, resolver vigencia por fecha y disposiciones transitorias sin inferencias. El selector actual muestra versiones por bloque, sin resolver automáticamente derecho aplicable.
+- Corpus real de 20 normas importado/cotejado, índices jerárquicos completos y ELI, versiones parciales, resolver vigencias parciales y disposiciones transitorias sin inferencias. La consulta histórica ya selecciona por fechas efectivas explícitas y rechaza fechas ausentes/conflictivas; no sustituye una interpretación jurídica.
 - Esquema relacional completo V2, migraciones, full-text indexado con tildes, paginación cliente, partición e inventario de cobertura por fuente, jurisdicción y materia.
 - Conectores autonómicos, EUR-Lex, fuentes universitarias y licencias. No hay catálogo municipal ni cobertura total.
 - Ingesta masiva reanudable, cola persistente, checkpoints/backfill, circuito de fallos, clasificación del sumario, correlación de normas modificadoras con consolidados, alertas por consolidación atrasada y entrada en vigor futura.
@@ -20,7 +20,7 @@ Esta entrega contiene código funcional del servidor y código cliente pendiente
 - Importación Anki y adjuntos, escaneo de archivos, controles de uso compartido, moderación y licencias por documento. CSV se importa solo como contenido privado no verificado.
 - Programación de recordatorios/push APNs/FCM, preferencias de canales/quiet hours, deduplicación de entregas y enlaces profundos. No se solicitan permisos push inexistentes.
 - Convocatorias oficiales y temarios verificables, mapa tema-artículo, asignaturas con evaluaciones/ponderaciones, semestres archivables, bibliografía licenciada, exámenes oficiales contrastados. Las oposiciones actuales son plantillas genéricas etiquetadas.
-- Planificador semanal completo (vacaciones, prioridades, recalcular según vencimientos y descansos). La carga diaria, disponibilidad, descansos y fecha se guardan; los descansos todavía no alteran la cola de vencimientos.
+- Planificación avanzada por prioridad de temas y capacidad horaria. Ya se guardan vacaciones y descansos, la cola diaria los respeta y se muestra una previsión de siete días con pendientes acumulados. La previsión todavía no simula futuras respuestas ni revisiones nuevas.
 - Compras Google Play/StoreKit, productos y precios con impuestos, entitlements autoritativos completos, restauración, webhooks firmados/deduplicados, reembolsos, gracia y revocación. El endpoint de validación rechaza compras hasta configurar integraciones; no hay botón de compra engañoso.
 - Registro del responsable, contacto y textos legales finales, inventario RGPD, política de menores, conservación/borrado de backups y revisión de licencias. Los avisos actuales describen el comportamiento de desarrollo.
 - Infraestructura dev/staging/prod, TLS público, cifrado de discos/backups, gestor de secretos, despliegue, colas/cron administrados, backup/restore operativo, observabilidad sin PII, alertas, SBOM/escaneo, límites de coste y recuperación RPO/RTO.

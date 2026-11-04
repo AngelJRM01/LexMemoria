@@ -96,3 +96,67 @@ List<Json> initialCatalogue() => [
 const subjects = ['Constitucional', 'Civil', 'Penal', 'Procesal', 'Administrativo', 'Mercantil',
   'Laboral', 'Tributario', 'Internacional', 'UE', 'Derechos Humanos', 'Criminología'];
 const tracks = ['Auxilio Judicial', 'Tramitación Procesal', 'Gestión Procesal', 'Administrativo', 'Estudio libre'];
+
+DateTime? legalDate(dynamic input) {
+  if (input is! String) return null;
+  final text = RegExp(r'^\d{8}$').hasMatch(input)
+      ? '${input.substring(0, 4)}-${input.substring(4, 6)}-${input.substring(6, 8)}' : input;
+  if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(text)) return null;
+  final parsed = DateTime.tryParse(text);
+  if (parsed == null || civilDate(parsed) != text) return null;
+  return DateTime.utc(parsed.year, parsed.month, parsed.day);
+}
+
+/// Selects source dates only. Ambiguous dates never fall back to publication.
+Json resolveLegalVersions(List<Json> versions, DateTime asOf) {
+  final target = DateTime.utc(asOf.year, asOf.month, asOf.day);
+  DateTime? newest;
+  int? selected;
+  final candidates = <int>[];
+  for (var i = 0; i < versions.length; i++) {
+    final starts = legalDate(versions[i]['effectiveFrom']);
+    final ends = versions[i]['effectiveTo'] == null ? null : legalDate(versions[i]['effectiveTo']);
+    if (starts == null || (versions[i]['effectiveTo'] != null && ends == null) || (ends != null && !ends.isAfter(starts))) {
+      return {'status': 'unresolved', 'selectedIndex': null, 'reason': 'Fechas de efecto incompletas o contradictorias.'};
+    }
+    if (!starts.isAfter(target) && (ends == null || target.isBefore(ends))) {
+      candidates.add(i);
+      if (newest == null || starts.isAfter(newest)) { newest = starts; selected = i; }
+    }
+  }
+  if (selected == null) return {'status': 'unavailable', 'selectedIndex': null, 'reason': 'No hay una redacción de la fuente para esta fecha.'};
+  final sameDate = candidates.where((i) => legalDate(versions[i]['effectiveFrom']) == newest).map((i) => versions[i]['hash'] ?? versions[i]['text']).toSet();
+  if (sameDate.length > 1) return {'status': 'unresolved', 'selectedIndex': null, 'reason': 'Hay redacciones distintas con la misma fecha. Requiere revisión editorial.'};
+  return {'status': 'selected_by_source_date', 'selectedIndex': selected,
+    'reason': 'Selección por fechas de la fuente; comprueba vigencias parciales y disposiciones transitorias.'};
+}
+
+bool isStudyDay(DateTime day, Json profile) {
+  if ((profile['restDays'] as List? ?? []).contains(day.weekday)) return false;
+  final date = civilDate(day);
+  for (final vacation in profile['vacations'] as List? ?? []) {
+    final start = vacation['start'] as String, end = vacation['end'] as String;
+    if (date.compareTo(start) >= 0 && date.compareTo(end) <= 0) return false;
+  }
+  return true;
+}
+
+List<Json> weeklyForecast(List<StudyCard> cards, Json states, Json profile, DateTime start) {
+  final pending = cards.where((c) => !c.blocked).toList();
+  final limit = (profile['dailyGoal'] as num? ?? 20).toInt().clamp(1, 200);
+  final assigned = <String>{};
+  return List.generate(7, (i) {
+    final day = DateTime(start.year, start.month, start.day + i);
+    final end = DateTime(day.year, day.month, day.day + 1);
+    final available = pending.where((c) {
+      final state = states[c.id] as Map? ?? {};
+      final due = DateTime.tryParse(state['dueAt'] ?? '');
+      return !assigned.contains(c.id) && (due == null || due.isBefore(end));
+    }).toList();
+    final study = isStudyDay(day, profile);
+    final count = study ? available.length.clamp(0, limit) : 0;
+    if (study) assigned.addAll(available.take(count).map((c) => c.id));
+    return {'date': civilDate(day), 'study': study, 'planned': count,
+      'backlog': available.length - count};
+  });
+}

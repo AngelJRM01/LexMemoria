@@ -14,3 +14,5 @@ local.properties
 .idea/
 .DS_Store
 coverage/
+
+*.iml

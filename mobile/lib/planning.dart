@@ -14,14 +14,17 @@ class _PlannerPageState extends State<PlannerPage> {
   late double goal, hours;
   DateTime? exam;
   late List<int> rest;
+  late List<Json> vacations;
   @override
   void initState() {
     super.initState(); goal = (widget.store.profile['dailyGoal'] as num? ?? 20).toDouble(); hours = (widget.store.profile['hours'] as num? ?? 1).toDouble();
     exam = DateTime.tryParse(widget.store.profile['examDate'] ?? ''); rest = List<int>.from(widget.store.profile['restDays'] ?? [7]);
+    vacations = (widget.store.profile['vacations'] as List? ?? []).map((v) => Json.from(v)).toList();
   }
   @override
   Widget build(BuildContext context) {
     final days = exam?.difference(DateTime.now()).inDays;
+    final forecast = weeklyForecast(widget.store.cards, Json.from(widget.store.data['states'] ?? {}), {...widget.store.profile, 'dailyGoal': goal.round(), 'restDays': rest, 'vacations': vacations}, DateTime.now());
     final load = widget.store.cards.length / ((days ?? 30) < 1 ? 1 : days ?? 30);
     return Scaffold(appBar: AppBar(title: const Text('Mi plan de estudio')), body: PageBody(children: [
       Text('Tu ritmo. Tu calendario.', style: Theme.of(context).textTheme.headlineMedium), const SizedBox(height: 12),
@@ -31,13 +34,25 @@ class _PlannerPageState extends State<PlannerPage> {
         Text('${hours.toStringAsFixed(1)} horas disponibles'), Slider(value: hours.clamp(.5, 8), min: .5, max: 8, divisions: 15, label: '$hours h', onChanged: (v) => setState(() => hours = v))])),
       const Section('Días de descanso'), Wrap(spacing: 8, runSpacing: 8, children: List.generate(7, (i) => FilterChip(label: Text(['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'][i]),
         selected: rest.contains(i + 1), onSelected: (v) => setState(() { v ? rest.add(i + 1) : rest.remove(i + 1); })))),
+      const Section('Vacaciones'),
+      ...vacations.asMap().entries.map((e) => ListTile(title: Text('${e.value['start']} → ${e.value['end']}'),
+        trailing: IconButton(tooltip: 'Quitar periodo de vacaciones', icon: const Icon(Icons.close), onPressed: () => setState(() => vacations.removeAt(e.key))))),
+      OutlinedButton.icon(onPressed: () async {
+        final range = await showDateRangePicker(context: context, firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 3650)));
+        if (range != null) setState(() => vacations.add({'start': civilDate(range.start), 'end': civilDate(range.end)}));
+      }, icon: const Icon(Icons.beach_access_outlined), label: const Text('Añadir vacaciones')),
+      const Section('Los próximos siete días'),
+      Paper(child: Column(children: forecast.map((day) => ListTile(contentPadding: EdgeInsets.zero,
+        leading: Icon(day['study'] ? Icons.style_outlined : Icons.free_breakfast_outlined, color: teal),
+        title: Text(day['date']), subtitle: Text(day['study'] ? '${day['planned']} tarjetas previstas · ${day['backlog']} pendientes de repartir' : 'Descanso o vacaciones'))).toList())),
+      const SizedBox(height: 10), const Text('Previsión de las tarjetas actuales. No anticipa futuros fallos ni nuevas tarjetas; se recalcula al cambiar el plan.', style: TextStyle(fontSize: 12)),
       const Section('Fecha de examen'), OutlinedButton.icon(onPressed: () async {
         final v = await showDatePicker(context: context, initialDate: exam != null && exam!.isAfter(DateTime.now()) ? exam : DateTime.now(), firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 3650)));
         if (v != null) setState(() => exam = v);
       }, icon: const Icon(Icons.event), label: Text(exam == null ? 'Añadir fecha opcional' : civilDate(exam!))),
       if (days != null) Padding(padding: const EdgeInsets.only(top: 14), child: Text('$days días hasta el examen. Las revisiones se priorizan por vencimiento, sin estimar una nota.')),
       if (load > goal || rest.length == 7) const Padding(padding: EdgeInsets.only(top: 20), child: Paper(child: Text('La disponibilidad no permite la carga prevista. Revisa la fecha, el objetivo o los días libres.'))),
-      const SizedBox(height: 24), FilledButton(onPressed: rest.length == 7 ? null : () => perform(context, () => widget.store.setProfile({'dailyGoal': goal.round(), 'hours': hours, 'examDate': exam?.toIso8601String(), 'restDays': rest}), success: 'Plan guardado'), child: const Text('Guardar mi plan')),
+      const SizedBox(height: 24), FilledButton(onPressed: rest.length == 7 ? null : () => perform(context, () => widget.store.setProfile({'dailyGoal': goal.round(), 'hours': hours, 'examDate': exam?.toIso8601String(), 'restDays': rest, 'vacations': vacations}), success: 'Plan guardado'), child: const Text('Guardar mi plan')),
       const Section('Asignaturas y objetivos propios'),
       ...widget.store.list('courses').map((c) => ListTile(leading: const Icon(Icons.school_outlined), title: Text(c['title']), subtitle: Text('${c['institution']} · ${c['semester']}\nGuía docente no verificada'))),
       OutlinedButton.icon(onPressed: () async {
