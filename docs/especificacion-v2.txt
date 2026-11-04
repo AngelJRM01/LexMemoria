@@ -1,0 +1,820 @@
+LEXMEMORIA · Oposiciones jurídicas
+Especificación integral: legislación verificable + flashcards + convocatorias + aprendizaje adaptativo
+Documento de requisitos para producto final objetivo · Versión 1.0 · 4 de noviembre de 2026
+ESTADO: diseño propuesto, NO aplicación implementada. Los datos, contenidos y cobertura no están cargados por la creación de este documento. Los precios, métricas y decisiones pendientes se indican como hipótesis.
+
+0. Resumen ejecutivo y posicionamiento
+Producto de aprendizaje para opositores españoles, comenzando por Justicia y Administración (Auxilio Judicial, Tramitación Procesal, Gestión Procesal y cuerpos administrativos), con expansión condicionada a convocatorias y revisión editorial. La biblioteca jurídica buscará cubrir toda la normativa que sea legal y técnicamente accesible, distinguiendo siempre: disponible, en importación, pendiente de validación, actualizada, pendiente de consolidación y no disponible. «Todas las leyes» es un objetivo de catálogo progresivo y auditable, no una promesa de cobertura íntegra al abrir la app.
+Propuesta diferencial: una tarjeta nunca queda desligada de su fuente. Cada conocimiento tiene versión normativa, fecha, ámbito territorial, artículo concreto, motivo de revisión, historial de cambios y estado editorial. Frente a suites de tests existentes, el valor principal está en memorizar Derecho vigente sin adquirir conocimientos obsoletos.
+Nombre LexMemoria provisional; comprobar OEPM/EUIPO, dominios, Apple y Google antes de registrar. Producto independiente de BOE y de las administraciones públicas.
+1. Investigación, competencia y límites de la oportunidad
+Competidor
+Capacidad observada
+Implicación
+OPO.coco
+Leyes, flashcards, tests, FSRS; catálogo amplio anunciado
+No competir sólo en volumen o repetición espaciada
+Opositor
+Legislación BOE, offline, simulacros, oposiciones y FSRS anunciados
+Diferenciar con trazabilidad jurídica y control editorial
+OpositaTest
+Material y tests organizados por oposición y legislación
+Competir en revisión y experiencia, no en cantidad bruta
+Anki
+Repaso espaciado y personalización avanzada
+Reducir preparación manual y riesgo de mazos desactualizados
+BOE/AEBOE
+Textos y versiones consolidadas mediante API
+Atribuir y verificar; advertir texto informativo
+Riesgos de negocio: actualización permanente de normas, cobertura desigual de normativa autonómica/local/UE, dificultad de asegurar pertinencia exacta en convocatorias, coste de revisión jurídica, pagos estacionales y riesgo de material editorial sin licencias.
+2. Personas, trabajos a realizar y criterios de éxito
+Persona
+Situación y objetivo
+Diseño requerido
+Opositora inicial
+Desconoce mapa legal; quiere plan guiado
+Onboarding de oposición y modo básico
+Opositor avanzado
+Domina temario; teme reformas
+Alertas normativas, historial y repaso selectivo
+Preparador
+Crea mazos para una academia
+Editor y revisión humana, permisos y exportación
+Estudiante de Derecho
+Consulta artículos y memoriza conceptos
+Modo libre por ley sin elegir oposición
+Usuario offline
+Estudia en transporte sin señal
+Packs legales versionados y sincronización diferida
+Métricas: D1/D7/D30 por oposición, activación (primer mazo completado), tarjetas revisadas, exactitud de fuentes auditadas, proporción de tarjetas afectadas por reformas detectadas, latencia de incorporación, incidencia de error jurídico, conversión a premium y cancelación. Umbrales de lanzamiento: 0 respuestas etiquetadas «verificadas» sin fuente y versión, 0 pérdidas de progreso en tests de sincronización, cobertura declarada = cobertura real auditada.
+3. Mapa de navegación y diseño visual
+Estética sobria editorial: fondo marfil suave #F8FAFC, encabezados azul tinta #17365D, acento turquesa #0E9F91, advertencias ámbar #E5A23A y errores rojo #BB3545. Tipografía sistema con equivalentes accesibles, 8px grid, esquinas 12–16px, objetivos táctiles mínimos 44–48dp, contraste WCAG AA. Barra inferior móvil de cinco destinos: Hoy, Estudiar, Leyes, Progreso, Perfil. Web/tablet: barra lateral 240px y panel de contenidos con ancho de lectura 720–840px.
+Pantalla · Bienvenida
+Composición: Logotipo, mensaje «Estudia leyes vigentes con contexto», botones Empezar y Explorar sin cuenta, fuente y privacidad.
+Estados y regla crítica: Cuenta no obligatoria para consulta pública; el acceso offline permite seguir sin registro.
+Interacciones comunes: carga progresiva con skeleton accesible; foco inicial en título; lectura por VoiceOver/TalkBack; búsqueda y filtros conservan estado al volver; mensajes de error con solución y botón Reintentar; funcionamiento offline identificado; confirmación visual al guardar.
+Pantalla · Selección de oposición
+Composición: Buscador, filtros por administración/cuerpo/convocatoria/territorio, fecha oficial, aviso de cobertura, acción Elegir.
+Estados y regla crítica: Si falta temario verificado, ofrecer estudio libre sin atribuir una cobertura inexistente.
+Interacciones comunes: carga progresiva con skeleton accesible; foco inicial en título; lectura por VoiceOver/TalkBack; búsqueda y filtros conservan estado al volver; mensajes de error con solución y botón Reintentar; funcionamiento offline identificado; confirmación visual al guardar.
+Pantalla · Inicio / Hoy
+Composición: Arriba fecha y oposición; panel «Revisiones hoy», «Cambios legales», «Continuar», objetivo configurable, calendario de constancia.
+Estados y regla crítica: Estado vacío ofrece crear mazo inicial; bloque de cambios sólo informa hechos vinculados a documentos.
+Interacciones comunes: carga progresiva con skeleton accesible; foco inicial en título; lectura por VoiceOver/TalkBack; búsqueda y filtros conservan estado al volver; mensajes de error con solución y botón Reintentar; funcionamiento offline identificado; confirmación visual al guardar.
+Pantalla · Explorador de leyes
+Composición: Búsqueda global, filtros Estado/CCAA/UE, consolidada/no consolidada, ámbito, rango, vigencia, fecha, marcadores.
+Estados y regla crítica: Mostrar fuente, último cotejo, estado de vigencia y disponibilidad por ley.
+Interacciones comunes: carga progresiva con skeleton accesible; foco inicial en título; lectura por VoiceOver/TalkBack; búsqueda y filtros conservan estado al volver; mensajes de error con solución y botón Reintentar; funcionamiento offline identificado; confirmación visual al guardar.
+Pantalla · Ficha de ley
+Composición: Título oficial, identificador BOE/ELI, índice jerárquico, pestañas Lectura, Versiones, Cambios, Tarjetas, Información.
+Estados y regla crítica: Texto consolidado identificado como informativo y enlace al documento oficial.
+Interacciones comunes: carga progresiva con skeleton accesible; foco inicial en título; lectura por VoiceOver/TalkBack; búsqueda y filtros conservan estado al volver; mensajes de error con solución y botón Reintentar; funcionamiento offline identificado; confirmación visual al guardar.
+Pantalla · Lector de artículo
+Composición: Título, número, apartados, fecha de versión, resaltado, acciones Tarjetas, Comparar, Guardar, Escuchar; navegación anterior/siguiente.
+Estados y regla crítica: La lectura muestra fecha histórica escogida y alerta de reforma pendiente.
+Interacciones comunes: carga progresiva con skeleton accesible; foco inicial en título; lectura por VoiceOver/TalkBack; búsqueda y filtros conservan estado al volver; mensajes de error con solución y botón Reintentar; funcionamiento offline identificado; confirmación visual al guardar.
+Pantalla · Comparador de versiones
+Composición: Selector dos fechas, diferencias en dos columnas o líneas resaltadas, fuentes de reforma y entrada en vigor.
+Estados y regla crítica: Las modificaciones no se marcan vigentes hasta resolver fecha de efecto.
+Interacciones comunes: carga progresiva con skeleton accesible; foco inicial en título; lectura por VoiceOver/TalkBack; búsqueda y filtros conservan estado al volver; mensajes de error con solución y botón Reintentar; funcionamiento offline identificado; confirmación visual al guardar.
+Pantalla · Mazos
+Composición: Pestañas Por oposición/Por ley/Personales; contador pendientes, revisiones y tarjetas suspendidas.
+Estados y regla crítica: Los mazos de terceros no adquieren sello editorial por importación.
+Interacciones comunes: carga progresiva con skeleton accesible; foco inicial en título; lectura por VoiceOver/TalkBack; búsqueda y filtros conservan estado al volver; mensajes de error con solución y botón Reintentar; funcionamiento offline identificado; confirmación visual al guardar.
+Pantalla · Tarjeta frontal
+Composición: Una única pregunta jurídica, categoría, dificultad, botón Mostrar, opciones texto adaptable y lectura voz.
+Estados y regla crítica: Evitar pistas en el anverso que revelen respuestas; mostrar revisión normativa pendiente si existe.
+Interacciones comunes: carga progresiva con skeleton accesible; foco inicial en título; lectura por VoiceOver/TalkBack; búsqueda y filtros conservan estado al volver; mensajes de error con solución y botón Reintentar; funcionamiento offline identificado; confirmación visual al guardar.
+Pantalla · Tarjeta reverso
+Composición: Respuesta concisa, explicación, artículo enlazado, fecha aplicable y botones Otra vez/Difícil/Bien/Fácil.
+Estados y regla crítica: No permitir calificar una tarjeta bloqueada por reforma sin validar.
+Interacciones comunes: carga progresiva con skeleton accesible; foco inicial en título; lectura por VoiceOver/TalkBack; búsqueda y filtros conservan estado al volver; mensajes de error con solución y botón Reintentar; funcionamiento offline identificado; confirmación visual al guardar.
+Pantalla · Editor de tarjetas
+Composición: Tipo pregunta-respuesta, cloze, lista, ordenación, verdadero/falso; selector de fuente, artículo, borrador y previsualización.
+Estados y regla crítica: Si se edita una tarjeta publicada, crear revisión y preservar historial del aprendiz.
+Interacciones comunes: carga progresiva con skeleton accesible; foco inicial en título; lectura por VoiceOver/TalkBack; búsqueda y filtros conservan estado al volver; mensajes de error con solución y botón Reintentar; funcionamiento offline identificado; confirmación visual al guardar.
+Pantalla · Planificador
+Composición: Fecha examen, días disponibles, horas, prioridad, carga revisiones, objetivos semanales y días de descanso.
+Estados y regla crítica: Carga imposible se comunica; no prometer cobertura total por predicción.
+Interacciones comunes: carga progresiva con skeleton accesible; foco inicial en título; lectura por VoiceOver/TalkBack; búsqueda y filtros conservan estado al volver; mensajes de error con solución y botón Reintentar; funcionamiento offline identificado; confirmación visual al guardar.
+Pantalla · Simulacros
+Composición: Selector convocatoria/ley/dificultad/número, reloj, corrección al final, penalización editable y revisión por artículo.
+Estados y regla crítica: No rotular como «examen oficial» sin origen acreditado.
+Interacciones comunes: carga progresiva con skeleton accesible; foco inicial en título; lectura por VoiceOver/TalkBack; búsqueda y filtros conservan estado al volver; mensajes de error con solución y botón Reintentar; funcionamiento offline identificado; confirmación visual al guardar.
+Pantalla · Progreso
+Composición: Calor de artículos, tasa aciertos por ley, tarjetas futuras, errores recurrentes, historial y exportación.
+Estados y regla crítica: Mostrar intervalo de confianza sólo si el método es válido; no predecir nota exacta.
+Interacciones comunes: carga progresiva con skeleton accesible; foco inicial en título; lectura por VoiceOver/TalkBack; búsqueda y filtros conservan estado al volver; mensajes de error con solución y botón Reintentar; funcionamiento offline identificado; confirmación visual al guardar.
+Pantalla · Cambios legislativos
+Composición: Cronología por normativa seguida, gravedad, artículos afectados, estado revisión y acción revisar impacto.
+Estados y regla crítica: Distinguir publicación, vigencia, consolidación y validación editorial.
+Interacciones comunes: carga progresiva con skeleton accesible; foco inicial en título; lectura por VoiceOver/TalkBack; búsqueda y filtros conservan estado al volver; mensajes de error con solución y botón Reintentar; funcionamiento offline identificado; confirmación visual al guardar.
+Pantalla · Premium
+Composición: Comparativa honesta gratuita vs premium, precio total, impuestos, renovación, cancelar, restaurar compras.
+Estados y regla crítica: Nada de cuenta atrás ficticia ni bloqueo del acceso a fuentes normativas públicas.
+Interacciones comunes: carga progresiva con skeleton accesible; foco inicial en título; lectura por VoiceOver/TalkBack; búsqueda y filtros conservan estado al volver; mensajes de error con solución y botón Reintentar; funcionamiento offline identificado; confirmación visual al guardar.
+Pantalla · Ajustes y cuenta
+Composición: Idioma, territorios, privacidad, sincronización, exportación, borrado, notificaciones, accesibilidad y soporte.
+Estados y regla crítica: Pedir confirmación específica en borrado irreversible y ofrecer copia antes.
+Interacciones comunes: carga progresiva con skeleton accesible; foco inicial en título; lectura por VoiceOver/TalkBack; búsqueda y filtros conservan estado al volver; mensajes de error con solución y botón Reintentar; funcionamiento offline identificado; confirmación visual al guardar.
+Pantalla · Backoffice editorial
+Composición: Ingestiones, diferencias, cola de incidencias, revisión doble, aprobación, auditoría de tarjetas y publicación.
+Estados y regla crítica: Las operaciones de publicador exigen roles, registro firmado y doble control para contenidos sensibles.
+Interacciones comunes: carga progresiva con skeleton accesible; foco inicial en título; lectura por VoiceOver/TalkBack; búsqueda y filtros conservan estado al volver; mensajes de error con solución y botón Reintentar; funcionamiento offline identificado; confirmación visual al guardar.
+4. Modelo jurídico: información, cobertura y trazabilidad
+Ingesta oficial
+ING-001  Conector API BOE. consumir búsqueda, metadatos, índice, bloques y versiones mediante endpoints documentados. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+ING-002  Identificación inequívoca. almacenar BOE-A-año-número y ELI cuando exista; nunca usar sólo nombre abreviado. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+ING-003  Pipeline robusta. jobs idempotentes con reintentos, límite de peticiones y deduplicación por hash. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+ING-004  Fuentes adicionales. separar boletines autonómicos, DOUE/EUR-Lex, normas locales y otras bases por origen/licencia. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+ING-005  Cobertura auditable. contar por organismo, rango, materias, años, bloques, versiones y estado de revisión. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+ING-006  Jurisdicción y alcance. reflejar Estado, UE, CCAA, diputación o municipio con relaciones normativas explícitas. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+ING-007  Confianza editorial. distinguir dato importado, analizado, verificado y retirado. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+ING-008  Licencias y atribución. guardar URL, fecha de última actualización, licencia y condiciones de reutilización. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+ING-009  Calidad de texto. conservar índices, apartados, tablas, anexos, disposición final y notas de fuente. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+ING-010  Cotejo programado. revisar sumario BOE y actualizaciones, no depender exclusivamente de última consolidación. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+ING-011  Cola de incidencias. registrar errores de parseo y fuentes no accesibles, con alerta y prioridad. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+ING-012  Publicación atómica. no mostrar parcialmente una versión hasta que todos los bloques y referencias pasen validación. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+Versionado legal
+VER-001  Doble fecha. guardar fecha publicación y fecha de entrada en vigor o aplicación cuando pueda determinarse. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+VER-002  Histórico inmutable. no sobrescribir textos anteriores; crear nueva revisión con referencias y hashes. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+VER-003  Diferencias por bloque. comparar títulos, párrafos, apartados, derogaciones, renumeraciones y disposiciones. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+VER-004  Incidencia potencial. marcar tarjetas enlazadas al bloque modificado como pendientes. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+VER-005  Consolidación retrasada. mostrar aviso si se detectó norma modificadora pero el consolidado no se actualizó. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+VER-006  Interpretación no automática. evitar declarar tácitas derogaciones o solución jurídica por comparación de texto. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+VER-007  Referencias cruzadas. registrar relaciones modifica/desarrolla/deroga/cita y sus periodos temporales. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+VER-008  Anexo y transitorias. no ignorar artículos temporales, regímenes transitorios ni disposiciones adicionales. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+VER-009  Consulta temporal. seleccionar fecha de estudio y obtener redacción aplicable sin inventar lagunas. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+VER-010  Rollback editorial. revertir publicación errónea sin alterar la evidencia ni historiales de revisión. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+VER-011  Alertas granulares. seguir una ley, título, artículo o conjunto de oposición sin saturación. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+VER-012  Aviso legal permanente. texto consolidado informativo; acceso a publicación oficial autenticable. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+Convocatorias y temarios
+CON-001  Ficha de convocatoria. cuerpo, turno, administración, territorio, fecha y bases oficiales enlazadas. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+CON-002  Cobertura por tema. mapear epígrafe oficial a leyes, artículos y conceptos con grado verificado. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+CON-003  Múltiples convocatorias. preservar perfiles de estudio distintos con versiones temporales independientes. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+CON-004  Temarios no normativos. distinguir doctrina, informática, psicotécnicos y supuestos de leyes. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+CON-005  Actualización de bases. cambios de convocatoria no modifican automáticamente temarios previos. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+CON-006  Dudas editoriales. marcar temas sin correspondencia segura y permitir revisión humana. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+CON-007  Exportación de alcance. usuario puede descargar qué normas y apartados están cubiertos. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+CON-008  Priorización contextual. programa semanal por objetivo y examen sin falsas garantías. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+CON-009  Especialidad autonómica. adaptar normativa por territorio y justificar divergencias. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+CON-010  No usar materiales con copyright. temarios privados y preguntas de academias sólo con licencia. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+Flashcards y FSRS
+FLA-001  Tarjeta atómica. una unidad comprobable; evitar preguntas con varias respuestas implícitas. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+FLA-002  Anclaje obligatorio. cada tarjeta editorial publicada incluye identificador de artículo, bloque, versión, estado y comprobador. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+FLA-003  Pregunta contextual. especificar jurisdicción, artículo y momento temporal cuando sean determinantes. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+FLA-004  Formato cloze. preservar huecos y resolver variantes aceptables sin evaluar con criterio engañoso. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+FLA-005  Cuatro calificaciones. Otra vez, Difícil, Bien, Fácil; planificador FSRS con librería compatible y versión registrada. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+FLA-006  Estado por usuario. guardar dificultad, estabilidad, recuperabilidad, último repaso y vencimiento. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+FLA-007  Cambios de algoritmo. migraciones reproducibles, pruebas de intervalos y posibilidad de recalcular colas. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+FLA-008  Tarjetas afectadas. suspender una tarjeta editorial tras cambio material hasta revisar contenido y solución. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+FLA-009  Revisiones pendientes. permitir límite diario, aplazar sin borrar progreso y evitar tareas infinitas. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+FLA-010  Tarjetas personales. admitir borradores propios y etiqueta no verificadas; no aparentar revisión jurídica. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+FLA-011  Importación. CSV/Anki con previsualización, sanitización, validación y respeto a derechos de terceros. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+FLA-012  Explicación. cada respuesta referencia el fragmento pertinente de la norma con enlace y fecha. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+FLA-013  Protección de ediciones. conservar identificador y aprendizaje al cambiar estilo sin cambiar significado. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+FLA-014  Generación asistida. IA sólo produce borradores; nunca publicar jurídicamente sin revisión humana. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+FLA-015  Auditoría de equívocos. registrar reportes de usuarios, frenar tarjetas erróneas y difundir rectificaciones. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+Estudio y evaluación
+EST-001  Modos. repaso, aprender, examen, artículos débiles y urgencia preexamen con métricas separadas. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+EST-002  Pruebas configurables. tiempos, penalización, número, temas y corregir después sin ambigüedad. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+EST-003  Resultado granular. justificar cada respuesta con fuente y versión, señalando preguntas anuladas. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+EST-004  Historial replicable. guardar versión de banco de preguntas usada por intento. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+EST-005  Retomar sesión. persistir cartas, orden, cronómetro y respuestas tras cierres abruptos. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+EST-006  Plan revisable. recalcular carga diaria ante cambios de disponibilidad. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+EST-007  Recomendaciones. priorizar errores frecuentes sin ocultar áreas menos practicadas. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+EST-008  Accesibilidad cognitiva. no penalizar por velocidad en modo estudio. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+EST-009  Estadísticas honestas. separar memorias recordadas de probabilidad de aprobar oposición. Aceptación: la acción debe producir el estado esperado, conservar datos y mostrar errores recuperables.
+Infraestructura y seguridad
+INF-001  Clientes. Flutter Android/iOS y web lectura, caché SQLite cifrada donde proceda. Aceptación: verificar mediante prueba automatizada y caso de usuario con datos válidos, vacíos, erróneos y sin conexión.
+INF-002  Backend. API versionada + PostgreSQL con eventos de importación y auditoría. Aceptación: verificar mediante prueba automatizada y caso de usuario con datos válidos, vacíos, erróneos y sin conexión.
+INF-003  Almacenamiento de texto. índices full-text, búsquedas tolerantes a tildes y campos normalizados. Aceptación: verificar mediante prueba automatizada y caso de usuario con datos válidos, vacíos, erróneos y sin conexión.
+INF-004  Identidad. acceso invitado local y OAuth/email opcionales; tokens breves y refresh revocable. Aceptación: verificar mediante prueba automatizada y caso de usuario con datos válidos, vacíos, erróneos y sin conexión.
+INF-005  Permisos. RBAC usuario/editor/revisor/publicador/admin, mínimo privilegio y 2FA editorial. Aceptación: verificar mediante prueba automatizada y caso de usuario con datos válidos, vacíos, erróneos y sin conexión.
+INF-006  Protección. TLS, secretos externos, cifrado reposo, validación servidor y rate limiting. Aceptación: verificar mediante prueba automatizada y caso de usuario con datos válidos, vacíos, erróneos y sin conexión.
+INF-007  Sincronización. cambios offline con IDs estables y estrategias explícitas ante conflictos. Aceptación: verificar mediante prueba automatizada y caso de usuario con datos válidos, vacíos, erróneos y sin conexión.
+INF-008  Copias. respaldo diario, restauración probada y objetivos RPO/RTO medidos. Aceptación: verificar mediante prueba automatizada y caso de usuario con datos válidos, vacíos, erróneos y sin conexión.
+INF-009  Observabilidad. errores sin información de respuestas ni datos personales sensibles. Aceptación: verificar mediante prueba automatizada y caso de usuario con datos válidos, vacíos, erróneos y sin conexión.
+INF-010  Integraciones. componentes desacoplados, cola reintentable, circuit breakers y caché. Aceptación: verificar mediante prueba automatizada y caso de usuario con datos válidos, vacíos, erróneos y sin conexión.
+INF-011  Privacidad. consentimiento granular, minimización, exportación, borrado y plazos de retención. Aceptación: verificar mediante prueba automatizada y caso de usuario con datos válidos, vacíos, erróneos y sin conexión.
+INF-012  Pagos. StoreKit/Google Billing, validación backend, restauración, cancelación y entitlements coherentes. Aceptación: verificar mediante prueba automatizada y caso de usuario con datos válidos, vacíos, erróneos y sin conexión.
+INF-013  Operaciones. CI/CD, versiones firmadas, staging, feature flags y rollback sin degradar artículos. Aceptación: verificar mediante prueba automatizada y caso de usuario con datos válidos, vacíos, erróneos y sin conexión.
+5. Modelo de datos conceptual y claves
+LegalSource · id, organisme, type, base_url, licence_url, attribution, checked_at, status
+LegalInstrument · id, BOE_A_id, ELI_uri, title, jurisdiction, rank, published_at, status, source_id
+InstrumentRevision · id, instrument_id, published_at, effective_from, effective_to, text_hash, source_url, consolidated_flag
+LegalBlock · id, instrument_id, parent_id, ordinal, block_type, stable_anchor
+BlockRevision · id, legal_block_id, instrument_revision_id, content, normalized_hash, effective_from
+LegalAmendment · id, amendment_instrument_id, target_block_id, amendment_kind, discovered_at, reviewed_at
+ExamTrack · id, administration, body, level, jurisdiction, status
+ExamCall · id, track_id, official_url, official_date, syllabus_version, reference_date
+SyllabusTopic · id, call_id, heading, order, coverage_state
+TopicLegalLink · id, syllabus_topic_id, block_id, scope, confidence, editorial_review_id
+Flashcard · id, deck_id, front, back, type, legal_block_id, block_revision_id, editorial_state, checksum
+FlashcardRevision · id, flashcard_id, version, text, reason, reviewer_id, published_at
+LearningState · user_id, flashcard_id, stability, difficulty, due_at, reviewed_at, lapses, fsrs_version
+ReviewEvent · id, user_id, flashcard_id, card_revision, rating, happened_at, device_id
+Entitlement · user_id, platform, product_id, status, expires_at, receipt_ref
+SyncMutation · id, device_id, user_id, entity_type, entity_id, sequence, op, occurred_at
+EditorialAudit · id, actor_id, entity, revision, action, timestamp, justification
+Política: claves estables UUID/ULID, unicidad por identificador oficial+versión y hash de bloque; FKs e índices de búsqueda, integridad referencial; retención por tipo; nunca inferir vigencia exclusivamente de fecha de modificación del registro.
+6. Contratos API propuestos (no endpoints reales ya desplegados)
+GET /v1/laws · q, jurisdiction, rank, asOf, updatedAfter, cursor → metadata + coverage
+GET /v1/laws/{id}/articles · asOf + includeNotes → artículos y versión
+GET /v1/laws/{id}/diff · from, to → cambios con fuente y fechas
+GET /v1/exams · region, track, year → convocatoria y temario
+GET /v1/decks/{id}/due · asOf, limit, cursor → revisiones ordenadas
+POST /v1/reviews · flashcardId, cardRevision, grade, clientTime, idempotencyKey → nextDue
+POST /v1/flashcards/report · cardId, reason, context → ticket
+POST /v1/sync/batch · device, since, mutations → accepted/conflicts/newCursor
+GET /v1/updates · followedLawIds, since → cambios pendientes
+POST /v1/editorial/{id}/approve · revision + reason → publicación auditada
+POST /v1/payments/verify · platform, receiptToken → entitlement
+Errores estándar: 400 validación, 401 autenticación, 403 permisos, 404 inexistente, 409 conflicto, 410 revisión retirada, 422 datos inválidos, 429 cuota, 503 origen temporalmente no disponible. Respuestas incluyen code, message, correlationId, retryable y serverTime; nunca prometer que todas las leyes se servirán sin conexión.
+7. Calidad, pruebas y aceptación de lanzamiento
+QA-L-001: Norma con una reforma publicada pero no consolidada: identificar estado pendiente y suspender tarjetas afectadas. Resultado exigido: reproducible, sin contradicciones y documentado.
+QA-L-002: Artículo renumerado y artículo derogado: preservar histórico y referencias. Resultado exigido: reproducible, sin contradicciones y documentado.
+QA-L-003: Dos normas homónimas en CCAA distintas: no fusionar identidades. Resultado exigido: reproducible, sin contradicciones y documentado.
+QA-L-004: Fecha de publicación distinta de entrada en vigor: selector histórico muestra texto apropiado. Resultado exigido: reproducible, sin contradicciones y documentado.
+QA-L-005: Tarjeta con respuesta obsoleta: bloquear repaso de contenido oficial y preservar aprendizaje. Resultado exigido: reproducible, sin contradicciones y documentado.
+QA-L-006: Usuario sin cuenta: lee y estudia mazos descargados; sincronización optativa. Resultado exigido: reproducible, sin contradicciones y documentado.
+QA-L-007: Usuario con dos móviles offline edita misma tarjeta: resolver conflicto sin duplicar review events. Resultado exigido: reproducible, sin contradicciones y documentado.
+QA-L-008: Pago cancelado/reembolsado: acceso degradado correctamente y datos personales conservados. Resultado exigido: reproducible, sin contradicciones y documentado.
+QA-L-009: Parser BOE cambia XML o falta un bloque: cuarentena y alerta, no publicar parcialmente. Resultado exigido: reproducible, sin contradicciones y documentado.
+QA-L-010: Texto con tabla y apartados anidados: lectura y accesibilidad intactas. Resultado exigido: reproducible, sin contradicciones y documentado.
+QA-L-011: Editor intenta autocertificarse: denegar por separación de roles. Resultado exigido: reproducible, sin contradicciones y documentado.
+QA-L-012: Error del backend o caída de BOE: servicio conserva catálogo marcado con su fecha de actualización. Resultado exigido: reproducible, sin contradicciones y documentado.
+QA-L-013: VoiceOver/TalkBack, zoom 200%, alto contraste, teclado físico y gesto alternativo. Resultado exigido: reproducible, sin contradicciones y documentado.
+QA-L-014: Carga de 10.000 leyes: consultas indexadas y paginadas sin congelar cliente. Resultado exigido: reproducible, sin contradicciones y documentado.
+QA-L-015: Simulacro queda interrumpido: recuperación exacta de preguntas y respuestas. Resultado exigido: reproducible, sin contradicciones y documentado.
+QA-L-016: Tarjeta generada por IA sin comprobación: siempre aparece como borrador no verificado. Resultado exigido: reproducible, sin contradicciones y documentado.
+8. Monetización, marketing, explotación y costes
+Hipótesis de precio: gratuito (consulta básica de leyes, número limitado de tarjetas y revisiones); Premium 5,99–9,99 €/mes o 39,99–69,99 €/año, sujeto a pruebas reales. El acceso al texto público no se vende como si fuera exclusivo; se cobra por productividad, curación, sincronización, analítica y herramientas. Evitar anuncios durante el estudio. Nunca garantizar aprobado.
+Canales: búsquedas orgánicas «flashcards Ley 39/2015», «artículos Ley 40/2015», páginas indexables por ley y artículo, comparadores de versiones, colaboración con preparadores, grupos de estudio sin spam, demo con 30 tarjetas verificadas. Embudo: visita → primer mazo completado → repaso D7 → pago; medir por oposición y cohortes. Coste oculto dominante: revisión jurídica editorial, no alojamiento.
+Plan de implantación realista: 0–4 semanas inventario de leyes y conexión de lectura; 5–10 semanas modelo versiones/importación y primer subconjunto verificable; 11–16 semanas tarjetas y FSRS; 17–22 semanas sincronización, pagos, QA y beta; posterior expansión de convocatorias. Esto es secuencia propuesta y no compromiso de duración. Para prometer «todas las leyes» hará falta financiación y operación editorial superiores a 0–50 € mensuales.
+9. Criterios de salida y decisiones pendientes
+No publicar si una tarjeta verificada puede permanecer activa tras una reforma detectada, si una ley no indica procedencia, si una fecha histórica queda inventada, si las fuentes normativas no cumplen sus condiciones de reutilización, si no hay proceso de revisión o si el permiso de contenido comprado no se verifica. Pendiente: catálogo exacto de oposiciones, actualización de normativa no BOE, acuerdos editoriales, elección del proveedor cloud, coste de revisor, fiscalidad y validación de precios.
+Fuentes consultadas y advertencias
+BOE API documentación: https://www.boe.es/datosabiertos/api/api.php
+BOE FAQ legislación consolidada: https://www.boe.es/datosabiertos/faq/consolidada.php
+BOE reutilización normativa: https://boe.es/buscar/act.php?id=BOE-A-2007-19814
+OPO.coco leyes y material: https://opococo.com/temas
+Opositor app: https://opositortest.es/
+OpositaTest leyes: https://www.opositatest.com/oposiciones/categorias/test-legislacion
+FSRS algoritmo: https://github.com/open-spaced-repetition/awesome-fsrs/wiki/The-Algorithm
+Sudoku.com descarga estimada: https://www.appbrain.com/app/com.easybrain.sudoku.android
+Good Sudoku: https://www.playgoodsudoku.com/
+Logic Wiz: https://logic-wiz.com/
+Sudoku Coach: https://sudoku.coach/
+HoDoKu: https://hodoku.dev/
+Apple review guidelines: https://developer.apple.com/app-store/review/guidelines/
+La mención de competidores, cifras de tiendas y precios se basa en fuentes consultadas en noviembre de 2026 y puede variar. La propuesta funcional y visual es diseño propio, no hechos del mercado. No se declara cubierta ninguna ley sin ingestión, comprobación de origen y revisión de vigencia. No se garantiza llegar a ser la mejor aplicación ni un nivel concreto de ingresos.
+
+
+AMPLIACIÓN V2 · ESTUDIANTES, OPOSICIONES Y LEGISLACIÓN VIVA
+Especificación de producto y arquitectura. Fecha de revisión: 4 de noviembre de 2026. Esta ampliación prevalece sobre cualquier requisito incompatible de la versión anterior. Los apartados anteriores conservan vigencia únicamente cuando no se contradigan con esta ampliación.
+Estado: documento para implementación y validación. No representa una base legal importada, un catálogo educativo verificado, una autorización de reutilización de terceros ni una aplicación ya publicada.
+10. Contrato de producto: alcance, públicos y límites
+LexMemoria es una plataforma de estudio jurídico para universitarios, estudiantes de máster y opositores, enfocada inicialmente en Derecho español. Comparte un corpus jurídico versionado, pero crea planes de estudio, vocabulario y evaluación adaptados a cada trayectoria. El producto no ofrece asesoramiento jurídico profesional ni garantiza aprobar exámenes.
+PRD-001 Un mismo usuario podrá activar simultáneamente itinerarios Universidad y Oposiciones y cambiar entre ellos sin perder progreso.
+PRD-002 El onboarding preguntará objetivo, materias/oposición, fecha de examen opcional, nivel, comunidad autónoma, horas disponibles y consentimiento opcional para notificaciones.
+PRD-003 La aplicación permitirá explorar leyes sin iniciar sesión; la sincronización multidispositivo, creación de progreso y compras requerirán identidad persistente.
+PRD-004 El contenido jurídico será consultable con independencia del plan; los beneficios de pago corresponderán a herramientas educativas, límites razonables o servicios con costes.
+PRD-005 No se publicitará una cobertura total del ordenamiento hasta que exista inventario auditable de fuentes, fechas y lagunas.
+PRD-006 La portada mostrará cobertura por materia y estado de actualización, sin mezclar contenido validado, generado automáticamente o pendiente.
+PRD-007 El usuario podrá archivar itinerarios, exportar notas y cambiar de oposición sin destruir su historial.
+PRD-008 El sistema facilitará modo lectura sin conexión de contenido previamente descargado, con fecha visible de última sincronización.
+PRD-009 El modelo de datos y localización permitirá Android, iOS y, cuando se implemente, web adaptable sin duplicar reglas jurídicas.
+PRD-010 En cualquier momento el usuario podrá consultar fuentes, formular reclamaciones por errores y conocer el alcance educativo del servicio.
+11. Taxonomía de contenidos jurídicos y cobertura
+COR-001 Cada norma tendrá identificador oficial, título canónico, título corto, rango, órgano, jurisdicción, ámbito territorial, materia, fecha de publicación, entrada en vigor y estado cuando la fuente lo permita.
+COR-002 Las categorías mínimas serán estatal, autonómica, UE, internacional, normativa histórica y otros instrumentos; la cobertura municipal solo se anunciará cuando exista fuente específica y revisión.
+COR-003 El modelo contemplará artículos, apartados, letras, disposiciones adicionales, transitorias, derogatorias y finales, anexos, tablas, notas y referencias.
+COR-004 Cada unidad normativa tendrá identificador estable interno y referencia externa, sin depender de su numeración visible porque puede cambiar entre versiones.
+COR-005 Los artículos duplicados por traducciones o formatos distintos conservarán vínculos a una entidad legal única y a cada texto de origen.
+COR-006 La navegación incluirá por materia, texto libre, referencia BOE/ELI, vigencia, rango, ámbito, etiquetas, asignatura y oposición.
+COR-007 Las materias cubrirán como mínimo Constitucional, Civil, Penal, Procesal, Administrativo, Mercantil, Laboral, Tributario, Internacional, UE, Derechos Humanos y fundamentos de Criminología.
+COR-008 Cada oposición se asociará a convocatoria y temario de referencia con fecha, organismo, ámbito, pruebas, bibliografía y reglas de corrección cuando existan fuentes oficiales.
+COR-009 Cada plan universitario se asociará a institución, titulación, asignatura, curso y guía docente de referencia, manteniendo avisos si la guía no ha sido verificada.
+COR-010 Una ley no cubierta por API consolidada podrá registrarse como texto publicado no consolidado, nunca camuflarse como texto vigente unificado.
+COR-011 Los catálogos mostrarán cobertura cuantificada: normas identificadas, textos accesibles, textos consolidados, artículos estructurados y contenido educativo validado.
+COR-012 Los contenidos de terceros que no sean legislación se importarán solo tras revisar licencias y derechos de reutilización.
+12. Conectores oficiales e importación masiva
+Referencia principal: https://www.boe.es/datosabiertos/api/api.php. La API ofrece sumarios por fecha, búsqueda de legislación consolidada y recuperación de metadatos, análisis, índices y textos. Sus condiciones de reutilización deben revisarse antes de operar comercialmente.
+ING-001 Implementar adaptador BOE con contratos versionados, timeouts configurables, User-Agent identificable, cuota local, paginación y reintentos con retroceso exponencial y jitter.
+ING-002 Consumir /datosabiertos/api/boe/sumario/{fecha} para detectar nuevas publicaciones en fechas en formato AAAAMMDD.
+ING-003 Consumir /datosabiertos/api/legislacion-consolidada con from/to, offset y limit para detectar actualizaciones del catálogo consolidado.
+ING-004 Consultar /datosabiertos/api/legislacion-consolidada/id/{id} y endpoints de metadatos, análisis, índice y texto para obtener la norma y su estructura.
+ING-005 Almacenar el documento crudo recibido, URL, cabeceras útiles, fecha de descarga, hash SHA-256, parser utilizado y resultado de validación.
+ING-006 Ingestar por lotes reanudables y operaciones idempotentes; volver a ejecutar un lote no generará normas ni versiones duplicadas.
+ING-007 Validar que el número de documentos procesados, descartados, fallidos y pendientes concuerda con el inventario del lote.
+ING-008 No alterar el contenido original de los textos fuente; normalizar solo en representaciones derivadas y conservar la trazabilidad al bloque original.
+ING-009 Extraer enlaces a documentos oficiales y relaciones de modificación, derogación y corrección de errores cuando estén disponibles.
+ING-010 Mantener lista de fuentes complementarias autonómicas, diarios oficiales y EUR-Lex con adaptadores independientes y aprobación jurídica de reutilización.
+ING-011 Registrar fuente, licencia, fecha de actualización, cobertura, fiabilidad y limitaciones de cada conector.
+ING-012 Si una fuente cambia su estructura, desactivar la publicación derivada de ese conector, generar una alerta y no sobrescribir versiones verificadas.
+ING-013 Recuperar fechas perdidas tras caídas, con punto de control persistente, rangos de backfill configurables y alertas por huecos de cobertura.
+ING-014 Soportar imports iniciales de gran volumen por trabajos en cola con límites de concurrencia y costes monitorizados.
+ING-015 Diseñar un test de contrato para respuestas vacías, XML inválido, HTTP 404/429/500, caracteres especiales, paginación y artículos sin numeración.
+ING-016 La importación de legislación no activará automáticamente flashcards o respuestas educativas públicas.
+13. Vigilancia diaria, clasificación y notificaciones
+MON-001 Programar la vigilancia BOE con ejecución diaria en hora de Madrid, contemplando cambios de horario y repetición segura.
+MON-002 La detección utilizará tanto publicaciones del sumario como últimas actualizaciones de consolidados; ninguna fuente por sí sola se considerará suficiente.
+MON-003 Persistir cada ejecución con inicio/fin, fecha consultada, indicadores de cobertura, número de cambios y resultado.
+MON-004 Distinguir eventos: disposición publicada, corrección, modificación, derogación expresa, entrada en vigor, versión consolidada disponible, incidencia de fuente.
+MON-005 Separar estado de impacto “posible”, “confirmado” y “descartado” y estado editorial “pendiente”, “en revisión”, “aprobado” y “publicado”.
+MON-006 Crear dependencias artículo→tarjeta/pregunta/explicación/tema/convocatoria/plan y recalcular impacto ante cada cambio.
+MON-007 Una reforma publicada sin versión consolidada disponible generará aviso preliminar y no sustituirá silenciosamente el texto anterior.
+MON-008 Una reforma con vigencia futura se mostrará con fecha de aplicación y comparador antes/después cuando esté comprobada.
+MON-009 Cada alerta tendrá norma, referencia, resumen neutral, estado, fechas, fuente y materiales afectados.
+MON-010 Los usuarios podrán seguir leyes, materias, itinerarios y oposiciones, elegir alertas críticas, resumen diario o semanal, y suspenderlas.
+MON-011 Aplicar deduplicación y límites de frecuencia; una reforma con diez artículos no enviará diez push por defecto.
+MON-012 No incluir datos sensibles de estudio en el texto de una push visible en la pantalla bloqueada.
+MON-013 Las notificaciones serán opt-in y contendrán enlace profundo a la actualización correspondiente; la bandeja interna conservará avisos importantes.
+MON-014 Se informará cuando el servicio lleve más de un umbral configurable sin sincronizar, sin afirmar que todo está actualizado.
+MON-015 Guardar auditoría completa del evento, versión anterior, versión nueva, razonamiento de impacto y usuarios notificados sin exponer datos innecesarios.
+14. Vigencia y comparador jurídico
+VER-001 Distinguir publication_date, effective_from, effective_to, consolidation_date, downloaded_at y verified_at; son hechos diferentes.
+VER-002 Cada versión de norma y artículo será inmutable una vez publicada; las correcciones generan otra revisión y relación explícita.
+VER-003 Una consulta “normativa aplicable en fecha X” resolverá por fecha efectiva y advertirá si los metadatos no permiten resolver conflictos interpretativos.
+VER-004 El comparador mostrará texto original, texto nuevo, fragmentos añadidos, suprimidos y modificados, fechas y disposición modificadora.
+VER-005 El sistema ofrecerá histórico cronológico y enlaces a publicaciones oficiales; el texto consolidado se señalará como informativo.
+VER-006 No inferir derogación tácita de manera automática; marcar interpretación no resuelta para revisión especializada.
+VER-007 En supuestos de vigencias parciales y disposiciones transitorias, mostrar advertencia visible y remitir al texto oficial.
+VER-008 Las preguntas de exámenes anteriores podrán anclarse a la legislación vigente en la fecha indicada, sin forzar su respuesta a la versión actual.
+VER-009 Las tarjetas antiguas conservarán registro de cómo se respondían cuando fueron estudiadas; el dominio acumulado no se borrará.
+VER-010 Si no existe versión oficial consolidada, mostrar “texto publicado; consolidación no disponible” en lugar de afirmar vigencia cerrada.
+15. Motor editorial de tarjetas y preguntas
+EDU-001 Cada tarjeta tendrá tipo (pregunta/respuesta, cloze, verdadero/falso, ordenar, caso), enunciado, respuesta, explicación, dificultad, etiquetas y estado editorial.
+EDU-002 Cada tarjeta incluirá una o varias referencias exactas a norma/versión/artículo/apartado, además de fuente y fecha de revisión.
+EDU-003 El contenido generado por IA será borrador privado hasta aprobación; la IA no publicará cambios normativos por sí sola.
+EDU-004 Se validará automáticamente que referencias, números de artículo, citas y fechas existen en las versiones legales almacenadas.
+EDU-005 La verificación automatizada no sustituye la revisión jurídica cuando existan ambigüedades, interpretación o hechos discutibles.
+EDU-006 Las respuestas mostrarán excepción y contexto relevante cuando una respuesta breve pudiera inducir a error.
+EDU-007 Los contenidos podrán tener niveles introductorio, intermedio y avanzado, pero un cambio de nivel no alterará el tenor literal de la norma.
+EDU-008 Las tarjetas potencialmente afectadas por reformas pasarán a “en revisión” e impedirán el estudio como respuesta plenamente actualizada.
+EDU-009 El usuario podrá informar errores, adjuntar explicación, votar utilidad y seguir la resolución, sin poder editar el contenido oficial.
+EDU-010 Un equipo editorial podrá aprobar con doble revisión los contenidos de mayor riesgo, registrar autoría y revertir una publicación.
+EDU-011 Las preguntas tendrán respuesta correcta verificable, distractores plausibles, explicación, referencias y reglas de puntuación.
+EDU-012 Prohibido reutilizar preguntas, manuales o bancos comerciales de terceros sin licencia o autorización.
+EDU-013 El usuario podrá crear tarjetas privadas y compartir mazos bajo opciones explícitas de visibilidad y moderación.
+EDU-014 Las tarjetas personales no aprobadas se etiquetarán como “creadas por el usuario”, separadas del catálogo verificado.
+EDU-015 El buscador educativo permitirá buscar concepto, término, artículo, norma, asignatura, oposición, tema y etiquetas.
+16. Aprendizaje, repaso espaciado y planificación
+STU-001 Implementar FSRS u otro programador validado con parámetros documentados y migraciones cuando cambie la versión del algoritmo.
+STU-002 Registrar por tarjeta revisiones, respuesta, grado de recuerdo, latencia, hora, intervalo y versión de algoritmo.
+STU-003 Permitir calificaciones de recuerdo claras y accesibles, evitando recompensar la pulsación repetitiva sin esfuerzo.
+STU-004 Permitir objetivos diarios de tiempo o tarjetas, días de descanso, exámenes, vacaciones y ajustes de carga.
+STU-005 El planificador priorizará tarjetas vencidas, material débil y fechas de examen sin sugerir cargas imposibles.
+STU-006 El usuario podrá elegir estudio por ley, artículo, asignatura, tema, oposición, errores, favoritas o búsqueda.
+STU-007 Ofrecer modo exposición literal, explicación simplificada, práctica activa y pregunta tipo test sin confundir evaluación con lectura.
+STU-008 Los ejercicios de casos prácticos incluirán hechos, pregunta, opciones, solución motivada y referencias.
+STU-009 Permitir sesiones offline con cola local y sincronización conflict-aware para no duplicar el historial.
+STU-010 Las estadísticas mostrarán tarjetas nuevas, vencidas, retención estimada, tiempo, exactitud y progreso por materia con advertencias sobre estimaciones.
+STU-011 No utilizar “probabilidad de aprobar” como promesa, salvo modelo calibrado y límites documentados.
+STU-012 Ofrecer recordatorios configurables, horarios silenciosos y desactivación sin perder funcionalidades.
+17. Universidad y oposiciones: recorridos específicos
+UNI-001 El usuario podrá crear semestre, asignaturas, evaluaciones, fecha de examen y ponderación personalizada.
+UNI-002 Asignaturas se mapearán a contenidos legales y conceptuales, no se presentarán como programas oficiales salvo verificación de guía docente.
+UNI-003 Permitir temarios personalizados, temas, subtemas, apuntes privados, etiquetas y prioridades.
+UNI-004 Ofrecer flashcards por capítulo, resúmenes revisados, glosario, casos y simulacros configurables.
+UNI-005 En doble grado Derecho–Criminología, permitir itinerarios compartidos y materias específicas sin duplicar estudio.
+UNI-006 Los materiales propios subidos se marcarán privados por defecto, con límites y eliminación.
+OPO-001 Cada convocatoria tendrá organismo, boletín, fecha, bases, temario, pruebas, penalizaciones, plazos, enlaces y estado de verificación.
+OPO-002 El itinerario distinguirá convocatoria vigente, anterior y plantilla genérica sin prometer equivalencia.
+OPO-003 Los simulacros reproducirán el formato de una convocatoria solo cuando sus reglas estén verificadas.
+OPO-004 Las modificaciones en temarios generarán un evento de cambio independiente de las reformas legales.
+OPO-005 Permitir planificación por disponibilidad semanal, dificultad y priorización de temas.
+OPO-006 Permitir comparar rendimiento de simulacros personales sin rankings públicos invasivos ni predicciones infundadas.
+18. Inventario de pantallas y microinteracciones
+Contrato visual: estilo claro y sobrio, navegación primaria Inicio / Estudiar / Biblioteca / Actualidad / Perfil; en modo Oposiciones aparece acceso destacado a simulacros. Respetar accesibilidad del sistema, modo oscuro, orientación y tamaños de texto.
+Pantalla · Bienvenida y onboarding
+UX-001 marca, ilustración jurídica discreta, propuesta de valor, acceso invitado y registro
+UX-002 selector Universidad / Oposiciones / Ambos, decisión reversible
+UX-003 selector de materia, oposición y fecha de examen opcional
+UX-004 permisos de notificaciones solicitados en contexto y nunca condicionantes
+Criterio de aceptación común: navegación por teclado y lector de pantalla, carga/error/vacío/éxito definidos, retroceso consistente, sin pérdida de datos al rotar o cambiar de aplicación, y cualquier acción irreversible exige confirmación.
+Pantalla · Inicio
+UX-001 encabezado con objetivo activo y estado de sincronización
+UX-002 módulo Hoy con vencidas, nuevas y progreso
+UX-003 accesos rápidos a continuar lectura, simulacro, normativa afectada
+UX-004 estados vacío, sin conexión, sin progreso y contenido pendiente de revisión
+Criterio de aceptación común: navegación por teclado y lector de pantalla, carga/error/vacío/éxito definidos, retroceso consistente, sin pérdida de datos al rotar o cambiar de aplicación, y cualquier acción irreversible exige confirmación.
+Pantalla · Biblioteca
+UX-001 búsqueda con sugerencias y filtros aplicados visibles
+UX-002 listado de normas con título, referencia, ámbito, estado y última verificación
+UX-003 filtros por materia, rango, territorio y fuente
+UX-004 paginación y carga con skeleton, error y reintento
+Criterio de aceptación común: navegación por teclado y lector de pantalla, carga/error/vacío/éxito definidos, retroceso consistente, sin pérdida de datos al rotar o cambiar de aplicación, y cualquier acción irreversible exige confirmación.
+Pantalla · Detalle de norma
+UX-001 encabezado de identidad y enlace a fuente oficial
+UX-002 índice jerárquico y búsqueda dentro de ley
+UX-003 selector de fecha y advertencia informativa de consolidación
+UX-004 acciones seguir, descargar, comparar y crear plan de estudio
+Criterio de aceptación común: navegación por teclado y lector de pantalla, carga/error/vacío/éxito definidos, retroceso consistente, sin pérdida de datos al rotar o cambiar de aplicación, y cualquier acción irreversible exige confirmación.
+Pantalla · Lector jurídico
+UX-001 texto legible, anclas, artículos y apartados
+UX-002 barra de herramientas para copiar referencia, guardar, escuchar y crear tarjeta
+UX-003 módulo artículo→explicación→tarjetas→test→historial
+UX-004 alertas de vigencia, cambio pendiente y corrección editorial
+Criterio de aceptación común: navegación por teclado y lector de pantalla, carga/error/vacío/éxito definidos, retroceso consistente, sin pérdida de datos al rotar o cambiar de aplicación, y cualquier acción irreversible exige confirmación.
+Pantalla · Comparador
+UX-001 dos columnas en pantalla ancha y vista secuencial en móvil
+UX-002 resaltado accesible de añadidos, eliminados y cambios
+UX-003 selectores de versiones y fecha efectiva
+UX-004 fuente oficial y estado de la comparación
+Criterio de aceptación común: navegación por teclado y lector de pantalla, carga/error/vacío/éxito definidos, retroceso consistente, sin pérdida de datos al rotar o cambiar de aplicación, y cualquier acción irreversible exige confirmación.
+Pantalla · Mazos y tarjetas
+UX-001 lista con vencidas, nivel y materia
+UX-002 anverso con una pregunta por tarjeta
+UX-003 reverso con respuesta, explicación y norma citada
+UX-004 controles de autoevaluación, desfacer limitado y reportar error
+Criterio de aceptación común: navegación por teclado y lector de pantalla, carga/error/vacío/éxito definidos, retroceso consistente, sin pérdida de datos al rotar o cambiar de aplicación, y cualquier acción irreversible exige confirmación.
+Pantalla · Editor de tarjetas
+UX-001 campos para pregunta, respuesta, explicación y etiquetas
+UX-002 búsqueda de artículos para anclar fuentes
+UX-003 vista previa accesible y guardado automático
+UX-004 opciones privacidad, duplicar, exportar y archivar
+Criterio de aceptación común: navegación por teclado y lector de pantalla, carga/error/vacío/éxito definidos, retroceso consistente, sin pérdida de datos al rotar o cambiar de aplicación, y cualquier acción irreversible exige confirmación.
+Pantalla · Simulacro
+UX-001 configuración de examen, duración, materias y penalización
+UX-002 temporizador opcional y navegación entre preguntas
+UX-003 entrega confirmada y resumen de aciertos/errores
+UX-004 revisión con explicación, fuente y tarjetas derivadas
+Criterio de aceptación común: navegación por teclado y lector de pantalla, carga/error/vacío/éxito definidos, retroceso consistente, sin pérdida de datos al rotar o cambiar de aplicación, y cualquier acción irreversible exige confirmación.
+Pantalla · Actualidad normativa
+UX-001 bandeja con filtros por relevancia, materia y fecha
+UX-002 tarjetas de eventos publicadas/revisión pendiente/verificado
+UX-003 detalle con cronología, diff y materiales afectados
+UX-004 configuración de notificaciones por seguimiento
+Criterio de aceptación común: navegación por teclado y lector de pantalla, carga/error/vacío/éxito definidos, retroceso consistente, sin pérdida de datos al rotar o cambiar de aplicación, y cualquier acción irreversible exige confirmación.
+Pantalla · Planificador
+UX-001 calendario y carga semanal
+UX-002 ajustar objetivos y días libres
+UX-003 señales de atraso sin culpa ni alarmismo
+UX-004 recalcular tras cambios de temario o examen
+Criterio de aceptación común: navegación por teclado y lector de pantalla, carga/error/vacío/éxito definidos, retroceso consistente, sin pérdida de datos al rotar o cambiar de aplicación, y cualquier acción irreversible exige confirmación.
+Pantalla · Perfil y pagos
+UX-001 resumen de plan, prueba y renovación
+UX-002 gestión de compra desde tienda de origen
+UX-003 exportar y eliminar cuenta con confirmación
+UX-004 privacidad, accesibilidad, soporte y descargas offline
+Criterio de aceptación común: navegación por teclado y lector de pantalla, carga/error/vacío/éxito definidos, retroceso consistente, sin pérdida de datos al rotar o cambiar de aplicación, y cualquier acción irreversible exige confirmación.
+Pantalla · Backoffice
+UX-001 cola de novedades y revisión jurídica con filtros
+UX-002 pantalla de cotejo fuente original vs extracción
+UX-003 aprobación, rechazo, asignación y auditoría
+UX-004 monitor de importaciones, errores y estados de servicio
+Criterio de aceptación común: navegación por teclado y lector de pantalla, carga/error/vacío/éxito definidos, retroceso consistente, sin pérdida de datos al rotar o cambiar de aplicación, y cualquier acción irreversible exige confirmación.
+19. Especificaciones de interfaz y accesibilidad
+ACC-001 Tamaños de toque mínimo de aproximadamente 48×48 dp y separación entre acciones de riesgo.
+ACC-002 Tipografía escalable y distribución que no recorta textos con ajustes de accesibilidad altos.
+ACC-003 Contraste verificable según WCAG 2.2 AA donde resulte aplicable.
+ACC-004 Indicaciones de estado nunca expresadas solo mediante color; añadir texto, iconos y estados accesibles.
+ACC-005 Orden de foco y etiquetas semánticas en tarjetas, tablas, lectores, diálogos y controles.
+ACC-006 Las notificaciones estarán bajo control del usuario y respetarán preferencias del sistema.
+ACC-007 Animaciones reducidas si el sistema indica reducir movimiento.
+ACC-008 Modo oscuro, lectura en voz alta cuando la plataforma lo permita, y selección/copia de referencias.
+ACC-009 En el lector, evitar columnas estrechas y justificar texto solo cuando no perjudique legibilidad.
+ACC-010 Señalizar errores de formularios junto al campo con instrucciones específicas de corrección.
+20. Esquema relacional mínimo y restricciones
+Entidad
+Campos esenciales
+Invariante / nota
+users
+id, email_normalized, status, created_at, deleted_at
+índice único opcional por email; borrado y anonimización
+user_study_profiles
+user_id, mode, locale, timezone, region
+un usuario puede tener varios perfiles
+legal_sources
+id, name, provider, licence_url, coverage_scope, status
+procedencia y límites
+legal_norms
+id, official_id, eli_uri, jurisdiction, title, kind
+unicidad fuente+official_id
+norm_versions
+id, norm_id, publication_date, effective_from, effective_to, source_hash, review_state
+versiones inmutables
+legal_units
+id, version_id, stable_unit_key, hierarchy_path, text_hash
+bloques de artículo/disposición/anexo
+legal_events
+id, event_type, norm_id, source_document, detected_at, effective_at
+eventos idempotentes
+legal_changes
+id, from_unit, to_unit, diff, impact_status
+cambios de contenido
+courses
+id, institution, degree, source_url, verification_state
+guía docente opcional
+exam_calls
+id, authority, official_url, publication_date, rules_json, status
+convocatorias versionadas
+learning_objects
+id, type, content_json, editorial_state, author_id
+tarjetas/preguntas/explicaciones
+learning_citations
+object_id, norm_version_id, unit_id, citation_kind
+relación muchos a muchos
+learning_decks
+id, owner_id, title, visibility, purpose
+mazos personales y editoriales
+deck_items
+deck_id, object_id, position
+orden conservado
+review_events
+id, user_id, object_id, rating, reviewed_at, scheduler_version
+historial append-only
+review_states
+user_id, object_id, due_at, stability, difficulty
+estado reconstruible
+practice_attempts
+id, user_id, config_json, started_at, completed_at, score
+corrección reproducible
+ingestion_runs
+id, connector, date_range, checkpoint, status, metrics
+observabilidad y reintentos
+raw_source_objects
+id, provider, external_id, fetched_at, sha256, payload_location
+trazabilidad de fuente
+editorial_decisions
+id, object_id, reviewer_id, decision, reason, at
+auditoría
+subscriptions
+id, user_id, store, product_id, entitlement, expires_at, status
+servidor autoritativo
+notification_preferences
+user_id, channel, topic, frequency, quiet_hours
+consentimiento granular
+notification_deliveries
+id, event_id, user_id, channel, status, dedupe_key
+entrega verificable
+data_exports
+id, user_id, status, requested_at, expires_at
+expiración de descarga
+21. Contratos HTTP y eventos (propuesta de implementación)
+Método
+Ruta propuesta
+Entrada
+Salida esperada
+GET
+/v1/library/norms
+filtros, cursor, cobertura
+200 + paginación
+GET
+/v1/library/norms/{id}
+identificador
+200/404
+GET
+/v1/library/norms/{id}/versions
+fecha y estado
+200
+GET
+/v1/library/norms/{id}/units
+version + índice
+200
+GET
+/v1/library/units/{id}/compare
+id antigua/nueva
+200/422
+GET
+/v1/study/today
+profileId
+200
+POST
+/v1/reviews
+idempotencyKey, cardId, rating, occurredAt
+201/409
+GET
+/v1/decks
+scope, cursor
+200
+POST
+/v1/decks
+title, visibility
+201
+POST
+/v1/exams/attempts
+examPreset, config
+201
+POST
+/v1/exams/attempts/{id}/submit
+responses, revision
+200/409
+GET
+/v1/legal-updates
+filters, cursor
+200
+POST
+/v1/legal-updates/subscriptions
+norms, subjects, channels
+200
+POST
+/v1/payments/validate
+store, receiptToken
+200/422
+POST
+/v1/account/export
+format
+202
+DELETE
+/v1/account
+confirmation
+202
+GET
+/v1/admin/ingestions
+filters
+200 admin
+POST
+/v1/admin/editorial/{id}/approve
+revision, decision
+200 admin
+API-001 API JSON versionada con OpenAPI 3.1, errores problem+json, requestId, timezone UTC para instantes y fechas civiles separadas.
+API-002 Autenticación por tokens de corta duración y renovación segura; autorización por recurso y tenant en servidor, nunca solo en cliente.
+API-003 Paginación cursor estable y orden determinista para colecciones grandes.
+API-004 Idempotency-Key obligatorio en escrituras susceptibles de repetirse por conexión inestable.
+API-005 Límites de tamaño, validación de esquema, rate limiting y protección frente a enumeración de identificadores.
+API-006 Soporte If-Match/ETag para evitar sobreescrituras concurrentes en materiales privados.
+API-007 Webhooks de pago autenticados y deduplicados; entitlements recalculados a partir del estado de la tienda.
+API-008 Contratos de error explícitos para norma no encontrada, versión pendiente, dato no verificable, prueba expirada y acceso denegado.
+API-009 Las rutas administrativas solo estarán disponibles a roles autorizados con MFA y trazas de auditoría.
+API-010 Pruebas de contrato consumer-driven y de compatibilidad al cambiar modelos.
+22. Privacidad, seguridad y cumplimiento
+SEC-001 Aplicar minimización de datos y privacidad desde el diseño, con inventario de tratamientos, base jurídica y periodos de conservación.
+SEC-002 Consentimiento separado para analítica no esencial y comunicaciones comerciales, cuando sea exigible.
+SEC-003 Permitir acceso, rectificación, portabilidad y supresión mediante mecanismos documentados y trazables.
+SEC-004 Cifrado TLS en tránsito y cifrado en reposo para información sensible y copias de seguridad.
+SEC-005 Separar secretos de aplicación, usar gestor de secretos y rotaciones documentadas.
+SEC-006 Control RBAC con mínimo privilegio en revisión editorial, administración y soporte.
+SEC-007 Proteger subidas de archivos con límites, escaneo y denegación de ejecución de archivos.
+SEC-008 Evitar que notas, preguntas privadas y tokens aparezcan en logs, crash reports o analytics.
+SEC-009 Auditar librerías, SBOM y dependencias; automatizar comprobación de vulnerabilidades.
+SEC-010 Permitir eliminación remota y local de datos respetando obligaciones de conservación aplicables.
+SEC-011 Aplicar retención limitada y políticas verificables para backups, logs, tickets y telemetría.
+SEC-012 Implantar restauración periódicamente probada, RPO/RTO definidos por entorno y alertas operativas.
+SEC-013 Prohibir el uso de datos de usuarios para entrenamiento de IA sin base jurídica y comunicación adecuada.
+SEC-014 En caso de menores, estudiar requisitos de edad y consentimiento según funciones de cuenta y tratamiento.
+SEC-015 No enviar texto completo de materiales privados a proveedores externos sin configuración y avisos explícitos.
+SEC-016 Revisar condiciones de reutilización del BOE y de fuentes universitarias/terceros antes de la explotación comercial.
+23. Monetización, prueba gratuita y gestión de derechos
+PAY-001 Ofrecer acceso a texto legal básico sin paywall, con información de versión y fuente.
+PAY-002 Definir Free, Estudiante Plus y Opositor Pro como planes configurables; precios de referencia experimentales de 3,99 €/mes y 7,99 €/mes sujetos a prueba.
+PAY-003 Permitir acceso promocional completo de 30 días sin tarjeta como entitlement interno, claramente separado de prueba de suscripción de tienda.
+PAY-004 La promoción opcional de 60 días para lanzamiento debe ser configurable, atribuible a cohorte y no renovable indefinidamente sin regla explícita.
+PAY-005 No iniciar cobro automático al acabar una promoción sin método de pago y consentimiento mediante flujo de compra de tienda.
+PAY-006 Una prueba de suscripción con Google Play Billing o StoreKit seguirá las condiciones y comunicaciones de la tienda y podrá convertirse automáticamente si el usuario no cancela.
+PAY-007 Mostrar precio, periodicidad, renovación, funcionalidades, cancelación, condiciones y enlace para gestionar suscripción antes de comprar.
+PAY-008 La pérdida de Premium no eliminará mazos, progreso ni datos privados; las funciones restringidas quedarán en solo lectura cuando proceda.
+PAY-009 Validar compras y renovaciones en backend con notificaciones de servidor y restauración de compras.
+PAY-010 Contemplar estados purchased, active, grace, hold, cancelled, refunded, expired, revoked y entitlements promocionales.
+PAY-011 Permitir cuentas que cambian de Android a iOS sin prometer transferir una compra cuando la tienda no lo permita: acceso según derechos y reglas aprobadas.
+PAY-012 Instrumentar embudos: activación, primera tarjeta, sesión D7, inicio de prueba, compra, renovación y cancelación sin capturar datos jurídicos privados.
+24. Fiabilidad operativa, observabilidad y continuidad
+OPS-001 CI ejecutará lint, análisis estático, pruebas unitarias, pruebas de contrato, escaneo de dependencias y build reproducible.
+OPS-002 Deploy separado dev/staging/prod y migraciones reversibles/compatibles.
+OPS-003 Alertas por fallo de ingesta, latencia, porcentaje de errores, gastos superiores a presupuesto y cola de editorial estancada.
+OPS-004 Métricas de cobertura por fuente, normas actualizadas, eventos publicados, tarjetas bloqueadas y revisor por resolver.
+OPS-005 Backups cifrados y recuperación probada con restauraciones parciales por entidad.
+OPS-006 No depender de una única región o servicio sin documentar plan de recuperación adecuado al presupuesto.
+OPS-007 Configurar caché y control de costes para corpus legal grande y sincronización móvil.
+OPS-008 Proveer panel de estado interno con fecha última ingesta satisfactoria y huecos detectados.
+OPS-009 Implementar feature flags y rollback de errores de contenido sin desplegar cliente.
+OPS-010 Implantar pruebas periódicas en Android e iOS y matrices de soporte de dispositivos.
+OPS-011 Configurar firmas de aplicación, gestión segura de keystores y credenciales de publicación.
+OPS-012 Generar paquetes AAB y archivos de dSYM/symbols cuando correspondan para observabilidad.
+25. Matriz de pruebas de aceptación obligatoria
+ID
+Prueba
+Resultado requerido
+LEG-001
+Importar norma con varias versiones
+Se conservan hashes y fuentes de cada versión sin sobrescribir
+LEG-002
+Norma sin texto consolidado
+Mostrar cobertura parcial y enlace oficial, nunca “actualizada”
+LEG-003
+Reforma publicada y aún no vigente
+Alerta preliminar, fecha futura y texto aplicable anterior
+LEG-004
+Consolidación con retraso
+Contenido educativo afectado queda marcado hasta revisión
+LEG-005
+Derogación tácita ambigua
+No inferir; derivar a revisión
+LEG-006
+Cambio en numeración de artículo
+No romper referencias por stable_unit_key
+LEG-007
+Cambio de horario estacional
+El trabajo diario se ejecuta una vez por día local
+LEG-008
+Fallo de BOE 500/429
+Reintentos con backoff, alerta y no pérdida de checkpoint
+LEG-009
+Respuesta XML inesperada
+Cuarentena de importación; conservar versión válida
+LEG-010
+Reejecución del mismo sumario
+No duplicar eventos ni avisos
+EDU-001
+Tarjeta referenciada con norma reformada
+Pasa a revisión y muestra advertencia
+EDU-002
+IA genera referencia inexistente
+Se rechaza automáticamente
+EDU-003
+Revisor publica contenido corregido
+Cambio auditable y versión anterior recuperable
+EDU-004
+Usuario estudia offline y sincroniza
+Sin duplicación de revisiones
+EDU-005
+Examen con penalización
+Puntuación reproducible para convocatoria versionada
+UX-001
+Texto grande y lector de pantalla
+Navegación completa sin controles inaccesibles
+UX-002
+Usuario cambia universidad/oposición
+Progreso previo conservado
+UX-003
+Usuario sin conexión
+Muestra fecha de última sincronización
+PAY-001
+Finalización de prueba sin tarjeta
+No se cobra y conserva plan Free
+PAY-002
+Reembolso confirmado
+Revocar entitlement sin borrar progreso
+PAY-003
+Renovación duplicada
+Idempotencia sin derechos duplicados
+SEC-001
+Usuario A solicita mazo privado B
+Respuesta denegada sin fuga de información
+SEC-002
+Exportación y supresión
+Datos procesados según política y plazo documentados
+OPS-001
+Restauración de backup
+Versiones jurídicas y revisiones consistentes
+26. Plan de contenido, fases y definición de terminado
+Fase
+Alcance verificable
+No se considera terminado hasta
+0: fuente y catálogo
+Ingesta BOE, trazabilidad, esquemas, 20 normas prioritarias
+Sin duplicados; fechas y cobertura verificadas
+1: biblioteca
+Lector, buscador, versiones, suscripción a normas
+Fuentes, estado y accesibilidad correctos
+2: aprendizaje
+Mazos, tarjetas verificadas, FSRS, modo universidad
+Referencias y sincronización probadas
+3: oposiciones
+Convocatorias piloto, temarios y simulacros
+Reglas oficiales verificadas y fuentes trazables
+4: vigilancia
+Sumario diario, cambios, revisión, push personalizado
+Fallos, vigencia futura y retrasos consolidados probados
+5: monetización
+Entitlements, promociones, compra y restauración
+Flujos reales y sandbox de tiendas aprobados
+6: escalado
+Fuentes extra, editoriales, idiomas, más itinerarios
+Auditoría de permisos/licencias y control de costes
+Cobertura inicial recomendada para reducir riesgos: Constitución, Código Civil, Código Penal, leyes procesales y administrativas principales, añadiendo convocatorias y asignaturas prioritarias tras validación de demanda. El objetivo de cobertura extensa no equivale a tener material educativo de calidad equivalente para toda norma importada.
+27. Principios de QA editorial y propuesta de revisión
+QA-001 El catálogo separará claramente texto legal original, consolidación informativa, explicación educativa validada, borrador IA y contenido del usuario.
+QA-002 Definir roles importador, analista normativo, redactor, revisor, publicador y administrador, con separación de funciones en material crítico.
+QA-003 Cada publicación tendrá checklist de citas, vigencia, términos jurídicos, excepciones, cuestiones transitorias y redacción clara.
+QA-004 Un cambio legislativo afectará una lista de tarjetas calculada por dependencias; se permitirán afectaciones manuales adicionales.
+QA-005 Las métricas públicas de cobertura mostrarán qué material tiene revisión humana y qué contenido no está disponible.
+QA-006 Implementar plazo objetivo interno para examinar cambios, sin prometer actualización inmediata al usuario.
+QA-007 Guardar historial de reportes y correcciones con clasificación de severidad y seguimiento.
+QA-008 Los exámenes usarán siempre una versión congelada de banco de preguntas para permitir reproducir calificaciones.
+QA-009 No rellenar lagunas de legislación con respuestas “probables” generadas por IA.
+QA-010 Antes del lanzamiento, auditar una muestra de cada categoría y todas las preguntas de evaluaciones comerciales prioritarias.
+28. Catálogo de decisiones pendientes y evidencia requerida
+DEC-001 Priorizar las oposiciones piloto según demanda real, coste de contenido y competencia; no prometer todas las convocatorias.
+DEC-002 Validar precios y período de prueba con usuarios reales, sin interpretar intención verbal como conversión efectiva.
+DEC-003 Revisar licencias de fuentes autonómicas, de EUR-Lex y jurisprudencia antes de descarga masiva.
+DEC-004 Definir SLA comercial y presupuesto máximo de infraestructura antes de ofrecer actualizaciones “diarias”.
+DEC-005 Decidir si se incorpora IA generativa en producción y el coste por usuario; el núcleo no dependerá de generación en tiempo real.
+DEC-006 Definir la política de publicaciones urgentes en fines de semana y festivos.
+DEC-007 Definir quién ejerce el control editorial jurídico y cómo se resuelven discrepancias.
+DEC-008 Definir política de conservación de versiones de contenidos, logs y copias.
+DEC-009 Definir requisitos concretos de tiendas según fecha efectiva del lanzamiento.
+DEC-010 Revisar fiscalidad, tratamiento del IVA y contratos de proveedores antes de cobrar.
+29. Fuentes oficiales de verificación y límites del documento
+Agencia Estatal BOE — API Datos Abiertos: https://www.boe.es/datosabiertos/api/api.php
+Agencia Estatal BOE — FAQ de legislación consolidada: https://www.boe.es/datosabiertos/faq/consolidada.php
+Agencia Estatal BOE — FAQ de sumarios: https://www.boe.es/datosabiertos/faq/boe.php
+Agencia Estatal BOE — carácter informativo y retardo de consolidación: https://www.boe.es/buscar/ayudas/legislacion_actualizada.php
+Portal EUR-Lex: https://eur-lex.europa.eu/
+Google Play Billing: https://developer.android.com/google/play/billing
+Apple In-App Purchase: https://developer.apple.com/in-app-purchase/
+RGPD: https://eur-lex.europa.eu/eli/reg/2016/679/oj
+WCAG 2.2: https://www.w3.org/TR/WCAG22/
+ADVERTENCIA FINAL: El presente documento define el producto objetivo y criterios verificables, pero ningún documento finito puede anticipar literalmente todos los detalles de una aplicación en producción. Los esquemas y rutas aquí descritos son decisiones propuestas, no contratos desplegados. Deben completarse diseño de alta fidelidad, investigación de usuarios, autorizaciones/licencias, catálogo jurídico real y verificación antes del lanzamiento.

@@ -1,0 +1,16 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+*.db
+*.sqlite*
+.dart_tool/
+.packages
+build/
+.flutter-plugins*
+local.properties
+*.keystore
+*.jks
+.idea/
+.DS_Store
+coverage/
