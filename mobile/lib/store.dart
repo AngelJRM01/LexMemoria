@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:archive/archive.dart';
 import 'package:crypto/crypto.dart';
@@ -9,12 +10,18 @@ import 'package:uuid/uuid.dart';
 import 'models.dart';
 import 'persistence.dart';
 import 'startup.dart';
+import 'prepared.dart';
+import 'pack_cache.dart';
 
 class AppStore extends ChangeNotifier {
   final SharedPreferences prefs;
   Json data;
   final http.Client client;
   final LocalPersistence persistence;
+  final PackCache packCache;
+  List<Json> corpusNorms = [];
+  final loadedPackVersions = <String, String>{};
+  final _packDownloads = <String, Future<void>>{};
   List<Json> bundledNorms = [];
   final Map<String, List<dynamic>> bundledPacks = {};
   List<Json> preparedDecks = [];
@@ -22,8 +29,11 @@ class AppStore extends ChangeNotifier {
   bool syncing = false;
   Future<void> _write = Future.value();
   AppStore(this.prefs, this.data,
-      {http.Client? client, LocalPersistence? persistence})
+      {http.Client? client,
+      LocalPersistence? persistence,
+      PackCache? packCache})
       : client = client ?? http.Client(),
+        packCache = packCache ?? MemoryPackCache(),
         persistence = persistence ?? PreferencesPersistence(prefs);
   static Future<AppStore> load({LocalPersistence? persistence}) async {
     final prefs =
@@ -51,7 +61,18 @@ class AppStore extends ChangeNotifier {
         await startupStep(
             'MIGRATION_FINISH', () => prefs.remove('lexmemoria.v1'));
       }
-      final store = AppStore(prefs, data, persistence: storage);
+      final store = AppStore(prefs, data,
+          persistence: storage,
+          packCache: storage is EncryptedPersistence
+              ? await startupStep('CORPUS_CACHE', openPackCache)
+              : MemoryPackCache());
+      final catalogueAsset =
+          await rootBundle.load('assets/corpus-catalogue.json.gz');
+      final catalogueBytes = catalogueAsset.buffer.asUint8List(
+          catalogueAsset.offsetInBytes, catalogueAsset.lengthInBytes);
+      store.corpusNorms = storage is EncryptedPersistence
+          ? await compute(decodeCorpusCatalogue, catalogueBytes)
+          : decodeCorpusCatalogue(catalogueBytes);
       try {
         final manifest = Json.from(jsonDecode(
             await rootBundle.loadString('assets/legal-catalogue.json')));
@@ -65,8 +86,12 @@ class AppStore extends ChangeNotifier {
         store.error =
             'No se ha podido cargar el catálogo incluido (LEGAL_CATALOGUE). Tus tarjetas y notas se conservan.';
       }
-      for (final norm
-          in store.list('norms').where((n) => n['bundledReady'] == true)) {
+      for (final norm in store
+          .list('norms')
+          .where((n) => n['bundledReady'] == true)
+          .toList()
+          .reversed
+          .take(4)) {
         final asset = store.bundledNorms
             .where((n) =>
                 n['id'] == norm['id'] &&
@@ -95,8 +120,13 @@ class AppStore extends ChangeNotifier {
   Future<void> loadPreparedCards() async {
     final manifest = Json.from(
         jsonDecode(await rootBundle.loadString('assets/ready/index.json')));
-    preparedDecks =
-        (manifest['items'] as List).map((v) => Json.from(v)).toList();
+    final corpusById = {for (final n in corpusNorms) n['id']: n};
+    preparedDecks = (manifest['items'] as List)
+        .map((v) => <String, dynamic>{...?corpusById[v['id']], ...Json.from(v)})
+        .toList();
+    final localIds = preparedDecks.map((d) => d['id']).toSet();
+    preparedDecks.addAll(corpusNorms.where(
+        (n) => !localIds.contains(n['id']) && (n['count'] as num? ?? 0) > 0));
     if (data['starterInstalled'] != true) {
       await installPreparedDeck(Json.from(manifest['starter']));
       data['starterInstalled'] = true;
@@ -104,7 +134,22 @@ class AppStore extends ChangeNotifier {
     }
   }
 
-  Future<int> installPreparedDeck(Json deck) async {
+  Future<int> installPreparedDeck(Json deck,
+      {String format = 'qa', String? group}) async {
+    if (deck['asset'] == null ||
+        format != 'qa' ||
+        (group ?? '').trim().isNotEmpty) {
+      final norm = catalogue.firstWhere((n) => n['id'] == deck['id']);
+      await downloadNorm(norm);
+      final loaded = catalogue.firstWhere((n) => n['id'] == deck['id']);
+      final prepared = await compute(buildLiteralCards, <String, dynamic>{
+        'norm': loaded,
+        'units': loaded['units'],
+        'format': format,
+        'deck': group
+      });
+      return addPreparedCards(prepared);
+    }
     final asset = await rootBundle.load(deck['asset']);
     final bytes =
         asset.buffer.asUint8List(asset.offsetInBytes, asset.lengthInBytes);
@@ -112,15 +157,25 @@ class AppStore extends ChangeNotifier {
     final prepared = bytes.length < 64000
         ? await Future<List<Json>>.sync(() => decodePreparedCards(input))
         : await compute(decodePreparedCards, input);
-    final existing = cards.map((c) => c.id).toSet();
-    final added = prepared.where((c) => !existing.contains(c['id'])).toList();
-    data['cards'] = [...cards.map((c) => c.toJson()), ...added];
+    final count = await addPreparedCards(prepared);
     if (deck['id'] != null) {
       data['installedDecks'] = {
         ...List<String>.from(data['installedDecks'] ?? []),
         deck['id']
       }.toList();
+      await save();
     }
+    return count;
+  }
+
+  Future<int> addPreparedCards(List<Json> prepared) async {
+    if (prepared.isEmpty) {
+      throw StateError(
+          'No hay fragmentos adecuados para este formato. Prueba Recuerdo literal.');
+    }
+    final existing = cards.map((c) => c.id).toSet();
+    final added = prepared.where((c) => !existing.contains(c['id'])).toList();
+    data['cards'] = [...cards.map((c) => c.toJson()), ...added];
     await save();
     return added.length;
   }
@@ -135,11 +190,12 @@ class AppStore extends ChangeNotifier {
       (data[key] as List? ?? []).map((v) => Json.from(v)).toList();
   List<Json> get catalogue {
     final norms = {for (final n in initialCatalogue()) n['id']: n};
-    for (final n in [...bundledNorms, ...list('norms')]) {
+    for (final n in [...corpusNorms, ...bundledNorms, ...list('norms')]) {
       norms[n['id']] = {...?norms[n['id']], ...n};
     }
     for (final n in norms.values) {
-      if (n['bundledVersion'] == n['latestVersion'] &&
+      if ((n['bundledVersion'] == n['latestVersion'] ||
+              loadedPackVersions[n['id']] == n['latestVersion']) &&
           bundledPacks[n['id']] != null) {
         n['units'] = bundledPacks[n['id']];
       }
@@ -157,8 +213,19 @@ class AppStore extends ChangeNotifier {
       'version': norm['latestVersion']
     });
     final items = pack['items'] as List;
-    bundledPacks[norm['id']] = items;
+    rememberPack(norm, items);
     return items;
+  }
+
+  void rememberPack(Json norm, List<dynamic> items) {
+    bundledPacks.remove(norm['id']);
+    bundledPacks[norm['id']] = items;
+    loadedPackVersions[norm['id']] = norm['latestVersion'];
+    while (bundledPacks.length > 4) {
+      final oldest = bundledPacks.keys.first;
+      bundledPacks.remove(oldest);
+      loadedPackVersions.remove(oldest);
+    }
   }
 
   Json state(String id) => Json.from((data['states'] as Map? ?? {})[id] ?? {});
@@ -432,6 +499,10 @@ class AppStore extends ChangeNotifier {
       await save();
       return;
     }
+    if (norm['packUrl'] != null) {
+      await downloadCorpusNorm(norm);
+      return;
+    }
     final base = apiBase;
     final version = norm['latestVersion'];
     if (base.isEmpty || version == null) {
@@ -451,6 +522,104 @@ class AppStore extends ChangeNotifier {
       'downloadedAt': DateTime.now().toUtc().toIso8601String()
     });
     data['norms'] = rows;
+    await save();
+  }
+
+  Future<bool> loadCachedNorm(Json norm) async {
+    if (norm['packHash'] == null) return false;
+    final bytes = await packCache.read(norm['packHash']);
+    if (bytes == null) {
+      if (norm['packReady'] == true) {
+        data['norms'] = list('norms')
+            .map((n) => n['id'] == norm['id'] ? {...n, 'packReady': false} : n)
+            .toList();
+        await save();
+      }
+      return false;
+    }
+    final pack = await compute(decodeBundledPack, <String, dynamic>{
+      'bytes': bytes,
+      'hash': norm['packHash'],
+      'version': norm['latestVersion']
+    });
+    if (pack['norm']['id'] != norm['id']) {
+      throw StateError('El paquete no corresponde a esta norma.');
+    }
+    rememberPack(norm, pack['items']);
+    notifyListeners();
+    return true;
+  }
+
+  Future<void> downloadCorpusNorm(Json norm) {
+    final key = '${norm['id']}:${norm['packHash']}';
+    return _packDownloads.putIfAbsent(
+        key,
+        () => _downloadCorpusNorm(norm).whenComplete(() {
+              _packDownloads.remove(key);
+            }));
+  }
+
+  Future<void> _downloadCorpusNorm(Json norm) async {
+    final uri = Uri.parse(norm['packUrl']);
+    if (uri.scheme != 'https' ||
+        uri.host != 'raw.githubusercontent.com' ||
+        !uri.path.startsWith('/AngelJRM01/LexMemoria/')) {
+      throw StateError('Dirección de contenido no válida.');
+    }
+    if (loadedPackVersions[norm['id']] == norm['latestVersion'] &&
+        bundledPacks[norm['id']] != null) {
+      return;
+    }
+    try {
+      if (await loadCachedNorm(norm)) return;
+    } catch (_) {/* A verified redownload can repair public cache files. */}
+    final expected = (norm['packBytes'] as num).toInt();
+    if (expected <= 0 || expected > 64000000) {
+      throw StateError('Paquete demasiado grande. Consulta la fuente oficial.');
+    }
+    final response = await client
+        .send(http.Request('GET', uri))
+        .timeout(const Duration(seconds: 30));
+    if (response.statusCode != 200) {
+      throw StateError(
+          'No se pudo descargar esta norma (${response.statusCode}). Tus datos se conservan.');
+    }
+    final builder = BytesBuilder(copy: false);
+    var size = 0;
+    await for (final chunk
+        in response.stream.timeout(const Duration(seconds: 60))) {
+      size += chunk.length;
+      if (size > expected) {
+        throw StateError('El tamaño del paquete no coincide.');
+      }
+      builder.add(chunk);
+    }
+    if (size != expected) throw StateError('Descarga incompleta. Reinténtalo.');
+    final bytes = builder.takeBytes();
+    final pack = await compute(decodeBundledPack, <String, dynamic>{
+      'bytes': bytes,
+      'hash': norm['packHash'],
+      'version': norm['latestVersion']
+    });
+    if (pack['norm']['id'] != norm['id']) {
+      throw StateError('El paquete no corresponde a esta norma.');
+    }
+    await packCache.write(norm['packHash'], bytes);
+    final current = catalogue.where((n) => n['id'] == norm['id']).firstOrNull;
+    if (current != null && current['latestVersion'] != norm['latestVersion']) {
+      throw StateError(
+          'La norma ha cambiado durante la descarga. Vuelve a abrirla para cargar la nueva versión.');
+    }
+    rememberPack(norm, pack['items']);
+    final saved = {
+      ...norm,
+      'packReady': packCache.persistent,
+      'downloadedAt': DateTime.now().toUtc().toIso8601String()
+    }..remove('units');
+    data['norms'] = [
+      ...list('norms').where((n) => n['id'] != norm['id']),
+      saved
+    ];
     await save();
   }
 
@@ -497,13 +666,29 @@ Json decodeBundledPack(Json input) {
         'El paquete jurídico no supera la comprobación de integridad.');
   }
   final decoded = GZipDecoder().decodeBytes(bytes);
-  if (decoded.length > 128000000) throw StateError('Paquete demasiado grande.');
+  if (decoded.length > 256000000) throw StateError('Paquete demasiado grande.');
   final pack = Json.from(jsonDecode(utf8.decode(decoded)));
   if (pack['schemaVersion'] != 1 ||
       pack['norm']['latestVersion'] != input['version']) {
     throw StateError('Versión de paquete incompatible.');
   }
   return pack;
+}
+
+List<Json> decodeCorpusCatalogue(Uint8List bytes) {
+  final decoded = GZipDecoder().decodeBytes(bytes);
+  if (decoded.length > 32000000) throw StateError('Catálogo demasiado grande.');
+  final result = Json.from(jsonDecode(utf8.decode(decoded)));
+  final items = (result['items'] as List).map((v) => Json.from(v)).toList();
+  if (result['schemaVersion'] != 1 ||
+      result['norms'] != items.length ||
+      items.map((n) => n['id']).toSet().length != items.length) {
+    throw StateError('Catálogo incompleto.');
+  }
+  for (final norm in items) {
+    norm['short'] = friendlyNormLabel(norm);
+  }
+  return items;
 }
 
 List<Json> decodePreparedCards(Json input) {

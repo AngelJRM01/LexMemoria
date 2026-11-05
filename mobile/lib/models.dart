@@ -32,6 +32,29 @@ String normalize(String value) {
 }
 
 typedef Json = Map<String, dynamic>;
+final _familiarNormNames = {
+  for (final n in initialCatalogue()) n['id']: n['short'] as String
+};
+String friendlyNormLabel(Json norm) {
+  if (norm['short'] is String && (norm['short'] as String).isNotEmpty) {
+    return norm['short'];
+  }
+  if (_familiarNormNames[norm['id']] != null) {
+    return _familiarNormNames[norm['id']]!;
+  }
+  final title = norm['title'] as String? ?? norm['id'].toString();
+  final match = RegExp(r'^(.{1,60}?\s+[A-Z0-9]+/\d{4})\b', caseSensitive: false)
+      .firstMatch(title);
+  var label = match?.group(1) ??
+      (title.length > 140 ? '${title.substring(0, 139)}…' : title);
+  if (normalize(norm['jurisdiction'] ?? '').startsWith('autonom') &&
+      norm['authority'] is String) {
+    final region = (norm['authority'] as String)
+        .replaceFirst(RegExp(r'^Comunidad (?:Autónoma|Foral) de '), '');
+    if (region.isNotEmpty) label = '$label · $region';
+  }
+  return label;
+}
 
 class StudyCard {
   final String id,

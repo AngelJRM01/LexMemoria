@@ -6,7 +6,7 @@ Aplicación Flutter para estudiar Derecho español en Universidad y Oposiciones,
 
 - Cliente móvil Android/iOS y proyecto web adaptable, interfaz en español, cinco destinos, modo oscuro y tipografía del sistema.
 - Onboarding Universidad/Oposiciones/Ambos, acceso local sin registro, cambio de itinerario conservando datos.
-- Catálogo de 20 normas BOE con paquetes locales. Búsqueda tolerante a tildes, materias, marcadores y seguimiento local. Los textos son consolidaciones informativas; **no incluyen material educativo certificado**.
+- Catálogo de 12.451 normas del BOE consolidado observado, veinte incluidas y el resto descargable por norma sin servidor privado. Búsqueda tolerante a tildes, materias, marcadores y seguimiento local. Los textos son consolidaciones informativas; **no incluyen material educativo certificado**.
 - Descarga de normas importadas desde una API configurable, lectura offline, notas privadas, copia de referencias, voz mediante plataforma, selector histórico, consulta por fecha efectiva que rechaza metadatos ambiguos y comparación textual de párrafos.
 - Tarjetas personales QA, cloze, verdadero/falso, ordenación, caso y test; creación desde artículo; importación CSV con previsualización, límites y validación completa antes de guardar.
 - Almacén SQLCipher en Android/iOS con clave separada en Keychain/Keystore; migración verificada desde preferencias. La versión web conserva preferencias locales sin este cifrado. La integración nativa está pendiente de ejecución.
@@ -31,7 +31,7 @@ export PATH="/workspace/tools/flutter/bin:$PATH"
 
 El script instala las versiones fijadas del backend y cliente, ejecuta análisis y pruebas. `mobile/pubspec.lock` está resuelto. No regenera ni sobrescribe el proyecto nativo.
 
-La aplicación incluye **20 normas oficiales del BOE con 11.777 bloques**, versiones, hashes, fechas y atribución. En Biblioteca abre una norma y pulsa Descargar texto para guardarla para lectura; no necesita servidor. Es texto consolidado informativo, sin certificación jurídica ni material educativo verificado. La actualización remota es opcional y debe configurarse en Perfil.
+La aplicación incluye el índice de **12.451 normas oficiales del BOE** y veinte textos locales con 11.777 bloques. El resto dispone de paquetes públicos con versiones, hashes, fechas y atribución. En Biblioteca abre una norma y pulsa Descargar texto para guardarla para lectura; no necesita servidor. Es texto consolidado informativo, sin certificación jurídica ni material educativo verificado. La actualización remota es opcional y debe configurarse en Perfil.
 
 [Avance V2 y límites](docs/AVANCE_V2_2026-11-05.md) · [Evidencia de validación](docs/VALIDACION.md) · [Despliegue propuesto en Render](docs/DESPLIEGUE.md)
 
@@ -98,7 +98,7 @@ flutter analyze
 flutter test
 ```
 
-CI preparada para backend, análisis/tests Flutter, web, APK debug y simulador iOS. No se ha publicado ni ejecutado remotamente este workflow. No se generan compras reales, cargos, notificaciones ni sellos editoriales ficticios.
+CI preparada para backend, análisis/tests Flutter, web, arranque cifrado en Android 15, APK release de prueba y simulador iOS. El resultado remoto debe comprobarse en Actions; la validación local no lo acredita. No se generan compras reales, cargos, notificaciones ni sellos editoriales ficticios.
 
 ## APK de prueba sin modo debug
 
@@ -112,3 +112,7 @@ La firma de las compilaciones temporales de GitHub puede cambiar entre ejecucion
 # Experiencia de estudio 0.2.0
 
 Pantallas simplificadas, lector por fragmentos, filtros fijos y 20 mazos preparados con 13.914 tarjetas. Consulta [los cambios y su validación](docs/MEJORAS_ESTUDIO_2026-11-05.md), incluyendo el estado real de las cuentas y el alcance de las descargas masivas.
+
+## Catálogo completo de estudio 0.3.0
+
+12.451 normas con 684.375 fragmentos base, cuatro formatos automáticos y mazos temáticos personalizados. Descarga por norma, verificación de integridad y lectura sin conexión en Android/iOS. [Alcance, funcionamiento y validación](docs/CATALOGO_COMPLETO_2026-11-05.md). [Contenido público](https://github.com/AngelJRM01/LexMemoria/tree/legal-corpus-20261105).

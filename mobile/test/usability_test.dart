@@ -25,7 +25,7 @@ void main() {
     final store =
         await AppStore.load(persistence: PreferencesPersistence(prefs));
     expect(store.cards.length, 20);
-    expect(store.preparedDecks.length, 20);
+    expect(store.preparedDecks.length, 12451);
     final original = store.cards.first;
     expect(original.normId, 'BOE-A-1978-31229');
     expect(original.unitVersionHash, isNotEmpty);
@@ -104,6 +104,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Constitución Española'), findsOneWidget);
     expect(find.text('Código Civil'), findsNothing);
+    await tester.tap(find.byTooltip('Filtros de biblioteca'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButtonFormField<String>).last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Estatal').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Aplicar filtros'));
+    await tester.pumpAndSettle();
+    expect(find.text('Constitución Española'), findsOneWidget);
     expect(tester.takeException(), isNull);
     store.dispose();
   });

@@ -357,7 +357,7 @@ class SettingsPage extends StatelessWidget {
             ])),
         const SizedBox(height: 24),
         const Text(
-            'LexMemoria 0.2.0 · Versión de prueba\nProducto educativo independiente de las administraciones públicas.',
+            'LexMemoria 0.3.0 · Versión de prueba\nProducto educativo independiente de las administraciones públicas.',
             style: TextStyle(fontSize: 12)),
       ]));
 }
@@ -432,7 +432,7 @@ class PrivacyPage extends StatelessWidget {
             'Se guardan perfiles, tarjetas, notas, respuestas de simulacros e historial hasta que los borres. En Android/iOS se utiliza SQLCipher con clave separada en Keychain/Keystore; en web se usan preferencias locales sin este cifrado adicional. Evita guardar datos especialmente sensibles. Exportar o compartir crea una copia bajo tu control.'),
         const Section('Conexiones'),
         const Text(
-            'Al sincronizar se consulta la API que configures. Al abrir una fuente sales al navegador y se aplica la privacidad del sitio de destino. La sincronización necesita un servidor configurado. La cuenta con código de recuperación permite trasladar tarjetas y progreso; el código debe guardarse fuera del móvil. Google y Apple requieren configurar sus proveedores antes de habilitarlos.'),
+            'Los textos del catálogo ampliado se descargan desde GitHub al solicitarlos, sin enviar tarjetas, notas ni progreso. Los paquetes públicos se guardan aparte y se pueden volver a descargar. Al sincronizar se consulta la API que configures. Al abrir una fuente sales al navegador y se aplica la privacidad del sitio de destino. La sincronización necesita un servidor configurado. La cuenta con código de recuperación permite trasladar tarjetas y progreso; el código debe guardarse fuera del móvil. Google y Apple requieren configurar sus proveedores antes de habilitarlos.'),
         const Section('Fuentes y contenido'),
         const Text(
             'Las referencias iniciales son un inventario de normas del BOE, no una declaración de cobertura, vigencia o revisión jurídica. Los textos consolidados son informativos. Las tarjetas personales no son contenido editorial verificado.'),

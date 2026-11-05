@@ -19,11 +19,26 @@ def main():
     cmd = sub.add_parser('batch'); cmd.add_argument('id')
     cmd = sub.add_parser('retry'); cmd.add_argument('id')
     cmd = sub.add_parser('backfill'); cmd.add_argument('start'); cmd.add_argument('end')
+    cmd = sub.add_parser('import-distribution'); cmd.add_argument('directory',type=Path); cmd.add_argument('--id',action='append'); cmd.add_argument('--limit',type=int)
     args = p.parse_args()
     _, factory = connect()
     client = BoeClient()
     with factory() as s:
-        if args.command == 'daily':
+        if args.command == 'import-distribution':
+            import gzip
+            from .distribution import import_distribution_pack
+            catalogue=json.loads(gzip.decompress((args.directory/'catalogue.json.gz').read_bytes()))
+            if args.limit is not None and args.limit<1:raise ValueError('Limit must be positive')
+            if args.id and set(args.id)-{e['id'] for e in catalogue['items']}:raise ValueError('Unknown requested identifier')
+            entries=[e for e in catalogue['items'] if not args.id or e['id'] in args.id]
+            result={'imported':0,'duplicate':0,'archived_older':0}
+            for entry in entries[:args.limit] if args.limit is not None else entries:
+                # The importer validates the identifier before any database write.
+                from .bulk import OFFICIAL_ID
+                if not OFFICIAL_ID.fullmatch(entry['id']):raise ValueError('Invalid official identifier')
+                payload=(args.directory/'boe'/(entry['id']+'.json.gz')).read_bytes()
+                state=import_distribution_pack(s,entry,payload);result[state]+=1
+        elif args.command == 'daily':
             from datetime import date
             result = daily_cycle(s, client, date.fromisoformat(args.day) if args.day else None)
         elif args.command == 'consolidations': result = watch_consolidations(s, client, args.day)

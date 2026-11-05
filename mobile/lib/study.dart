@@ -788,76 +788,154 @@ class CardHistoryPage extends StatelessWidget {
 
 class PreparedDecksPage extends StatefulWidget {
   final AppStore store;
-  const PreparedDecksPage({super.key, required this.store});
+  final String initialQuery;
+  const PreparedDecksPage(
+      {super.key, required this.store, this.initialQuery = ''});
   @override
   State<PreparedDecksPage> createState() => _PreparedDecksPageState();
 }
 
 class _PreparedDecksPageState extends State<PreparedDecksPage> {
-  String query = '';
+  late String query;
+  late final TextEditingController search;
   String? busy;
+  @override
+  void initState() {
+    super.initState();
+    query = widget.initialQuery;
+    search = TextEditingController(text: query);
+  }
+
+  @override
+  void dispose() {
+    search.dispose();
+    super.dispose();
+  }
+
+  Future<void> prepare(Json deck) async {
+    var format = 'qa';
+    final name = TextEditingController();
+    final chosen = await showModalBottomSheet<bool>(
+        context: context,
+        showDragHandle: true,
+        isScrollControlled: true,
+        builder: (sheet) => SafeArea(
+            child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                    24, 0, 24, MediaQuery.viewInsetsOf(sheet).bottom + 28),
+                child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text('Preparar mi mazo',
+                          style: Theme.of(sheet).textTheme.titleLarge),
+                      const SizedBox(height: 20),
+                      DropdownButtonFormField<String>(
+                          initialValue: format,
+                          isExpanded: true,
+                          decoration: const InputDecoration(
+                              labelText: 'Cómo quiero practicar'),
+                          items: const [
+                            DropdownMenuItem(
+                                value: 'qa', child: Text('Recuerdo literal')),
+                            DropdownMenuItem(
+                                value: 'cloze',
+                                child: Text('Completar huecos')),
+                            DropdownMenuItem(
+                                value: 'test',
+                                child: Text('Test de recuerdo literal')),
+                            DropdownMenuItem(
+                                value: 'reference',
+                                child: Text('Identificar artículo')),
+                          ],
+                          onChanged: (v) => format = v!),
+                      const SizedBox(height: 16),
+                      TextField(
+                          controller: name,
+                          maxLength: 160,
+                          decoration: const InputDecoration(
+                              labelText: 'Nombre del mazo (opcional)',
+                              hintText: 'Mi tema de Administrativo')),
+                      const SizedBox(height: 12),
+                      const Text(
+                          'Usa el mismo nombre para reunir tarjetas de varias normas en un tema propio.'),
+                      const SizedBox(height: 20),
+                      FilledButton(
+                          onPressed: () => Navigator.pop(sheet, true),
+                          child: const Text('Añadir tarjetas preparadas')),
+                    ]))));
+    final group = name.text.trim();
+    name.dispose();
+    if (chosen != true || !mounted) return;
+    setState(() => busy = deck['id']);
+    await perform(context, () async {
+      final count = await widget.store
+          .installPreparedDeck(deck, format: format, group: group);
+      if (mounted) {
+        toast(
+            context,
+            count == 0
+                ? 'No hay tarjetas nuevas para esta selección. Tu progreso se conserva.'
+                : '$count tarjetas añadidas a tus mazos.');
+      }
+    });
+    if (mounted) setState(() => busy = null);
+  }
+
   @override
   Widget build(BuildContext context) {
     final rows = widget.store.preparedDecks
-        .where((d) => normalize('${d['title']} ${d['subject']}')
+        .where((d) => normalize('${d['title']} ${d['subject']} ${d['id']}')
             .contains(normalize(query)))
         .toList();
     return Scaffold(
         appBar: AppBar(title: const Text('Mazos preparados')),
-        body: SearchPageBody(header: [
-          const Text('Elige una norma. Las tarjetas ya están hechas.'),
-          const SizedBox(height: 12),
-          TextField(
-              decoration: const InputDecoration(
-                  hintText: 'Buscar norma o materia',
-                  prefixIcon: Icon(Icons.search)),
-              onChanged: (v) => setState(() => query = v)),
-        ], children: [
-          ...rows.map((deck) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Paper(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                    Text(deck['title'],
-                        style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 8),
-                    Text('${deck['count']} tarjetas · ${deck['subject']}'),
-                    const SizedBox(height: 16),
-                    FilledButton(
-                        onPressed: busy != null
-                            ? null
-                            : () async {
-                                setState(() => busy = deck['id']);
-                                await perform(context, () async {
-                                  final count = await widget.store
-                                      .installPreparedDeck(deck);
-                                  if (context.mounted) {
-                                    toast(
-                                        context,
-                                        count == 0
-                                            ? 'Ya tienes todas las tarjetas de este mazo.'
-                                            : '$count tarjetas añadidas. Tu progreso se conserva.');
-                                  }
-                                });
-                                if (mounted) setState(() => busy = null);
-                              },
-                        child: Text(busy == deck['id']
-                            ? 'Añadiendo…'
-                            : (widget.store.data['installedDecks'] as List? ??
-                                        [])
-                                    .contains(deck['id'])
-                                ? 'Comprobar tarjetas'
-                                : 'Añadir mazo completo')),
-                  ])))),
-          if (rows.isEmpty)
-            const EmptyState(
-                title: 'Sin coincidencias',
-                detail: 'Prueba con otra norma o materia.'),
-          const Details('Fuente de las tarjetas', children: [
-            Text(
-                'Ejercicios de recuerdo literal basados en el texto consolidado informativo de la Agencia Estatal Boletín Oficial del Estado. Conservan norma, artículo y versión; no son resúmenes ni una certificación de vigencia. Puedes modificarlos sin alterar el original de la fuente.')
-          ]),
-        ]));
+        body: SearchPageBody(
+            header: [
+              const Text('Elige una norma y cómo quieres practicar.'),
+              const SizedBox(height: 12),
+              TextField(
+                  controller: search,
+                  decoration: const InputDecoration(
+                      hintText: 'Buscar norma, referencia o materia',
+                      prefixIcon: Icon(Icons.search)),
+                  onChanged: (v) => setState(() => query = v)),
+              const SizedBox(height: 8),
+              Text('${rows.length} normas con material preparado',
+                  style: Theme.of(context).textTheme.bodySmall),
+            ],
+            resultCount: rows.length,
+            resultBuilder: (context, i) {
+              final deck = rows[i];
+              return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Paper(
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                        Text(deck['title'],
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleMedium),
+                        const SizedBox(height: 8),
+                        Text('${deck['count']} fragmentos de referencia'),
+                        if (deck['exhausted'] == true)
+                          const Text('Vigencia agotada según la fuente',
+                              style: TextStyle(color: Color(0xff946017))),
+                        const SizedBox(height: 16),
+                        FilledButton(
+                            onPressed:
+                                busy == null ? () => prepare(deck) : null,
+                            child: Text(busy == deck['id']
+                                ? 'Preparando…'
+                                : 'Elegir ejercicio')),
+                      ])));
+            },
+            children: [
+              if (rows.isEmpty)
+                const EmptyState(
+                    title: 'Sin coincidencias',
+                    detail: 'Prueba con otra norma o referencia.'),
+            ]));
   }
 }

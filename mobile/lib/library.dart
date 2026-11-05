@@ -15,110 +15,156 @@ class LibraryPage extends StatefulWidget {
 }
 
 class _LibraryPageState extends State<LibraryPage> {
-  String query = '', subject = 'Todas';
+  String query = '', subject = 'Todas', scope = 'Todos';
   bool saved = false;
+  Future<void> filters() async {
+    var selectedSubject = subject;
+    var selectedScope = scope;
+    await showModalBottomSheet(
+        context: context,
+        showDragHandle: true,
+        isScrollControlled: true,
+        builder: (sheet) => SafeArea(
+            child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
+                child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text('Filtrar biblioteca',
+                          style: Theme.of(sheet).textTheme.titleLarge),
+                      const SizedBox(height: 20),
+                      DropdownButtonFormField<String>(
+                          initialValue: selectedSubject,
+                          isExpanded: true,
+                          decoration:
+                              const InputDecoration(labelText: 'Materia'),
+                          items: ['Todas', ...subjects, 'Normativa']
+                              .map((v) =>
+                                  DropdownMenuItem(value: v, child: Text(v)))
+                              .toList(),
+                          onChanged: (v) => selectedSubject = v!),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                          initialValue: selectedScope,
+                          isExpanded: true,
+                          decoration:
+                              const InputDecoration(labelText: 'Ámbito'),
+                          items: ['Todos', 'Estatal', 'Autonómico']
+                              .map((v) =>
+                                  DropdownMenuItem(value: v, child: Text(v)))
+                              .toList(),
+                          onChanged: (v) => selectedScope = v!),
+                      const SizedBox(height: 24),
+                      FilledButton(
+                          onPressed: () {
+                            setState(() {
+                              subject = selectedSubject;
+                              scope = selectedScope;
+                            });
+                            Navigator.pop(sheet);
+                          },
+                          child: const Text('Aplicar filtros')),
+                    ]))));
+  }
+
   @override
   Widget build(BuildContext context) {
     final rows = widget.store.catalogue
         .where((n) =>
             (subject == 'Todas' || n['subject'] == subject) &&
+            (scope == 'Todos' ||
+                (scope == 'Estatal'
+                    ? normalize(n['jurisdiction'] ?? '').startsWith('esta')
+                    : normalize(n['jurisdiction'] ?? '')
+                        .contains('autonom'))) &&
             (!saved || widget.store.has('bookmarks', n['id'])) &&
-            normalize('${n['title']} ${n['id']}').contains(normalize(query)))
+            normalize('${n['title']} ${n['id']} ${n['authority'] ?? ''}')
+                .contains(normalize(query)))
         .toList();
-    return SearchPageBody(header: [
-      Text('Tu biblioteca jurídica',
-          style: Theme.of(context).textTheme.headlineMedium),
-      const SizedBox(height: 8),
-      const SizedBox(height: 12),
-      TextField(
-          decoration: const InputDecoration(
-              hintText: 'Título, referencia BOE o concepto',
-              prefixIcon: Icon(Icons.search)),
-          onChanged: (v) => setState(() => query = v)),
-      const SizedBox(height: 12),
-      SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-              children: ['Todas', ...subjects]
-                  .map((s) => Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: ChoiceChip(
-                          label: Text(s),
-                          selected: subject == s,
-                          onSelected: (_) => setState(() => subject = s))))
-                  .toList())),
-      Row(children: [
-        FilterChip(
-            label: const Text('Guardadas'),
-            selected: saved,
-            onSelected: (v) => setState(() => saved = v)),
-        const Spacer(),
-        IconButton(
-            tooltip: 'Sincronizar biblioteca',
-            onPressed: widget.store.syncing
-                ? null
-                : () => perform(context, widget.store.fetchCatalogue,
-                    success: 'Metadatos sincronizados'),
-            icon: const Icon(Icons.sync))
-      ]),
-      if (widget.store.syncing) const LinearProgressIndicator(),
-      if (widget.store.error != null)
-        Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Text(widget.store.error!,
-                style: const TextStyle(color: Color(0xffbb3545)))),
-    ], children: [
-      const SizedBox(height: 12),
-      Text('${rows.length} normas', style: const TextStyle(fontSize: 12)),
-      const SizedBox(height: 12),
-      if (rows.isEmpty)
-        const EmptyState(
-            title: 'Sin coincidencias',
-            detail: 'Prueba otro término o elimina los filtros.'),
-      ...rows.map((n) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Paper(
-              child: InkWell(
-                  onTap: () =>
-                      push(context, NormPage(store: widget.store, id: n['id'])),
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(children: [
-                          const Icon(Icons.description_outlined, color: teal),
-                          const SizedBox(width: 10),
-                          Expanded(
-                              child: Text(n['subject'] ?? 'Normativa',
-                                  style: const TextStyle(
-                                      fontSize: 12, letterSpacing: .8))),
-                          if (n['units'] != null)
-                            const Icon(Icons.offline_pin_outlined,
-                                color: teal,
-                                semanticLabel: 'Disponible offline')
-                        ]),
-                        const SizedBox(height: 12),
-                        Text(n['short'] ?? n['title'],
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.titleMedium),
-                        const SizedBox(height: 8),
-                        Text(
-                            n['units'] != null
-                                ? 'Disponible sin conexión'
-                                : n['bundledAsset'] != null
-                                    ? 'Incluida en la aplicación'
-                                    : 'Consultar disponibilidad',
-                            style: Theme.of(context).textTheme.bodySmall)
-                      ]))))),
-      if (widget.store.data['catalogueCursor'] != null)
-        OutlinedButton.icon(
-            onPressed: widget.store.syncing
-                ? null
-                : () => perform(
-                    context, () => widget.store.fetchCatalogue(nextPage: true)),
-            icon: const Icon(Icons.expand_more),
-            label: const Text('Cargar más normas')),
-    ]);
+    return SearchPageBody(
+        header: [
+          Text('Tu biblioteca jurídica',
+              style: Theme.of(context).textTheme.headlineMedium),
+          const SizedBox(height: 12),
+          TextField(
+              decoration: InputDecoration(
+                  hintText: 'Título o referencia de norma',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: IconButton(
+                      tooltip: 'Filtros de biblioteca',
+                      onPressed: filters,
+                      icon: const Icon(Icons.tune))),
+              onChanged: (v) => setState(() => query = v)),
+          const SizedBox(height: 10),
+          Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                FilterChip(
+                    label: const Text('Guardadas'),
+                    selected: saved,
+                    onSelected: (v) => setState(() => saved = v)),
+                if (subject != 'Todas')
+                  InputChip(
+                      label: Text(subject),
+                      onDeleted: () => setState(() => subject = 'Todas')),
+                if (scope != 'Todos')
+                  InputChip(
+                      label: Text(scope),
+                      onDeleted: () => setState(() => scope = 'Todos')),
+                if (widget.store.hasRemoteServer)
+                  IconButton(
+                      tooltip: 'Sincronizar biblioteca',
+                      onPressed: widget.store.syncing
+                          ? null
+                          : () => perform(context, widget.store.fetchCatalogue),
+                      icon: const Icon(Icons.sync)),
+              ]),
+          if (widget.store.syncing) const LinearProgressIndicator(),
+        ],
+        resultCount: rows.length,
+        resultBuilder: (context, i) {
+          final n = rows[i];
+          return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Paper(
+                  child: InkWell(
+                      onTap: () => push(
+                          context, NormPage(store: widget.store, id: n['id'])),
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(n['short'] ?? n['title'],
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.titleMedium),
+                            const SizedBox(height: 8),
+                            Text(n['id'],
+                                style: Theme.of(context).textTheme.bodySmall),
+                            if (n['exhausted'] == true)
+                              const Padding(
+                                  padding: EdgeInsets.only(top: 8),
+                                  child: Text(
+                                      'Vigencia agotada según la fuente',
+                                      style:
+                                          TextStyle(color: Color(0xff946017)))),
+                            if (n['units'] != null || n['packReady'] == true)
+                              const Padding(
+                                  padding: EdgeInsets.only(top: 8),
+                                  child: Text('Disponible sin conexión')),
+                          ]))));
+        },
+        children: [
+          Text('${rows.length} normas',
+              style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: 12),
+          if (rows.isEmpty)
+            const EmptyState(
+                title: 'Sin coincidencias',
+                detail: 'Prueba otro término o elimina los filtros.'),
+        ]);
   }
 }
 
@@ -134,6 +180,28 @@ class _NormPageState extends State<NormPage> {
   String query = '';
   bool downloading = false;
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final norm =
+          widget.store.catalogue.firstWhere((n) => n['id'] == widget.id);
+      if (norm['units'] == null &&
+          (norm['packReady'] == true || norm['bundledReady'] == true) &&
+          mounted) {
+        setState(() => downloading = true);
+        await perform(context, () async {
+          if (norm['bundledReady'] == true) {
+            await widget.store.loadBundledPack(norm);
+          } else {
+            await widget.store.loadCachedNorm(norm);
+          }
+        });
+        if (mounted) setState(() => downloading = false);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final n = widget.store.catalogue.firstWhere((n) => n['id'] == widget.id);
     final all = (n['units'] as List? ?? []).map((u) => Json.from(u)).toList();
@@ -142,6 +210,13 @@ class _NormPageState extends State<NormPage> {
         .toList();
     return Scaffold(
         appBar: AppBar(title: const Text('Leer norma'), actions: [
+          IconButton(
+              tooltip: 'Tarjetas de esta norma',
+              onPressed: () => push(
+                  context,
+                  PreparedDecksPage(
+                      store: widget.store, initialQuery: widget.id)),
+              icon: const Icon(Icons.style_outlined)),
           IconButton(
               tooltip: 'Fuente oficial',
               onPressed: () => openSource(context, n['sourceUrl']),
@@ -160,6 +235,11 @@ class _NormPageState extends State<NormPage> {
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
+          if (n['exhausted'] == true)
+            const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: Text(
+                    'Vigencia agotada según la fuente. Consulta las fechas antes de estudiar.')),
           if (all.isNotEmpty)
             TextField(
                 decoration: const InputDecoration(

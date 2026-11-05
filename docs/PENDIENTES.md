@@ -1,6 +1,6 @@
 # Estado real y trabajo pendiente
 
-La aplicación es ejecutable en web y dispone de APK Android de desarrollo, con veinte normas BOE incluidas, estudio privado y capacidades de sincronización. **No está terminada al 100 % ni lista para publicación comercial.** La existencia de pantallas, adaptadores y tests no sustituye las aceptaciones de la especificación.
+La aplicación es ejecutable en web y dispone de APK Android release de prueba, con un catálogo de 12.451 normas y veinte textos BOE incluidos, estudio privado y capacidades de sincronización. **No está terminada al 100 % ni lista para publicación comercial.** La existencia de pantallas, adaptadores y tests no sustituye las aceptaciones de la especificación.
 
 [Avance implementado de 5 de noviembre](AVANCE_V2_2026-11-05.md) · [Pruebas ejecutadas](VALIDACION.md) · [Despliegue propuesto](DESPLIEGUE.md)
 
@@ -10,12 +10,12 @@ La aplicación es ejecutable en web y dispone de APK Android de desarrollo, con 
 - FCM/APNs, permisos del sistema, tokens de dispositivo, entrega push, quiet hours y enlaces profundos. La bandeja interna no acredita entrega push.
 - Google Play Billing/StoreKit: productos y precios aprobados, comprobación servidor con tiendas reales, webhooks autenticados, restauración, reembolsos, gracia y revocación. El endpoint de compras sigue rechazando compras sin verificar.
 - Render/hosting y PostgreSQL administrado contratados/configurados por el titular. El blueprint es revisable y no ha sido desplegado. Faltan dominio/TLS público, rate limiting compartido para múltiples réplicas, migraciones completas, backups PostgreSQL, observabilidad, alertas, presupuestos y RPO/RTO aprobados.
-- Firma de release, App Store Connect/Google Play Console, pruebas sandbox, AAB/symbols/dSYM y publicación. El APK entregado es debug. iOS no está compilado en esta máquina Linux.
+- Firma de release, App Store Connect/Google Play Console, pruebas sandbox, AAB/symbols/dSYM y publicación. El APK entregado es release firmado para pruebas; falta una firma estable de distribución. iOS no está compilado en esta máquina Linux.
 
 ## Implementación de producto pendiente
 
-- Esquema relacional V2 completo, migraciones, full-text a escala y rendimiento con 10.000 normas. El índice de catálogo actual no es un motor jurídico completo.
-- Conectores autonómicos/EUR-Lex/municipales y fuentes universitarias, revisión individual de licencias y declaraciones auditables de cobertura.
+- Esquema relacional V2 completo, migraciones, full-text a escala y rendimiento de búsquedas jurídicas complejas. El catálogo móvil de 12.451 normas usa listas por demanda y caché de archivos, pero no es un motor jurídico completo.
+- Completar e integrar las descargas europeas y los boletines autonómicos/municipales adicionales y fuentes universitarias. El catálogo BOE ya incluye 3.620 normas autonómicas; los boletines no están archivados íntegramente. Mantener revisión de licencias y declaraciones auditables de cobertura.
 - Índices jerárquicos completos; interpretación jurídica de vigencias parciales/transitorias y reformas, referencias cruzadas, correlación con consolidación atrasada y clasificación especializada de eventos. No inferir derogaciones tácitas.
 - MFA real y RBAC editorial por tenant, backoffice de cotejo y asignación, auditoría firmada, checklist jurídico, rollback y circuito de resolución de reportes. La recepción de un reporte no implica revisión profesional. No activar `EDITORIAL_MFA_GATEWAY` como sustituto de MFA.
 - Corpus educativo validado por profesionales, explicaciones, glosario, resúmenes y casos revisados; no hay material con sello de verificación por el hecho de incluir legislación.

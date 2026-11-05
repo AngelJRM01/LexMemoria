@@ -65,8 +65,14 @@ class PageBody extends StatelessWidget {
 /// let the whole page scroll so the keyboard never traps the results.
 class SearchPageBody extends StatelessWidget {
   final List<Widget> header, children;
+  final IndexedWidgetBuilder? resultBuilder;
+  final int resultCount;
   const SearchPageBody(
-      {super.key, required this.header, required this.children});
+      {super.key,
+      required this.header,
+      this.children = const [],
+      this.resultBuilder,
+      this.resultCount = 0});
   @override
   Widget build(BuildContext context) => SafeArea(
       top: false,
@@ -76,9 +82,15 @@ class SearchPageBody extends StatelessWidget {
               constraints: const BoxConstraints(maxWidth: 840),
               child: LayoutBuilder(builder: (context, size) {
                 if (size.maxHeight < 440) {
-                  return ListView(
+                  return ListView.builder(
                       padding: const EdgeInsets.fromLTRB(20, 16, 20, 56),
-                      children: [...header, ...children]);
+                      itemCount: header.length + children.length + resultCount,
+                      itemBuilder: (context, i) => i < header.length
+                          ? header[i]
+                          : i < header.length + children.length
+                              ? children[i - header.length]
+                              : resultBuilder!(context,
+                                  i - header.length - children.length));
                 }
                 return Column(children: [
                   ConstrainedBox(
@@ -92,8 +104,10 @@ class SearchPageBody extends StatelessWidget {
                   Expanded(
                       child: ListView.builder(
                           padding: const EdgeInsets.fromLTRB(20, 8, 20, 56),
-                          itemCount: children.length,
-                          itemBuilder: (_, i) => children[i])),
+                          itemCount: children.length + resultCount,
+                          itemBuilder: (context, i) => i < children.length
+                              ? children[i]
+                              : resultBuilder!(context, i - children.length))),
                 ]);
               }))));
 }
