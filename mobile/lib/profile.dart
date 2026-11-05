@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Badge;
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
@@ -8,6 +8,7 @@ import 'models.dart';
 import 'widgets.dart';
 import 'planning.dart';
 import 'remote.dart';
+import 'workspace.dart';
 
 class ProfilePage extends StatelessWidget {
   final AppStore store;
@@ -43,7 +44,7 @@ class ProfilePage extends StatelessWidget {
     const SizedBox(height: 12),
     Wrap(spacing: 8, runSpacing: 8, children: [
       if (store.data['remoteUserId'] == null) OutlinedButton(onPressed: () => perform(context, RemoteSync(store).activate, success: 'Identidad remota creada en este dispositivo'), child: const Text('Activar identidad remota'))
-      else ...[FilledButton.icon(onPressed: () => perform(context, RemoteSync(store).upload, success: 'Tarjetas y revisiones sincronizadas'), icon: const Icon(Icons.sync), label: const Text('Subir progreso')),
+      else ...[OutlinedButton.icon(onPressed: () => push(context, WorkspacePage(store: store)), icon: const Icon(Icons.note_alt_outlined), label: const Text('Sincronizar notas y plan')), FilledButton.icon(onPressed: () => perform(context, RemoteSync(store).upload, success: 'Tarjetas y revisiones sincronizadas'), icon: const Icon(Icons.sync), label: const Text('Subir progreso')),
         OutlinedButton.icon(onPressed: () => perform(context, RemoteSync(store).pull, success: 'Progreso descargado; revisa los conflictos si los hay'), icon: const Icon(Icons.cloud_download_outlined), label: const Text('Descargar progreso')),
         TextButton(onPressed: () => push(context, RecoveryPage(store: store, create: true)), child: const Text('Crear código de recuperación')),
         TextButton(onPressed: () => perform(context, RemoteSync(store).disconnect, success: 'Sesión remota revocada'), child: const Text('Desconectar'))],

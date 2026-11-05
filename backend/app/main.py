@@ -7,11 +7,16 @@ from collections import defaultdict, deque
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 from fastapi import FastAPI, Depends, Header, Request, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import select, delete
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import StaleDataError
+from .identity import ExternalIdentity, FirebaseVerifier, IdentityError
+from .notifications import inbox
+from .catalogue import NormIndex, normalize, rebuild_index
+from .exercises import validate_exercise, grade_exercise
 from .db import connect, Record, Account, Token, RecoveryCode, Mutation, Audit, now, uid
 from .learning import schedule, score
 from .temporal import civil_date, resolve_block
@@ -19,8 +24,16 @@ from .temporal import civil_date, resolve_block
 
 def create_app(database_url=None):
     engine, factory = connect(database_url)
+    with factory() as session:
+        rebuild_index(session)
     app = FastAPI(title='LexMemoria', version='0.1.0')
+    origins = [v.strip() for v in os.getenv('CORS_ORIGINS', '').split(',') if v.strip()]
+    if origins:
+        app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=False,
+                           allow_methods=['GET', 'POST', 'PUT', 'DELETE'], allow_headers=['Authorization', 'Content-Type', 'If-Match'],
+                           expose_headers=['ETag', 'X-Request-ID'])
     app.state.factory = factory
+    app.state.identity_verifier = FirebaseVerifier(os.getenv('FIREBASE_PROJECT_ID', ''))
     buckets = defaultdict(deque)
 
     @app.middleware('http')
@@ -37,8 +50,19 @@ def create_app(database_url=None):
                                  'status': 429, 'requestId': request_id}, status_code=429,
                                 headers={'Retry-After': '60'}, media_type='application/problem+json')
         bucket.append(current)
-        if int(request.headers.get('content-length', '0')) > 2_000_000:
-            return JSONResponse({'title': 'Solicitud demasiado grande', 'status': 413}, status_code=413)
+        try:
+            declared_size = int(request.headers.get('content-length', '0'))
+            if declared_size < 0:
+                raise ValueError()
+        except ValueError:
+            return JSONResponse({'title': 'Content-Length no válido', 'status': 400, 'requestId': request_id}, status_code=400, media_type='application/problem+json')
+        size, chunks = 0, []
+        async for chunk in request.stream():
+            size += len(chunk)
+            if size > 2_000_000 or declared_size > 2_000_000:
+                return JSONResponse({'title': 'Solicitud demasiado grande', 'status': 413, 'requestId': request_id}, status_code=413, media_type='application/problem+json')
+            chunks.append(chunk)
+        request._body = b''.join(chunks)
         response = await call_next(request)
         response.headers['X-Request-ID'] = request_id
         response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -90,6 +114,48 @@ def create_app(database_url=None):
         s.commit()
         return result
 
+    class IdentityInput(BaseModel):
+        idToken: str = Field(min_length=20, max_length=16000)
+
+    def verified_identity(body):
+        if not app.state.identity_verifier.project:
+            raise HTTPException(503, 'Configura FIREBASE_PROJECT_ID para el acceso con Google/Apple')
+        try:
+            return app.state.identity_verifier.verify(body.idToken)
+        except IdentityError:
+            raise HTTPException(401, 'No se ha podido verificar la identidad')
+
+    @app.post('/v1/auth/oidc')
+    def oidc_login(body: IdentityInput, s=Depends(db)):
+        claim = verified_identity(body)
+        external = s.scalar(select(ExternalIdentity).where(ExternalIdentity.issuer == claim['issuer'], ExternalIdentity.subject == claim['subject']))
+        if external:
+            user = s.get(Account, external.user_id)
+        else:
+            user = Account(); s.add(user); s.flush()
+            s.add(ExternalIdentity(user_id=user.id, **claim))
+        try:
+            return issue(s, user)
+        except IntegrityError:
+            s.rollback()
+            raise HTTPException(409, 'Acceso concurrente; reintenta')
+
+    @app.post('/v1/auth/link')
+    def oidc_link(body: IdentityInput, user=Depends(identity), s=Depends(db)):
+        claim = verified_identity(body)
+        external = s.scalar(select(ExternalIdentity).where(ExternalIdentity.issuer == claim['issuer'], ExternalIdentity.subject == claim['subject']))
+        if external:
+            if external.user_id != user.id:
+                raise HTTPException(409, 'Esta identidad pertenece a otra cuenta; recupera esa cuenta antes de fusionar datos')
+            return {'linked': True}
+        s.add(ExternalIdentity(user_id=user.id, **claim))
+        try:
+            s.commit()
+        except IntegrityError:
+            s.rollback()
+            raise HTTPException(409, 'Vinculación concurrente; reintenta')
+        return {'linked': True}
+
     @app.get('/health')
     def health(s=Depends(db)):
         s.execute(select(1))
@@ -111,7 +177,10 @@ def create_app(database_url=None):
         if not t or t.kind != 'refresh' or t.expires_at < now():
             raise HTTPException(401, 'Renovación no disponible')
         user = s.get(Account, t.user_id)
-        s.delete(t)
+        consumed = s.execute(delete(Token).where(Token.digest == t.digest, Token.kind == 'refresh'))
+        if consumed.rowcount != 1:
+            s.rollback()
+            raise HTTPException(401, 'Renovación no disponible')
         return issue(s, user)
 
     def new_recovery(s, user):
@@ -152,14 +221,34 @@ def create_app(database_url=None):
         s.commit()
         return {'revoked': True}
 
+    @app.get('/v1/library/coverage')
+    def coverage(s=Depends(db)):
+        from collections import Counter
+        norms = list(s.scalars(select(Record).where(Record.kind == 'norm')))
+        versions = list(s.scalars(select(Record.data).where(Record.kind == 'norm_version')))
+        return {'identified': len(norms), 'accessibleTexts': sum(bool(n.data.get('latestVersion')) for n in norms),
+                'snapshots': len(versions), 'structuredBlocks': sum(len(v.get('blocks', [])) for v in versions),
+                'bySource': dict(Counter(n.data.get('source', 'unknown') for n in norms)),
+                'byJurisdiction': dict(Counter(n.data.get('jurisdiction', 'unknown') for n in norms)),
+                'byReviewState': dict(Counter(n.data.get('reviewState', 'pending') for n in norms)),
+                'verifiedEducationalObjects': s.query(Record).filter(Record.kind == 'card', Record.owner.is_(None),
+                    Record.data['editorialState'].as_string() == 'approved').count(),
+                'claim': 'Inventario de esta instalación. Importación no equivale a validación jurídica.'}
+
     @app.get('/v1/library/norms')
-    def norms(q: str = '', cursor: str = '', limit: int = 30, s=Depends(db)):
-        if not 1 <= limit <= 100:
-            raise HTTPException(422, 'Límite entre 1 y 100')
+    def norms(q: str = '', cursor: str = '', limit: int = 30, jurisdiction: str = '', source: str = '',
+              kind: str = '', reviewState: str = '', s=Depends(db)):
+        if not 1 <= limit <= 100 or len(q) > 200:
+            raise HTTPException(422, 'Límite entre 1 y 100 y búsqueda de hasta 200 caracteres')
         stmt = select(Record).where(Record.kind == 'norm', Record.id > cursor).order_by(Record.id)
-        if q:
-            # PostgreSQL JSON text cast supports indexed derived search in production migration.
-            stmt = stmt.where(Record.data.cast(__import__('sqlalchemy').Text).ilike('%' + q[:200] + '%'))
+        if q or jurisdiction or source or kind or reviewState:
+            stmt = stmt.join(NormIndex, NormIndex.norm_id == Record.id)
+            for word in normalize(q).split():
+                stmt = stmt.where(NormIndex.text.contains(word, autoescape=True))
+            for column, value in [(NormIndex.jurisdiction, jurisdiction), (NormIndex.source, source),
+                                  (NormIndex.kind, kind), (NormIndex.review_state, reviewState)]:
+                if value:
+                    stmt = stmt.where(column == value)
         rows = list(s.scalars(stmt.limit(limit + 1)))
         return {'items': [pack(r) for r in rows[:limit]], 'nextCursor': rows[limit - 1].id if len(rows) > limit else None,
                 'coverage': {'claim': 'Solo normas importadas; revisión jurídica pendiente', 'certified': False}}
@@ -173,7 +262,7 @@ def create_app(database_url=None):
 
     @app.get('/v1/library/norms/{id}/versions')
     def versions(id: str, s=Depends(db)):
-        return {'items': [pack(r) for r in s.scalars(select(Record).where(
+        return {'items': [{k: v for k, v in pack(r).items() if k not in ('blocks', 'rawXml', 'rawMetadata')} for r in s.scalars(select(Record).where(
             Record.kind == 'norm_version', Record.data['normId'].as_string() == id).order_by(Record.created_at))]}
 
     @app.get('/v1/library/norms/{id}/units')
@@ -216,6 +305,74 @@ def create_app(database_url=None):
         return {'items': [pack(r) for r in rows[:limit]],
                 'nextCursor': rows[limit - 1].id if len(rows) > limit else None}
 
+    class FollowInput(BaseModel):
+        normIds: list[str] = Field(default_factory=list, max_length=1000)
+        enabled: bool = True
+        frequency: str = 'immediate'
+
+    @app.post('/v1/legal-updates/subscriptions')
+    def follow(body: FollowInput, user=Depends(identity), s=Depends(db)):
+        if body.frequency not in ('immediate', 'daily', 'weekly') or len(set(body.normIds)) != len(body.normIds):
+            raise HTTPException(422, 'Frecuencia o normas no válidas')
+        for norm_id in body.normIds:
+            norm = s.get(Record, norm_id)
+            if not norm or norm.kind != 'norm':
+                raise HTTPException(422, 'Norma no disponible')
+        id_ = 'follows:' + user.id
+        row = s.get(Record, id_)
+        data = {**(row.data if row else {}), **body.model_dump(), 'channel': 'in_app', 'since': row.data.get('since', now()) if row else now()}
+        if row:
+            row.data = data
+        else:
+            row = Record(id=id_, kind='subscription_follow', owner=user.id, data=data)
+            s.add(row)
+        s.commit()
+        return pack(row)
+
+    @app.get('/v1/notifications')
+    def notifications(cursor: str = '', limit: int = 50, user=Depends(identity), s=Depends(db)):
+        if not 1 <= limit <= 100:
+            raise HTTPException(422, 'Límite entre 1 y 100')
+        inbox(s, user.id)
+        rows = list(s.scalars(select(Record).where(Record.kind == 'notification_delivery', Record.owner == user.id,
+                                                  Record.id > cursor).order_by(Record.id).limit(limit + 1)))
+        return {'items': [pack(r) for r in rows[:limit]], 'nextCursor': rows[limit - 1].id if len(rows) > limit else None}
+
+    @app.post('/v1/notifications/{id}/read')
+    def read_notification(id: str, user=Depends(identity), s=Depends(db)):
+        row = own(s, id, user, 'notification_delivery')
+        row.data = {**row.data, 'read': True}
+        s.commit()
+        return pack(row)
+
+    class ReportInput(BaseModel):
+        clientId: str = Field(min_length=8, max_length=80, pattern=r'^[A-Za-z0-9_-]+$')
+        cardId: str
+        reason: str = Field(min_length=5, max_length=4000)
+        severity: str = 'normal'
+
+    @app.post('/v1/reports', status_code=201)
+    def report(body: ReportInput, user=Depends(identity), s=Depends(db)):
+        own(s, body.cardId, user, 'card')
+        if body.severity not in ('normal', 'high', 'critical'):
+            raise HTTPException(422, 'Severidad no válida')
+        id_ = user.id + ':report:' + body.clientId
+        row = s.get(Record, id_)
+        if row:
+            if any(row.data.get(k) != v for k, v in body.model_dump().items()):
+                raise HTTPException(409, 'Reporte reutilizado con otros datos')
+            return pack(row)
+        row = Record(id=id_, kind='report', owner=user.id, data={**body.model_dump(), 'status': 'received',
+                     'history': [{'status': 'received', 'at': now()}]})
+        s.add(row)
+        s.commit()
+        return pack(row)
+
+    @app.get('/v1/reports')
+    def reports(user=Depends(identity), s=Depends(db)):
+        return {'items': [pack(r) for r in s.scalars(select(Record).where(
+            Record.kind == 'report', Record.owner == user.id).order_by(Record.created_at, Record.id))]}
+
     class DeckInput(BaseModel):
         title: str = Field(min_length=1, max_length=160)
         visibility: str = 'private'
@@ -249,19 +406,30 @@ def create_app(database_url=None):
         explanation: str = Field(default='', max_length=8000)
         type: str = 'qa'
         citations: list[dict] = Field(default_factory=list, max_length=20)
-        options: list[str] = Field(default_factory=list, max_length=6)
+        options: list[str] = Field(default_factory=list, max_length=12)
         correct: int | None = None
+
+    def validate_card(s, body):
+        try:
+            validate_exercise(body.model_dump())
+        except ValueError as exc:
+            raise HTTPException(422, str(exc))
+        for citation in body.citations:
+            version = s.get(Record, citation.get('versionId', ''))
+            if not version or version.kind != 'norm_version' or version.data.get('normId') != citation.get('normId') or not any(b['id'] == citation.get('unitId') for b in version.data['blocks']):
+                raise HTTPException(422, 'Referencia normativa inexistente')
+            if citation.get('unitVersionHash'):
+                block = next(b for b in version.data['blocks'] if b['id'] == citation['unitId'])
+                if not any(v.get('hash') == citation['unitVersionHash'] for v in block.get('versions', [])):
+                    raise HTTPException(422, 'Redacción histórica inexistente')
 
     @app.post('/v1/cards', status_code=201)
     def card(body: CardInput, user=Depends(identity), s=Depends(db)):
         own(s, body.deckId, user, 'deck')
-        if body.type not in ['qa', 'cloze', 'truefalse', 'order', 'case', 'test']:
-            raise HTTPException(422, 'Tipo de ejercicio desconocido')
-        if body.type == 'test' and (len(body.options) < 2 or body.correct is None or not 0 <= body.correct < len(body.options)):
-            raise HTTPException(422, 'Opciones o solución no válidas')
+        validate_card(s, body)
         for c in body.citations:
             v = s.get(Record, c.get('versionId', ''))
-            if not v or v.kind != 'norm_version' or not any(b['id'] == c.get('unitId') for b in v.data['blocks']):
+            if not v or v.kind != 'norm_version' or v.data.get('normId') != c.get('normId') or not any(b['id'] == c.get('unitId') for b in v.data['blocks']):
                 raise HTTPException(422, 'Referencia normativa inexistente')
         id_ = user.id + ':card:' + body.clientId if body.clientId else uid()
         old = s.get(Record, id_)
@@ -274,6 +442,31 @@ def create_app(database_url=None):
         s.commit()
         return pack(r)
 
+    @app.get('/v1/cards/{id}/history')
+    def card_history(id: str, user=Depends(identity), s=Depends(db)):
+        own(s, id, user, 'card')
+        rows = s.scalars(select(Record).where(Record.kind == 'card_revision', Record.owner == user.id,
+                                            Record.data['cardId'].as_string() == id).order_by(Record.created_at, Record.id))
+        return {'items': [pack(r) for r in rows]}
+
+    @app.put('/v1/cards/{id}')
+    def edit_card(id: str, body: CardInput, if_match: str = Header(), user=Depends(identity), s=Depends(db)):
+        card = own(s, id, user, 'card')
+        own(s, body.deckId, user, 'deck')
+        if if_match.strip('"') != str(card.revision):
+            raise HTTPException(409, 'Conflicto de edición; conserva ambas versiones')
+        validate_card(s, body)
+        if body.clientId != card.data.get('clientId'):
+            raise HTTPException(422, 'El identificador estable no puede cambiar')
+        if all(card.data.get(k) == v for k, v in body.model_dump().items()):
+            return JSONResponse(pack(card), headers={'ETag': str(card.revision)})
+        s.add(Record(kind='card_revision', owner=user.id, data={
+            'cardId': id, 'cardRevision': card.revision, 'content': card.data, 'archivedAt': now()}))
+        card.data = {**body.model_dump(), 'editorialState': 'user', 'authorId': user.id,
+                     'blocked': bool(card.data.get('blocked')), 'updatedAt': now()}
+        s.commit()
+        return JSONResponse(pack(card), headers={'ETag': str(card.revision)})
+
     class ReviewInput(BaseModel):
         cardId: str
         cardRevision: int = Field(ge=1)
@@ -281,6 +474,8 @@ def create_app(database_url=None):
         occurredAt: datetime
         idempotencyKey: str = Field(min_length=8, max_length=128)
         state: dict = Field(default_factory=dict)
+        latencyMs: int = Field(default=0, ge=0, le=86400000)
+        response: int | list[int] | None = None
 
     @app.post('/v1/reviews', status_code=201)
     def review(body: ReviewInput, user=Depends(identity), s=Depends(db)):
@@ -293,8 +488,17 @@ def create_app(database_url=None):
                 raise HTTPException(409, 'Clave reutilizada con otro contenido')
             return previous.result
         c = own(s, body.cardId, user, 'card')
-        if c.revision != body.cardRevision or c.data.get('blocked'):
+        historical = None
+        if c.revision != body.cardRevision:
+            historical = s.scalar(select(Record).where(Record.kind == 'card_revision', Record.owner == user.id,
+                Record.data['cardId'].as_string() == c.id,
+                Record.data['cardRevision'].as_integer() == body.cardRevision))
+        if c.data.get('blocked') or (c.revision != body.cardRevision and historical is None):
             raise HTTPException(409, 'Tarjeta modificada o pendiente de revisión')
+        try:
+            objective = grade_exercise(historical.data['content'] if historical else c.data, body.response)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc))
         state_id = user.id + ':' + c.id
         r = s.get(Record, state_id)
         # Do not trust a client-provided interval or ease.
@@ -306,7 +510,7 @@ def create_app(database_url=None):
         else:
             s.add(Record(id=state_id, kind='review_state', owner=user.id, data=state))
         result = {'cardId': c.id, 'state': state}
-        s.add(Record(kind='review_event', owner=user.id, data={**body.model_dump(mode='json'), 'algorithm': 'sm2-1'}))
+        s.add(Record(kind='review_event', owner=user.id, data={**body.model_dump(mode='json'), 'algorithm': 'sm2-1', 'objectiveCorrect': objective}))
         s.add(Mutation(user_id=user.id, key=body.idempotencyKey, payload_hash=payload_hash, result=result))
         try:
             s.commit()
@@ -319,6 +523,38 @@ def create_app(database_url=None):
     def today(user=Depends(identity), s=Depends(db)):
         return {'cards': [pack(r) for r in s.scalars(select(Record).where(Record.kind == 'card', Record.owner == user.id))],
                 'states': [pack(r) for r in s.scalars(select(Record).where(Record.kind == 'review_state', Record.owner == user.id))]}
+
+    class WorkspaceInput(BaseModel):
+        profile: dict = Field(default_factory=dict)
+        notes: dict[str, str] = Field(default_factory=dict)
+        courses: list[dict] = Field(default_factory=list, max_length=500)
+        follows: list[str] = Field(default_factory=list, max_length=1000)
+
+    @app.get('/v1/workspace')
+    def workspace(user=Depends(identity), s=Depends(db)):
+        row = s.get(Record, user.id + ':workspace')
+        return {'data': row.data if row else None, 'revision': row.revision if row else 0}
+
+    @app.put('/v1/workspace')
+    def save_workspace(body: WorkspaceInput, if_match: str = Header(), user=Depends(identity), s=Depends(db)):
+        id_ = user.id + ':workspace'
+        row = s.get(Record, id_)
+        if if_match.strip('"') != str(row.revision if row else 0):
+            raise HTTPException(409, 'El espacio de estudio ha cambiado; conserva ambas versiones y vuelve a sincronizar')
+        if any(len(k) > 256 or len(v) > 20000 for k, v in body.notes.items()):
+            raise HTTPException(422, 'Nota demasiado larga')
+        data = body.model_dump()
+        if row:
+            row.data = data
+        else:
+            row = Record(id=id_, kind='workspace', owner=user.id, data=data)
+            s.add(row)
+        try:
+            s.commit()
+        except IntegrityError:
+            s.rollback()
+            raise HTTPException(409, 'Edición concurrente del espacio de estudio; reintenta')
+        return JSONResponse({'data': row.data, 'revision': row.revision}, headers={'ETag': str(row.revision)})
 
     class PrivateInput(BaseModel):
         kind: str
@@ -361,6 +597,7 @@ def create_app(database_url=None):
         s.execute(delete(Mutation).where(Mutation.user_id == user.id))
         s.execute(delete(Token).where(Token.user_id == user.id))
         s.execute(delete(RecoveryCode).where(RecoveryCode.user_id == user.id))
+        s.execute(delete(ExternalIdentity).where(ExternalIdentity.user_id == user.id))
         s.delete(s.get(Account, user.id))
         s.commit()
         return {'deleted': True, 'backupRetention': 'Configure según política antes de producción'}
@@ -382,6 +619,8 @@ def create_app(database_url=None):
 
     @app.post('/v1/exams/attempts', status_code=201)
     def attempt(body: AttemptInput, user=Depends(identity), s=Depends(db)):
+        if len(set(body.cardIds)) != len(body.cardIds):
+            raise HTTPException(422, 'Preguntas duplicadas')
         questions = []
         for id in body.cardIds:
             c = own(s, id, user, 'card')

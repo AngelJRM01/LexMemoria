@@ -106,3 +106,25 @@ def test_legal_event_cursor_has_no_duplicates(tmp_path):
     assert len(first['items']) == len(second['items']) == 2
     assert not {v['id'] for v in first['items']} & {v['id'] for v in second['items']}
     assert c.get('/v1/legal-updates?limit=0').status_code == 422
+
+def test_consolidation_pages_resume_and_deduplicate(db):
+    from app.monitor import watch_consolidations
+    class Catalogue:
+        fail = True
+        seen = []
+        def catalogue(self, offset, limit, start=None, end=None):
+            self.seen.append(offset)
+            if offset == 1 and self.fail: raise SourceError('Temporary', retryable=True)
+            if offset >= 2: return b'<response><data/></response>'
+            return f'<response><data><item><identificador>BOE-A-2026-{offset+1}</identificador><fecha_actualizacion>20261104T120000Z</fecha_actualizacion><titulo>Norma</titulo></item></data></response>'.encode()
+    source = Catalogue()
+    with db() as s:
+        with pytest.raises(SourceError): watch_consolidations(s, source, '2026-11-04', page_size=1)
+        assert s.get(Record, 'consolidated:2026-11-04').data['offset'] == 1
+        source.fail = False
+        result = watch_consolidations(s, source, '2026-11-04', page_size=1)
+        assert result['status'] == 'complete' and result['documents'] == 2
+        assert source.seen == [0, 1, 1, 2]
+        assert len(list(s.scalars(select(Record).where(Record.kind == 'legal_event')))) == 2
+        watch_consolidations(s, source, '2026-11-04', page_size=1)
+        assert source.seen == [0, 1, 1, 2]

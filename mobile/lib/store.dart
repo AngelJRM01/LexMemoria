@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'package:flutter/services.dart';
+import 'package:archive/archive.dart';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -11,6 +14,8 @@ class AppStore extends ChangeNotifier {
   Json data;
   final http.Client client;
   final LocalPersistence persistence;
+  List<Json> bundledNorms = [];
+  final Map<String, List<dynamic>> bundledPacks = {};
   String? error;
   bool syncing = false;
   Future<void> _write = Future.value();
@@ -29,7 +34,14 @@ class AppStore extends ChangeNotifier {
       if (await storage.read() != legacy) throw StateError('No se pudo verificar la migración. La copia anterior se conserva.');
       await prefs.remove('lexmemoria.v1');
     }
-    return AppStore(prefs, data, persistence: storage);
+    final store = AppStore(prefs, data, persistence: storage);
+    final manifest = Json.from(jsonDecode(await rootBundle.loadString('assets/legal-catalogue.json')));
+    store.bundledNorms = (manifest['items'] as List).map((v) => <String, dynamic>{...Json.from(v), 'bundledVersion': v['latestVersion']}).toList();
+    for (final norm in store.list('norms').where((n) => n['bundledReady'] == true)) {
+      final asset = store.bundledNorms.where((n) => n['id'] == norm['id'] && n['latestVersion'] == norm['latestVersion']).firstOrNull;
+      if (asset != null) await store.loadBundledPack(asset);
+    }
+    return store;
   }
   bool get onboarded => data['onboarded'] == true;
   Json get profile => Json.from(data['profile'] ?? {});
@@ -38,8 +50,24 @@ class AppStore extends ChangeNotifier {
   List<StudyCard> get cards => (data['cards'] as List? ?? []).map((v) => StudyCard.fromJson(Json.from(v))).toList();
   List<Json> list(String key) => (data[key] as List? ?? []).map((v) => Json.from(v)).toList();
   List<Json> get catalogue {
-    final cached = {for (final n in list('norms')) n['id']: n};
-    return initialCatalogue().map((n) => <String, dynamic>{...n, ...?cached.remove(n['id'])}).toList()..addAll(cached.values);
+    final norms = {for (final n in initialCatalogue()) n['id']: n};
+    for (final n in [...bundledNorms, ...list('norms')]) {
+      norms[n['id']] = {...?norms[n['id']], ...n};
+    }
+    for (final n in norms.values) {
+      if (n['bundledVersion'] == n['latestVersion'] && bundledPacks[n['id']] != null) {
+        n['units'] = bundledPacks[n['id']];
+      }
+    }
+    return norms.values.toList();
+  }
+  Future<List<dynamic>> loadBundledPack(Json norm) async {
+    final asset = await rootBundle.load(norm['bundledAsset']);
+    final bytes = asset.buffer.asUint8List(asset.offsetInBytes, asset.lengthInBytes);
+    final pack = await compute(decodeBundledPack, <String, dynamic>{'bytes': bytes, 'hash': norm['bundledHash'], 'version': norm['latestVersion']});
+    final items = pack['items'] as List;
+    bundledPacks[norm['id']] = items;
+    return items;
   }
   Json state(String id) => Json.from((data['states'] as Map? ?? {})[id] ?? {});
   List<StudyCard> due({String? deck, DateTime? at, bool includeRest = false}) {
@@ -71,6 +99,16 @@ class AppStore extends ChangeNotifier {
   Future<void> addCard(StudyCard c) async {
     data['cards'] = [...cards.map((v) => v.toJson()), c.toJson()]; await save();
   }
+  Future<void> editCard(StudyCard card, {required int expectedRevision}) async {
+    final previous = cards.where((c) => c.id == card.id).firstOrNull;
+    if (previous == null || previous.revision != expectedRevision) {
+      throw StateError('La tarjeta ha cambiado. Conserva el borrador y vuelve a abrirla.');
+    }
+    if (jsonEncode({...previous.toJson()}..remove('revision')) == jsonEncode({...card.toJson()}..remove('revision'))) return;
+    data['cardHistory'] = [...list('cardHistory'), {...previous.toJson(), 'archivedAt': DateTime.now().toUtc().toIso8601String()}];
+    data['cards'] = cards.map((c) => c.id == card.id ? card.toJson() : c.toJson()).toList();
+    await save();
+  }
   Future<void> add(String key, Json value) async { data[key] = [...list(key), value]; await save(); }
   Future<void> toggle(String key, String id) async {
     final values = List<String>.from(data[key] ?? []);
@@ -78,13 +116,15 @@ class AppStore extends ChangeNotifier {
     data[key] = values; await save();
   }
   bool has(String key, String id) => (data[key] as List? ?? []).contains(id);
-  Future<void> review(StudyCard card, int rating, {int latencyMs = 0}) async {
-    if (card.blocked) throw StateError('Tarjeta bloqueada por revisión normativa');
+  Future<void> review(StudyCard card, int rating, {int latencyMs = 0, dynamic response}) async {
+    final current = cards.where((c) => c.id == card.id).firstOrNull;
+    if (current == null || current.revision != card.revision) throw StateError('La tarjeta ha cambiado; abre una sesión nueva.');
+    if (current.blocked) throw StateError('Tarjeta bloqueada por revisión normativa');
     final at = DateTime.now().toUtc();
     final previous = state(card.id);
     final event = <String, dynamic>{'id': const Uuid().v4(), 'cardId': card.id,
       'cardRevision': card.revision, 'rating': rating, 'occurredAt': at.toIso8601String(),
-      'previous': previous, 'latencyMs': latencyMs, 'algorithm': 'sm2-1'};
+      'previous': previous, 'latencyMs': latencyMs, 'response': response, 'algorithm': 'sm2-1'};
     data['states'] = {...(data['states'] as Map? ?? {}), card.id: schedule(previous, rating, at)};
     data['reviews'] = [...list('reviews'), event];
     data['session'] = null;
@@ -100,7 +140,7 @@ class AppStore extends ChangeNotifier {
     data['states'] = {...(data['states'] as Map? ?? {}), last['cardId']: last['previous']};
     await save();
   }
-  Future<void> reset() async { data = {}; await save(); }
+  Future<void> reset() async { data = {}; bundledPacks.clear(); await save(); }
   Future<void> restore(String text) async {
     final parsed = jsonDecode(text);
     if (parsed is! Map || parsed['schemaVersion'] != 1 || parsed['data'] is! Map) {
@@ -112,6 +152,8 @@ class AppStore extends ChangeNotifier {
     restored.remove('auth');
     restored.remove('remoteUserId');
     restored.remove('remoteCardIds');
+    restored.remove('remoteCardRevisions');
+    restored.remove('workspaceBase');
     data = restored; await save();
   }
   String export() => const JsonEncoder.withIndent('  ').convert({'schemaVersion': 1,
@@ -151,7 +193,7 @@ class AppStore extends ChangeNotifier {
       final update = <String, dynamic>{...?before, ...n};
       if (before != null && before['latestVersion'] != null && before['latestVersion'] != n['latestVersion']) {
         changed.add(n['id']);
-        if (before['units'] != null) data['archivedPacks'] = [...list('archivedPacks'), before];
+        if (before['units'] != null || before['bundledReady'] == true) data['archivedPacks'] = [...list('archivedPacks'), before];
         update.remove('units'); update.remove('downloadedAt');
         update['coverage'] = 'pending_download_after_change';
       }
@@ -165,6 +207,12 @@ class AppStore extends ChangeNotifier {
     await save();
   }
   Future<void> downloadNorm(Json norm) async {
+    if (norm['bundledAsset'] != null && norm['bundledVersion'] == norm['latestVersion']) {
+      await loadBundledPack(norm);
+      final saved = {...norm, 'bundledReady': true, 'downloadedAt': DateTime.now().toUtc().toIso8601String()}..remove('units');
+      data['norms'] = [...list('norms').where((n) => n['id'] != norm['id']), saved];
+      await save(); return;
+    }
     final base = apiBase;
     final version = norm['latestVersion'];
     if (base.isEmpty || version == null) throw StateError('Importa primero esta norma en el servidor.');
@@ -195,4 +243,19 @@ class AppStore extends ChangeNotifier {
   @override
   void dispose() { client.close(); persistence.close(); super.dispose(); }
 
+}
+
+/// Decode outside the UI isolate on native platforms. Verification precedes parsing.
+Json decodeBundledPack(Json input) {
+  final bytes = input['bytes'] as List<int>;
+  if (sha256.convert(bytes).toString() != input['hash']) {
+    throw StateError('El paquete jurídico no supera la comprobación de integridad.');
+  }
+  final decoded = GZipDecoder().decodeBytes(bytes);
+  if (decoded.length > 128000000) throw StateError('Paquete demasiado grande.');
+  final pack = Json.from(jsonDecode(utf8.decode(decoded)));
+  if (pack['schemaVersion'] != 1 || pack['norm']['latestVersion'] != input['version']) {
+    throw StateError('Versión de paquete incompatible.');
+  }
+  return pack;
 }

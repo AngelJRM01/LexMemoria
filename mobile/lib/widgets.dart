@@ -9,9 +9,13 @@ class Paper extends StatelessWidget {
   final EdgeInsets padding;
   const Paper({super.key, required this.child, this.padding = const EdgeInsets.all(20)});
   @override
-  Widget build(BuildContext context) => Container(width: double.infinity, padding: padding,
-    decoration: BoxDecoration(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xff1b2b3d) : Colors.white,
-      borderRadius: BorderRadius.circular(18), border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: .12))), child: child);
+  Widget build(BuildContext context) => Material(
+    color: Theme.of(context).brightness == Brightness.dark ? const Color(0xff1b2b3d) : Colors.white,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18),
+      side: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: .12))),
+    clipBehavior: Clip.antiAlias,
+    child: Padding(padding: padding, child: SizedBox(width: double.infinity, child: child)));
+
 }
 class Badge extends StatelessWidget {
   final String text;

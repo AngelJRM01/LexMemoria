@@ -1,11 +1,12 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Badge;
 import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
 import 'package:uuid/uuid.dart';
 import 'models.dart';
 import 'store.dart';
 import 'widgets.dart';
+import 'exercises.dart';
 
 class StudyPage extends StatefulWidget {
   final AppStore store;
@@ -15,6 +16,7 @@ class StudyPage extends StatefulWidget {
 }
 class _StudyPageState extends State<StudyPage> {
   String query = '';
+  bool favoritesOnly = false, weakOnly = false;
   Future<void> importCsv() async {
     await perform(context, () async {
       final picked = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['csv'], withData: true);
@@ -48,25 +50,34 @@ class _StudyPageState extends State<StudyPage> {
     final session = s.data['session'];
     final resumeIds = session is Map ? List<String>.from(session['ids'] ?? []) : <String>[];
     final resumeCards = resumeIds.map((id) => s.cards.where((c) => c.id == id && !c.blocked).firstOrNull).whereType<StudyCard>().toList();
-    final decks = s.cards.map((c) => c.deck).toSet().where((d) => normalize(d).contains(normalize(query))).toList();
+    final eligible = s.cards.where((c) => (!favoritesOnly || s.has('favoriteCards', c.id)) &&
+      (!weakOnly || (s.state(c.id)['lapses'] as num? ?? 0) > 0) &&
+      normalize('${c.deck} ${c.front} ${c.back} ${c.explanation} ${c.normId} ${c.unitId}').contains(normalize(query))).toList();
+    final eligibleIds = eligible.map((c) => c.id).toSet();
+    final decks = eligible.map((c) => c.deck).toSet().toList();
     return PageBody(children: [Text('Aprender. Recordar. Avanzar.', style: Theme.of(context).textTheme.headlineMedium), const SizedBox(height: 8),
       const Text('Sesiones breves, referencias claras y un ritmo sostenible.'), const SizedBox(height: 20),
       Wrap(spacing: 8, runSpacing: 8, children: [FilledButton.icon(onPressed: () => push(context, CardEditor(store: s)), icon: const Icon(Icons.add), label: const Text('Crear tarjeta')),
         OutlinedButton.icon(onPressed: importCsv, icon: const Icon(Icons.upload_file_outlined), label: const Text('Importar CSV'))]),
-      const SizedBox(height: 20), TextField(decoration: const InputDecoration(hintText: 'Buscar un mazo', prefixIcon: Icon(Icons.search)), onChanged: (v) => setState(() => query = v)),
+      const SizedBox(height: 20), TextField(decoration: const InputDecoration(hintText: 'Buscar mazo, pregunta, concepto o artículo', prefixIcon: Icon(Icons.search)), onChanged: (v) => setState(() => query = v)),
+      const SizedBox(height: 10), Wrap(spacing: 8, children: [
+        FilterChip(label: const Text('Favoritas'), selected: favoritesOnly, onSelected: (v) => setState(() => favoritesOnly = v)),
+        FilterChip(label: const Text('Con fallos anteriores'), selected: weakOnly, onSelected: (v) => setState(() => weakOnly = v)),
+      ]),
       if (resumeCards.length == resumeIds.length && resumeCards.isNotEmpty && (session['index'] as int? ?? 0) < resumeCards.length) ...[const SizedBox(height: 16), FilledButton.icon(onPressed: () => push(context, ReviewPage(store: s, queue: resumeCards)), icon: const Icon(Icons.play_arrow), label: const Text('Continuar sesión guardada'))],
       const Section('Tus mazos'),
       if (decks.isEmpty) EmptyState(icon: Icons.style_outlined, title: 'Tu primer recuerdo empieza aquí', detail: 'Crea tarjetas propias o importa un CSV. Las tarjetas personales no llevan sello editorial.',
         action: FilledButton(onPressed: () => push(context, CardEditor(store: s)), child: const Text('Crear mi primera tarjeta'))),
       ...decks.map((deck) {
-        final cards = s.cards.where((c) => c.deck == deck).toList();
-        final due = s.due(deck: deck);
+        final cards = eligible.where((c) => c.deck == deck).toList();
+        final due = s.due(deck: deck).where((c) => eligibleIds.contains(c.id)).toList();
         return Padding(padding: const EdgeInsets.only(bottom: 14), child: Paper(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Icon(Icons.layers_outlined, color: teal), const SizedBox(height: 14), Text(deck, style: Theme.of(context).textTheme.titleLarge), const SizedBox(height: 8),
           Text('${cards.length} tarjetas · ${due.length} pendientes · ${cards.where((c) => c.blocked).length} bloqueadas'),
           const SizedBox(height: 16), const Badge('Contenido del usuario · no verificado', warning: true), const SizedBox(height: 16),
           Wrap(spacing: 8, children: [FilledButton.icon(onPressed: due.isEmpty ? null : () => push(context, ReviewPage(store: s, queue: due)), icon: const Icon(Icons.play_arrow), label: const Text('Repasar')),
-            TextButton(onPressed: () => push(context, CardEditor(store: s, deck: deck)), child: const Text('Añadir tarjeta'))]),
+            TextButton(onPressed: () => push(context, CardEditor(store: s, deck: deck)), child: const Text('Añadir tarjeta')),
+            TextButton(onPressed: () => push(context, CardListPage(store: s, deck: deck)), child: const Text('Ver y editar'))]),
         ])));
       }),
       const SizedBox(height: 16), const Text('Programación de repasos: SM-2 adaptado, versión sm2-1. No es una implementación de FSRS. Los intervalos estiman práctica, no una nota de examen.', style: TextStyle(fontSize: 12)),
@@ -76,9 +87,10 @@ class _StudyPageState extends State<StudyPage> {
 
 class CardEditor extends StatefulWidget {
   final AppStore store;
-  final Json? norm, unit;
+  final Json? norm, unit, sourceVersion;
   final String? deck;
-  const CardEditor({super.key, required this.store, this.norm, this.unit, this.deck});
+  final StudyCard? existing;
+  const CardEditor({super.key, required this.store, this.norm, this.unit, this.sourceVersion, this.deck, this.existing});
   @override
   State<CardEditor> createState() => _CardEditorState();
 }
@@ -99,11 +111,31 @@ class _CardEditorState extends State<CardEditor> {
       explanation.text = draft['explanation'] ?? ''; options.text = draft['options'] ?? '';
       type = draft['type'] ?? 'qa'; correct = draft['correct'] ?? 0;
     }
+    if (widget.unit != null && widget.sourceVersion != null) {
+      front.text = '¿Qué establece ${widget.unit!['title']} de ${widget.norm!['short'] ?? widget.norm!['title']}?';
+      final literal = widget.sourceVersion!['text'] as String? ?? '';
+      if (literal.length <= 8000) back.text = literal;
+      explanation.text = 'Lectura literal de la fuente; tarjeta personal sin revisión jurídica. Fecha de efecto según fuente: ${widget.sourceVersion!['effectiveFrom'] ?? 'no determinada'}.';
+    }
+    final existing = widget.existing;
+    if (existing != null) {
+      deck.text = existing.deck; front.text = existing.front; back.text = existing.back;
+      explanation.text = existing.explanation; options.text = existing.options.join('\n');
+      type = existing.type; correct = existing.correct ?? 0;
+      final draft = (widget.store.data['editDrafts'] as Map? ?? {})[existing.id] as Map?;
+      if (draft != null) {
+        deck.text = draft['deck']; front.text = draft['front']; back.text = draft['back'];
+        explanation.text = draft['explanation']; options.text = draft['options']; type = draft['type']; correct = draft['correct'];
+      }
+    }
     for (final controller in [deck, front, back, explanation, options]) { controller.addListener(saveDraft); }
   }
   void saveDraft() {
-    widget.store.data['draftCard'] = {'deck': deck.text, 'front': front.text, 'back': back.text,
+    final draft = {'deck': deck.text, 'front': front.text, 'back': back.text,
       'explanation': explanation.text, 'options': options.text, 'type': type, 'correct': correct};
+    if (widget.existing != null) {
+      widget.store.data['editDrafts'] = {...(widget.store.data['editDrafts'] as Map? ?? {}), widget.existing!.id: draft};
+    } else { widget.store.data['draftCard'] = draft; }
     widget.store.save();
   }
   @override
@@ -113,16 +145,27 @@ class _CardEditorState extends State<CardEditor> {
     if (type == 'cloze' && !RegExp(r'\{\{c\d+::.+?\}\}').hasMatch(front.text)) {
       toast(context, 'Añade al menos un hueco: {{c1::respuesta}}'); return;
     }
-    final choices = options.text.split('\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
-    if (type == 'test' && (choices.length < 2 || choices.length > 6 || correct >= choices.length)) {
+    final choices = type == 'truefalse' ? ['Verdadero', 'Falso'] : options.text.split('\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+    if (['test', 'case'].contains(type) && (choices.length < 2 || choices.length > 6 || correct >= choices.length)) {
       toast(context, 'Introduce de 2 a 6 opciones y un índice correcto válido.'); return;
+    }
+    if (type == 'order' && (choices.length < 2 || choices.length > 12 || choices.toSet().length != choices.length)) {
+      toast(context, 'Añade entre 2 y 12 elementos distintos en orden correcto.'); return;
     }
     setState(() => saving = true);
     await perform(context, () async {
-      await widget.store.addCard(StudyCard(id: const Uuid().v4(), deck: deck.text.trim(), front: front.text.trim(), back: back.text.trim(),
-        explanation: explanation.text.trim(), type: type, normId: widget.norm?['id'] ?? '', unitId: widget.unit?['id'] ?? '',
-        versionId: widget.norm?['latestVersion'] ?? '', options: type == 'test' ? choices : [], correct: type == 'test' ? correct : null));
-      widget.store.data['draftCard'] = null; await widget.store.save();
+      final card = StudyCard(id: widget.existing?.id ?? const Uuid().v4(), deck: deck.text.trim(), front: front.text.trim(), back: back.text.trim(),
+        explanation: explanation.text.trim(), type: type, normId: widget.existing?.normId ?? widget.norm?['id'] ?? '', unitId: widget.existing?.unitId ?? widget.unit?['id'] ?? '',
+        versionId: widget.existing?.versionId ?? widget.norm?['latestVersion'] ?? '',
+        unitVersionHash: widget.existing?.unitVersionHash ?? widget.sourceVersion?['hash'] ?? '',
+        revision: (widget.existing?.revision ?? 0) + 1, blocked: widget.existing?.blocked ?? false,
+        options: ['test', 'case', 'order', 'truefalse'].contains(type) ? choices : [],
+        correct: ['test', 'case', 'truefalse'].contains(type) ? correct : null);
+      if (widget.existing == null) { await widget.store.addCard(card); }
+      else { await widget.store.editCard(card, expectedRevision: widget.existing!.revision); }
+      if (widget.existing != null) { (widget.store.data['editDrafts'] as Map?)?.remove(widget.existing!.id); }
+      else { widget.store.data['draftCard'] = null; }
+      await widget.store.save();
       if (mounted) Navigator.pop(context);
     });
     if (mounted) setState(() => saving = false);
@@ -132,16 +175,18 @@ class _CardEditorState extends State<CardEditor> {
     Widget field(TextEditingController c, String label, {int lines = 1, bool required = true, int max = 4000}) => Padding(padding: const EdgeInsets.only(bottom: 16),
       child: TextFormField(controller: c, minLines: lines, maxLines: lines + 3, maxLength: max, decoration: InputDecoration(labelText: label),
         validator: required ? (v) => v == null || v.trim().isEmpty ? 'Completa este campo' : null : null));
-    return Scaffold(appBar: AppBar(title: const Text('Nueva tarjeta privada')), body: Form(key: form, child: PageBody(children: [
+    return Scaffold(appBar: AppBar(title: Text(widget.existing == null ? 'Nueva tarjeta privada' : 'Editar tarjeta privada')), body: Form(key: form, child: PageBody(children: [
       const Badge('Creada por el usuario · sin revisión jurídica', warning: true), const SizedBox(height: 20),
       field(deck, 'Mazo', max: 160), DropdownButtonFormField<String>(initialValue: type, decoration: const InputDecoration(labelText: 'Tipo de ejercicio'),
         items: const [DropdownMenuItem(value: 'qa', child: Text('Pregunta y respuesta')), DropdownMenuItem(value: 'cloze', child: Text('Completar huecos')),
           DropdownMenuItem(value: 'truefalse', child: Text('Verdadero / falso')), DropdownMenuItem(value: 'order', child: Text('Ordenar una lista')),
-          DropdownMenuItem(value: 'case', child: Text('Caso práctico')), DropdownMenuItem(value: 'test', child: Text('Pregunta tipo test'))], onChanged: (v) { setState(() => type = v!); saveDraft(); }),
+          DropdownMenuItem(value: 'case', child: Text('Caso práctico')), DropdownMenuItem(value: 'test', child: Text('Pregunta tipo test'))], onChanged: (v) { setState(() { type = v!; correct = 0; }); saveDraft(); }),
       const SizedBox(height: 20), field(front, type == 'cloze' ? 'Enunciado con {{c1::respuesta}}' : 'Pregunta / hechos del caso', lines: 3),
       field(back, 'Respuesta y excepciones relevantes', lines: 3, max: 8000), field(explanation, 'Explicación y contexto', lines: 3, required: false, max: 8000),
-      if (type == 'test') ...[field(options, 'Opciones · una por línea', lines: 4), DropdownButtonFormField<int>(initialValue: correct,
-        decoration: const InputDecoration(labelText: 'Opción correcta'), items: List.generate(6, (i) => DropdownMenuItem(value: i, child: Text('Opción ${i + 1}'))), onChanged: (v) => correct = v!), const SizedBox(height: 20)],
+      if (['test', 'case', 'order'].contains(type)) field(options, type == 'order' ? 'Elementos en orden correcto · uno por línea' : 'Opciones · una por línea', lines: 4),
+      if (['test', 'case', 'truefalse'].contains(type)) ...[DropdownButtonFormField<int>(initialValue: correct,
+        decoration: const InputDecoration(labelText: 'Respuesta correcta'),
+        items: List.generate(type == 'truefalse' ? 2 : 6, (i) => DropdownMenuItem(value: i, child: Text(type == 'truefalse' ? ['Verdadero', 'Falso'][i] : 'Opción ${i + 1}'))), onChanged: (v) { correct = v!; saveDraft(); }), const SizedBox(height: 20)],
       Paper(child: Text(widget.norm == null ? 'Sin fuente jurídica anclada. Puedes crear una tarjeta desde un artículo descargado para conservar norma, versión y bloque.' : 'Fuente: ${widget.norm!['id']} · ${widget.unit!['title']}\nVersión: ${widget.norm!['latestVersion']}')),
       const SizedBox(height: 24), FilledButton(onPressed: saving ? null : save, child: Text(saving ? 'Guardando…' : 'Guardar tarjeta')),
     ])));
@@ -158,6 +203,7 @@ class ReviewPage extends StatefulWidget {
 class _ReviewPageState extends State<ReviewPage> {
   int index = 0;
   bool revealed = false, saving = false;
+  dynamic response;
   DateTime shown = DateTime.now();
   @override
   void initState() {
@@ -170,31 +216,33 @@ class _ReviewPageState extends State<ReviewPage> {
   Future<void> rate(int rating) async {
     setState(() => saving = true);
     await perform(context, () async {
-      await widget.store.review(widget.queue[index], rating, latencyMs: DateTime.now().difference(shown).inMilliseconds);
-      index++; revealed = false; shown = DateTime.now();
+      await widget.store.review(widget.queue[index], rating, latencyMs: DateTime.now().difference(shown).inMilliseconds, response: response);
+      index++; revealed = false; response = null; shown = DateTime.now();
       widget.store.data['session'] = {'ids': widget.queue.map((c) => c.id).toList(), 'index': index}; await widget.store.save();
     });
     if (mounted) setState(() => saving = false);
   }
   @override
   Widget build(BuildContext context) {
-    if (index >= widget.queue.length) return Scaffold(appBar: AppBar(title: const Text('Sesión completada')), body: PageBody(children: [const SizedBox(height: 50),
+    if (index >= widget.queue.length) { return Scaffold(appBar: AppBar(title: const Text('Sesión completada')), body: PageBody(children: [const SizedBox(height: 50),
       EmptyState(icon: Icons.check_circle_outline, title: 'Un paso más en tu camino', detail: '${widget.queue.length} tarjetas repasadas. El progreso está guardado en este dispositivo.',
         action: FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Volver a mis mazos')))]));
+    }
     final c = widget.queue[index];
     final question = c.type == 'cloze' ? c.front.replaceAllMapped(RegExp(r'\{\{c\d+::(.+?)\}\}'), (_) => '[…]') : c.front;
     return Scaffold(appBar: AppBar(title: const Text('Repaso activo'), actions: [IconButton(tooltip: 'Informar de un error', icon: const Icon(Icons.flag_outlined), onPressed: () async {
       final controller = TextEditingController();
-      final reason = await showDialog<String>(context: context, builder: (ctx) => AlertDialog(title: const Text('Informar de un error'), content: TextField(controller: controller, decoration: const InputDecoration(labelText: 'Describe el problema'), maxLines: 4),
+      final reason = await showDialog<String>(context: context, builder: (ctx) => AlertDialog(title: const Text('Informar de un error'), content: TextField(controller: controller, decoration: const InputDecoration(labelText: 'Describe el problema (mínimo 5 caracteres)'), maxLength: 4000, maxLines: 4),
         actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')), FilledButton(onPressed: () => Navigator.pop(ctx, controller.text), child: const Text('Guardar reporte'))]));
       controller.dispose();
-      if (reason != null && reason.trim().isNotEmpty && context.mounted) await perform(context, () => widget.store.add('reports', {'id': const Uuid().v4(), 'cardId': c.id, 'reason': reason, 'status': 'local_pending'}), success: 'Reporte guardado localmente; pendiente de envío');
+      if (reason != null && reason.trim().length >= 5 && context.mounted) await perform(context, () => widget.store.add('reports', {'id': const Uuid().v4(), 'cardId': c.id, 'reason': reason, 'status': 'local_pending'}), success: 'Reporte guardado localmente; pendiente de envío');
     })]), body: PageBody(children: [
       Row(children: [Text('${index + 1} / ${widget.queue.length}'), const Spacer(), const Badge('Repaso · sin cronómetro')]), const SizedBox(height: 14),
       LinearProgressIndicator(value: index / widget.queue.length, color: teal), const SizedBox(height: 28),
       Text(c.deck, style: const TextStyle(fontSize: 12, letterSpacing: 1)), const SizedBox(height: 16),
       Paper(padding: const EdgeInsets.all(28), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Badge('PREGUNTA'), const SizedBox(height: 28),
         Text(question, style: Theme.of(context).textTheme.headlineMedium), const SizedBox(height: 32),
+        ExerciseInput(key: ValueKey(c.id), card: c, revealed: revealed, onChanged: (v) => response = v),
         if (revealed) ...[const Divider(), const SizedBox(height: 20), const Badge('RESPUESTA'), const SizedBox(height: 20),
           SelectableText(c.back, style: const TextStyle(fontSize: 21, height: 1.6)), if (c.explanation.isNotEmpty) ...[const SizedBox(height: 20), Text(c.explanation)],
           const SizedBox(height: 24), Text(c.normId.isEmpty ? 'Contenido personal sin fuente anclada' : '${c.normId} · ${c.unitId}\nVersión ${c.versionId}', style: const TextStyle(fontSize: 12)),
@@ -205,8 +253,54 @@ class _ReviewPageState extends State<ReviewPage> {
       else Wrap(spacing: 8, runSpacing: 8, children: List.generate(4, (i) => OutlinedButton(onPressed: saving || c.blocked ? null : () => rate(i + 1),
         child: Text(['Otra vez', 'Difícil', 'Bien', 'Fácil'][i])))),
       const SizedBox(height: 20), TextButton.icon(onPressed: index == 0 || saving ? null : () async {
-        await perform(context, widget.store.undoLast); if (mounted) setState(() { index--; revealed = false; });
+        await perform(context, () async { await widget.store.undoLast(); if (mounted) setState(() { index--; revealed = false; response = null; }); });
       }, icon: const Icon(Icons.undo), label: const Text('Deshacer última revisión local')),
+    ]));
+  }
+}
+
+class CardListPage extends StatelessWidget {
+  final AppStore store;
+  final String deck;
+  const CardListPage({super.key, required this.store, required this.deck});
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(animation: store, builder: (context, _) {
+    final cards = store.cards.where((c) => c.deck == deck).toList();
+    return Scaffold(appBar: AppBar(title: Text(deck)), body: PageBody(children: [
+      ...cards.map((c) => Padding(padding: const EdgeInsets.only(bottom: 16), child: Paper(child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(c.front, style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8), Text('${c.type} · revisión ${c.revision}'),
+          if (c.blocked) const Text('Bloqueada: requiere revisión de fuente o conflicto.'),
+          Wrap(spacing: 8, children: [
+            TextButton.icon(onPressed: () => push(context, CardEditor(store: store, existing: c)),
+              icon: const Icon(Icons.edit_outlined), label: const Text('Editar')),
+            TextButton.icon(onPressed: () => perform(context, () => store.toggle('favoriteCards', c.id)),
+              icon: Icon(store.has('favoriteCards', c.id) ? Icons.star : Icons.star_outline), label: const Text('Favorita')),
+            TextButton(onPressed: () => push(context, CardHistoryPage(store: store, card: c)), child: const Text('Historial')),
+          ]),
+        ],
+      )))),
+    ]));
+  });
+}
+
+class CardHistoryPage extends StatelessWidget {
+  final AppStore store;
+  final StudyCard card;
+  const CardHistoryPage({super.key, required this.store, required this.card});
+  @override
+  Widget build(BuildContext context) {
+    final history = [...store.list('cardHistory').where((c) => c['id'] == card.id), card.toJson()];
+    return Scaffold(appBar: AppBar(title: const Text('Historial de la tarjeta')), body: PageBody(children: [
+      const Text('Las ediciones conservan las respuestas anteriores y el progreso de repaso.'),
+      ...history.reversed.map((c) => Padding(padding: const EdgeInsets.only(top: 16), child: Paper(child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Revisión ${c['revision']}', style: Theme.of(context).textTheme.titleMedium),
+          SelectableText(c['front']), const Divider(), SelectableText(c['back']),
+          if ((c['versionId'] as String? ?? '').isNotEmpty) Text('Fuente: ${c['normId']} · ${c['unitId']} · ${c['versionId']}'),
+        ],
+      )))),
     ]));
   }
 }

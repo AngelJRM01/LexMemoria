@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Badge;
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'models.dart';
 import 'store.dart';
 import 'widgets.dart';
 import 'study.dart';
+import 'remote.dart';
 
 class LibraryPage extends StatefulWidget {
   final AppStore store;
@@ -37,7 +38,7 @@ class _LibraryPageState extends State<LibraryPage> {
           if (n['units'] != null) const Icon(Icons.offline_pin_outlined, color: teal, semanticLabel: 'Disponible offline')]),
           const SizedBox(height: 12), Text(n['short'] ?? n['title'], style: Theme.of(context).textTheme.titleLarge), const SizedBox(height: 8),
           Text(n['id'], style: const TextStyle(fontSize: 12)), const SizedBox(height: 12),
-          Badge(n['units'] != null ? 'Importada · revisión pendiente' : 'Texto pendiente de importar', warning: true)]))))),
+          Badge(n['units'] != null ? 'Disponible offline · revisión pendiente' : n['bundledAsset'] != null ? 'Incluida · lista para guardar' : n['latestVersion'] != null ? 'Importada · pendiente de descarga' : 'Texto pendiente de importar', warning: true)]))))),
       if (widget.store.data['catalogueCursor'] != null) OutlinedButton.icon(
         onPressed: widget.store.syncing ? null : () => perform(context, () => widget.store.fetchCatalogue(nextPage: true)),
         icon: const Icon(Icons.expand_more), label: const Text('Cargar más normas')),
@@ -77,8 +78,12 @@ class _NormPageState extends State<NormPage> {
       Paper(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('Ámbito: ${n['jurisdiction']}'), Text('Estado: ${n['coverage']} · revisión pendiente'),
         Text('Publicación: ${n['publicationDate'] ?? 'no comprobada'}'), Text('Fecha de efecto: ${n['effectiveFrom'] ?? 'no comprobada'}'),
+        Text('Actualización en la fuente: ${n['sourceUpdatedAt'] ?? 'no indicada'}'),
         Text('Último cotejo: ${n['checkedAt'] ?? 'sin cotejo'}'), Text('Descarga local: ${n['downloadedAt'] ?? 'no descargada'}'),
       ])),
+      const SizedBox(height: 12), const Text('Basado en datos de la Agencia Estatal Boletín Oficial del Estado. Extracción estructurada para lectura; el texto consolidado tiene carácter meramente informativo.'),
+      TextButton(onPressed: () => openSource(context, 'https://www.boe.es'), child: const Text('Agencia Estatal Boletín Oficial del Estado')),
+      TextButton(onPressed: () => openSource(context, 'https://www.boe.es/informacion/aviso_legal/index.php#reutilizacion'), child: const Text('Condiciones de reutilización')),
       const Section('Índice de lectura'),
       if (units.isNotEmpty) TextField(decoration: const InputDecoration(labelText: 'Buscar dentro del índice', prefixIcon: Icon(Icons.search)), onChanged: (v) => setState(() => query = v)),
       const SizedBox(height: 12),
@@ -128,13 +133,15 @@ class _ReaderPageState extends State<ReaderPage> {
           OutlinedButton.icon(onPressed: unavailable ? null : () => perform(context, () async { await tts.setLanguage('es-ES'); await tts.speak(v['text']); }), icon: const Icon(Icons.volume_up_outlined), label: const Text('Escuchar')),
           OutlinedButton.icon(onPressed: () => tts.stop(), icon: const Icon(Icons.stop), label: const Text('Detener')),
           OutlinedButton.icon(onPressed: () => push(context, ComparePage(unit: widget.unit)), icon: const Icon(Icons.compare_arrows), label: const Text('Comparar')),
-          FilledButton.icon(onPressed: unavailable ? null : () => push(context, CardEditor(store: widget.store, norm: widget.norm, unit: widget.unit)), icon: const Icon(Icons.add), label: const Text('Crear tarjeta')),
+          FilledButton.icon(onPressed: unavailable ? null : () => push(context, CardEditor(store: widget.store, norm: widget.norm, unit: widget.unit, sourceVersion: v)), icon: const Icon(Icons.add), label: const Text('Crear tarjeta')),
         ]), const Section('Notas privadas'),
         TextFormField(initialValue: (widget.store.data['notes'] as Map? ?? {})['${widget.norm['id']}:${widget.unit['id']}'] ?? '', minLines: 3, maxLines: 10,
           decoration: const InputDecoration(labelText: 'Tus notas se guardan solo en este dispositivo'), onChanged: (text) {
             widget.store.data['notes'] = {...(widget.store.data['notes'] as Map? ?? {}), '${widget.norm['id']}:${widget.unit['id']}': text}; widget.store.save();
           }),
         const SizedBox(height: 20), SelectableText(reference, style: const TextStyle(fontSize: 12)),
+        const Text('Basado en datos de la Agencia Estatal Boletín Oficial del Estado · extracción estructurada. Texto consolidado meramente informativo.'),
+        Text('Actualización de la fuente: ${widget.norm['sourceUpdatedAt'] ?? 'no indicada'} · cotejo: ${widget.norm['checkedAt'] ?? 'no indicado'}'),
         TextButton(onPressed: () => openSource(context, widget.norm['sourceUrl']), child: const Text('Abrir publicación oficial')),
       ]));
   }
@@ -215,6 +222,12 @@ class _UpdatesPageState extends State<UpdatesPage> {
         subtitle: const Text('Seguimiento local'), onTap: () => push(context, NormPage(store: store, id: n['id'])))),
       const Section('Preferencias de avisos'),
       SwitchListTile(value: store.data['internalAlerts'] ?? true, title: const Text('Avisos dentro de la aplicación'), onChanged: (v) { store.data['internalAlerts'] = v; store.save(); }),
+      if (store.data['remoteUserId'] != null) ...[
+        OutlinedButton.icon(onPressed: () => perform(context, RemoteSync(store).syncNotifications, success: 'Suscripciones y bandeja sincronizadas'), icon: const Icon(Icons.sync), label: const Text('Sincronizar mis avisos')),
+        ...store.list('notifications').map((n) => ListTile(leading: Icon(n['read'] == true ? Icons.drafts_outlined : Icons.markunread_outlined), title: Text('Actualización de ${n['normId']}'), subtitle: Text('Disponible desde ${n['createdAt']}'), onTap: () => perform(context, () async {
+          await RemoteSync(store).send('/v1/notifications/${n['id']}/read'); await RemoteSync(store).syncNotifications();
+        }))),
+      ],
       const Text('Las notificaciones push requieren Firebase/APNs y consentimiento del sistema.', style: TextStyle(fontSize: 12)),
     ]);
   }

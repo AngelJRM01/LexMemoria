@@ -1,32 +1,32 @@
-# Trabajo pendiente para cumplir íntegramente la especificación V2
+# Estado real y trabajo pendiente
 
-Esta entrega contiene código funcional del servidor y código cliente pendiente de compilación. No satisface todavía todos los requisitos del documento. Los bloqueos externos no eliminan el trabajo de implementación que queda.
+La aplicación es ejecutable en web y dispone de APK Android de desarrollo, con veinte normas BOE incluidas, estudio privado y capacidades de sincronización. **No está terminada al 100 % ni lista para publicación comercial.** La existencia de pantallas, adaptadores y tests no sustituye las aceptaciones de la especificación.
 
-## Bloqueos actuales del entorno
+[Avance implementado de 5 de noviembre](AVANCE_V2_2026-11-05.md) · [Pruebas ejecutadas](VALIDACION.md) · [Despliegue propuesto](DESPLIEGUE.md)
 
-1. `storage.googleapis.com`: el proxy deniega la descarga del Dart SDK (HTTP CONNECT 403). La adición está guardada en el borrador, pendiente de aplicarse en ajustes. Sin Dart no se han podido resolver paquetes, analizar tipos, ejecutar Flutter ni compilar APK.
-2. `www.boe.es` y `boe.es`: destinos añadidos al mismo borrador para las importaciones reales. Falta comprobar acceso una vez aplicados. Los tests del conector usan fixtures sintéticos, no acreditan compatibilidad con el BOE en vivo.
-3. Android SDK no instalado; iOS requiere macOS/Xcode y firma. No hay artefacto APK/IPA entregado.
+## Integraciones y operación pendientes
 
-## Implementación restante
+- Proyecto Firebase real, configuración de aplicaciones/Google/Apple, interfaz federada nativa, vinculación y revocación probadas con el proveedor.
+- FCM/APNs, permisos del sistema, tokens de dispositivo, entrega push, quiet hours y enlaces profundos. La bandeja interna no acredita entrega push.
+- Google Play Billing/StoreKit: productos y precios aprobados, comprobación servidor con tiendas reales, webhooks autenticados, restauración, reembolsos, gracia y revocación. El endpoint de compras sigue rechazando compras sin verificar.
+- Render/hosting y PostgreSQL administrado contratados/configurados por el titular. El blueprint es revisable y no ha sido desplegado. Faltan dominio/TLS público, rate limiting compartido para múltiples réplicas, migraciones completas, backups PostgreSQL, observabilidad, alertas, presupuestos y RPO/RTO aprobados.
+- Firma de release, App Store Connect/Google Play Console, pruebas sandbox, AAB/symbols/dSYM y publicación. El APK entregado es debug. iOS no está compilado en esta máquina Linux.
 
-- Corpus real de 20 normas importado/cotejado, índices jerárquicos completos y ELI, versiones parciales, resolver vigencias parciales y disposiciones transitorias sin inferencias. La consulta histórica ya selecciona por fechas efectivas explícitas y rechaza fechas ausentes/conflictivas; no sustituye una interpretación jurídica.
-- Esquema relacional completo V2, migraciones, full-text indexado con tildes, paginación cliente, partición e inventario de cobertura por fuente, jurisdicción y materia.
-- Conectores autonómicos, EUR-Lex, fuentes universitarias y licencias. No hay catálogo municipal ni cobertura total.
-- Clasificación jurídica del sumario, correlación de normas modificadoras con consolidados, alertas por consolidación atrasada, circuit breaker y entrada en vigor futura. Ya están implementados cola/lotes persistentes, leases, retries, backfill, captura de XML y eventos de publicación deduplicados; falta validar el BOE real.
-- Frontend editorial completo, autenticación MFA real, RBAC por tenant, auditoría firmada, checklist jurídico, rollback editorial y revisión por profesionales. La API editorial permanece deshabilitada; `EDITORIAL_MFA_GATEWAY` es una salvaguarda de desarrollo, **no implementa ni verifica MFA** y no debe habilitarse en un servidor público.
-- Edición de tarjetas con revisiones inmutables y reconciliación en varios dispositivos; sincronización de notas/planes, OAuth/email y resolución avanzada de conflictos. Ya hay recuperación de identidad con código de un uso, descarga/subida de tarjetas y revisiones con conflictos conservados y SQLCipher móvil con clave separada. El cifrado y la migración nativos están pendientes de prueba; web conserva preferencias sin SQLCipher.
-- Ejercicios estructurados de ordenación y verdadero/falso (ahora son autoevaluados), glosario, resúmenes revisados, material débil, favoritos de tarjetas, undo remoto compensatorio, informes enviados al equipo. Los reportes actuales son locales.
-- Importación Anki y adjuntos, escaneo de archivos, controles de uso compartido, moderación y licencias por documento. CSV se importa solo como contenido privado no verificado.
-- Programación de recordatorios/push APNs/FCM, preferencias de canales/quiet hours, deduplicación de entregas y enlaces profundos. No se solicitan permisos push inexistentes.
-- Convocatorias oficiales y temarios verificables, mapa tema-artículo, asignaturas con evaluaciones/ponderaciones, semestres archivables, bibliografía licenciada, exámenes oficiales contrastados. Las oposiciones actuales son plantillas genéricas etiquetadas.
-- Planificación avanzada por prioridad de temas y capacidad horaria. Ya se guardan vacaciones y descansos, la cola diaria los respeta y se muestra una previsión de siete días con pendientes acumulados. La previsión todavía no simula futuras respuestas ni revisiones nuevas.
-- Compras Google Play/StoreKit, productos y precios con impuestos, entitlements autoritativos completos, restauración, webhooks firmados/deduplicados, reembolsos, gracia y revocación. El endpoint de validación rechaza compras hasta configurar integraciones; no hay botón de compra engañoso.
-- Registro del responsable, contacto y textos legales finales, inventario RGPD, política de menores, conservación/borrado de backups y revisión de licencias. Los avisos actuales describen el comportamiento de desarrollo.
-- Infraestructura dev/staging/prod, TLS público, cifrado de discos/backups, gestor de secretos, despliegue, colas/cron administrados, backup/restore operativo, observabilidad sin PII, alertas, SBOM/escaneo, límites de coste y recuperación RPO/RTO.
-- QA de accesibilidad real con TalkBack/VoiceOver, textos 200%, rotaciones, teclado y dispositivos; rendimiento con 10.000 normas, prueba multidispositivo y todas las aceptaciones LEG/EDU/UX/PAY/SEC/OPS del documento. Una comprobación de sintaxis no valida estos puntos.
-- Firmas, AAB, symbols/dSYM y publicación con cuentas de desarrollador. No se han creado cuentas, contratado servicios ni enviado comunicaciones.
+## Implementación de producto pendiente
 
-## Configuración y decisiones del titular
+- Esquema relacional V2 completo, migraciones, full-text a escala y rendimiento con 10.000 normas. El índice de catálogo actual no es un motor jurídico completo.
+- Conectores autonómicos/EUR-Lex/municipales y fuentes universitarias, revisión individual de licencias y declaraciones auditables de cobertura.
+- Índices jerárquicos completos; interpretación jurídica de vigencias parciales/transitorias y reformas, referencias cruzadas, correlación con consolidación atrasada y clasificación especializada de eventos. No inferir derogaciones tácitas.
+- MFA real y RBAC editorial por tenant, backoffice de cotejo y asignación, auditoría firmada, checklist jurídico, rollback y circuito de resolución de reportes. La recepción de un reporte no implica revisión profesional. No activar `EDITORIAL_MFA_GATEWAY` como sustituto de MFA.
+- Corpus educativo validado por profesionales, explicaciones, glosario, resúmenes y casos revisados; no hay material con sello de verificación por el hecho de incluir legislación.
+- Convocatorias y temarios oficiales versionados y verificados, mapeo tema-artículo y guías docentes autorizadas. Las plantillas personales no son programas oficiales.
+- Resolución avanzada de conflictos de tarjetas entre dispositivos, compensación remota de undo y sincronización granular por entidad. Las revisiones y los conflictos se conservan; no todos los conflictos tienen resolución automática.
+- Importación Anki, adjuntos con escaneo/controles, uso compartido y moderación. CSV sigue siendo privado no verificado.
+- Planificador por prioridad de temas, tiempo disponible y capacidad horaria; edición avanzada de evaluaciones/temas y mapeo multidisciplinar. La previsión actual no simula futuras respuestas ni garantiza cobertura.
+- Copias SQLite cifradas de desarrollo están probadas; faltan backups del proveedor, retención y simulacros operativos de recuperación parcial por entidad en PostgreSQL.
 
-Hacen falta cuentas de tiendas, proveedor de hosting/PostgreSQL/colas/almacenamiento, identidad/OAuth, Firebase/APNs, presupuestos, productos/precios finales, revisión jurídica y licencias. No se deben enviar secretos en el chat; deben configurarse en el gestor seguro correspondiente. El documento deja estas decisiones expresamente abiertas.
+## Validación y decisiones del titular
+
+Faltan SQLCipher/Keychain/Keystore en dispositivos reales, comportamiento multidispositivo con red inestable, TalkBack/VoiceOver, teclado, escalado y rotación en toda la aplicación, pruebas de carga/consumo y auditoría de dependencias/seguridad completa. Un build correcto o una prueba visual de Chromium no acredita estos puntos.
+
+El titular debe concretar presupuesto/región/proveedor, proyecto Firebase, productos/precios, responsable editorial jurídico, convocatorias piloto, identidad del responsable del tratamiento, contacto, menores, RGPD, políticas de conservación y licencias comerciales. Usar ajustes seguros para las credenciales; nunca enviarlas al chat ni guardarlas en Git.

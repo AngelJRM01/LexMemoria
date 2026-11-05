@@ -74,6 +74,8 @@ class Audit(Base):
 
 def connect(url=None):
     url = url or os.getenv('DATABASE_URL', 'sqlite:///./lexmemoria.db')
+    if url.startswith(('postgres://', 'postgresql://')):
+        url = 'postgresql+psycopg://' + url.split('://', 1)[1]
     engine = create_engine(url, connect_args={'check_same_thread': False} if url.startswith('sqlite') else {})
     if url.startswith('sqlite'):
         @event.listens_for(engine, 'connect')

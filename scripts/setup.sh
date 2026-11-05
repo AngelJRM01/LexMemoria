@@ -14,8 +14,7 @@ if ! command -v flutter >/dev/null; then
 fi
 flutter --version
 cd "$PROJECT_ROOT/mobile"
-# Generate tool metadata/wrappers missing from a clean checkout, preserving sources.
-flutter create --platforms=android,ios,web --org es.lexmemoria --project-name lexmemoria --no-pub .
-flutter pub get
+# Native project files are already tracked. Do not regenerate application scaffolding.
+flutter pub get --enforce-lockfile
 flutter analyze
 flutter test

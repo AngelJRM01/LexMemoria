@@ -2,7 +2,7 @@
 
 La V2 prevalece sobre V1. Se conservan identificadores repetidos junto con sección y línea de origen; `UX-001` y otros códigos se reutilizan en el documento. Esta matriz inventaría requisitos, **no acredita su cumplimiento integral**. El estado es conservador: la presencia de código no equivale a aceptación. Las referencias de archivos identifican una base parcial; para carencias concretas, consultar `PENDIENTES.md`.
 
-Los requisitos sin prueba ejecutada continúan pendientes de aceptación, aunque haya pantallas o endpoints. Las pruebas de servidor usan fixtures sintéticos. No se ha probado Flutter ni el BOE real.
+Los requisitos sin prueba ejecutada continúan pendientes de aceptación, aunque haya pantallas o endpoints. Las pruebas de servidor usan fixtures sintéticos. Las comprobaciones actuales de Flutter y BOE real se documentan en [el avance de 5 de noviembre](AVANCE_V2_2026-11-05.md) y [VALIDACION.md](VALIDACION.md). Los estados de esta matriz siguen siendo conservadores y no acreditan aceptación integral.
 
 | Origen | ID | Requisito | Estado | Base / evidencia |
 | --- | --- | --- | --- | --- |

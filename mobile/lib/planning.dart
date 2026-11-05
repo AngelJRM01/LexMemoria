@@ -1,8 +1,9 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Badge;
 import 'models.dart';
 import 'store.dart';
 import 'widgets.dart';
+import 'university.dart';
 
 class PlannerPage extends StatefulWidget {
   final AppStore store;
@@ -48,22 +49,13 @@ class _PlannerPageState extends State<PlannerPage> {
       const SizedBox(height: 10), const Text('Previsión de las tarjetas actuales. No anticipa futuros fallos ni nuevas tarjetas; se recalcula al cambiar el plan.', style: TextStyle(fontSize: 12)),
       const Section('Fecha de examen'), OutlinedButton.icon(onPressed: () async {
         final v = await showDatePicker(context: context, initialDate: exam != null && exam!.isAfter(DateTime.now()) ? exam : DateTime.now(), firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 3650)));
-        if (v != null) setState(() => exam = v);
+        if (v != null) { setState(() => exam = v); }
       }, icon: const Icon(Icons.event), label: Text(exam == null ? 'Añadir fecha opcional' : civilDate(exam!))),
       if (days != null) Padding(padding: const EdgeInsets.only(top: 14), child: Text('$days días hasta el examen. Las revisiones se priorizan por vencimiento, sin estimar una nota.')),
       if (load > goal || rest.length == 7) const Padding(padding: EdgeInsets.only(top: 20), child: Paper(child: Text('La disponibilidad no permite la carga prevista. Revisa la fecha, el objetivo o los días libres.'))),
       const SizedBox(height: 24), FilledButton(onPressed: rest.length == 7 ? null : () => perform(context, () => widget.store.setProfile({'dailyGoal': goal.round(), 'hours': hours, 'examDate': exam?.toIso8601String(), 'restDays': rest, 'vacations': vacations}), success: 'Plan guardado'), child: const Text('Guardar mi plan')),
-      const Section('Asignaturas y objetivos propios'),
-      ...widget.store.list('courses').map((c) => ListTile(leading: const Icon(Icons.school_outlined), title: Text(c['title']), subtitle: Text('${c['institution']} · ${c['semester']}\nGuía docente no verificada'))),
-      OutlinedButton.icon(onPressed: () async {
-        final title = TextEditingController(), school = TextEditingController(), semester = TextEditingController();
-        final ok = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: const Text('Nueva asignatura'), content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(controller: title, decoration: const InputDecoration(labelText: 'Asignatura')), const SizedBox(height: 12), TextField(controller: school, decoration: const InputDecoration(labelText: 'Universidad')),
-          const SizedBox(height: 12), TextField(controller: semester, decoration: const InputDecoration(labelText: 'Semestre / curso'))])), actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
-            FilledButton(onPressed: () { if (title.text.trim().isNotEmpty) Navigator.pop(ctx, true); }, child: const Text('Guardar'))]));
-        if (ok == true) { await widget.store.add('courses', {'title': title.text, 'institution': school.text, 'semester': semester.text}); if (mounted) setState(() {}); }
-        title.dispose(); school.dispose(); semester.dispose();
-      }, icon: const Icon(Icons.add), label: const Text('Añadir asignatura')),
+      const Section('Universidad y semestres'),
+      OutlinedButton.icon(onPressed: () => push(context, UniversityPage(store: widget.store)), icon: const Icon(Icons.school_outlined), label: const Text('Asignaturas, temas y evaluaciones')),
     ]));
   }
 }
@@ -102,7 +94,7 @@ class _ExamPageState extends State<ExamPage> {
   @override
   Widget build(BuildContext context) {
     final available = widget.store.cards.where((c) => c.type == 'test' && c.options.length >= 2 && c.correct != null && !c.blocked).toList();
-    if (attempt == null) return Scaffold(appBar: AppBar(title: const Text('Simulacro personal')), body: PageBody(children: [
+    if (attempt == null) { return Scaffold(appBar: AppBar(title: const Text('Simulacro personal')), body: PageBody(children: [
       Text('Practica con intención.', style: Theme.of(context).textTheme.headlineMedium), const SizedBox(height: 14), const Badge('Práctica personal · no es un examen oficial', warning: true),
       const SizedBox(height: 24), if (available.isEmpty) const EmptyState(icon: Icons.fact_check_outlined, title: 'Necesitas preguntas tipo test', detail: 'Crea tarjetas de tipo test con opciones, solución y explicación. No se inventan preguntas oficiales.'),
       const Section('Configura tu sesión'), DropdownButtonFormField<int>(initialValue: minutes, decoration: const InputDecoration(labelText: 'Tiempo disponible'), items: [10, 20, 30, 60].map((v) => DropdownMenuItem(value: v, child: Text('$v minutos'))).toList(), onChanged: (v) => minutes = v!),
@@ -115,9 +107,10 @@ class _ExamPageState extends State<ExamPage> {
         await persist(); if (mounted) setState(() {});
       }, child: Text('Comenzar · ${available.length < count ? available.length : count} preguntas')),
     ]));
+    }
     final questions = (attempt!['questions'] as List).map((q) => Json.from(q)).toList();
     final result = attempt!['result'];
-    if (result != null) return Scaffold(appBar: AppBar(title: const Text('Resultado del simulacro')), body: PageBody(children: [
+    if (result != null) { return Scaffold(appBar: AppBar(title: const Text('Resultado del simulacro')), body: PageBody(children: [
       Text('${(result['score'] as num).toStringAsFixed(2)} / ${result['total']}', style: Theme.of(context).textTheme.headlineLarge), const SizedBox(height: 12),
       Text('${result['correct']} aciertos · ${result['wrong']} errores · ${result['blank']} en blanco'), const SizedBox(height: 8), const Text('Práctica personal. Esta puntuación no predice tu resultado en una convocatoria.'),
       ...questions.map((q) => Padding(padding: const EdgeInsets.only(top: 20), child: Paper(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(q['front'], style: Theme.of(context).textTheme.titleLarge), const SizedBox(height: 10),
@@ -126,6 +119,7 @@ class _ExamPageState extends State<ExamPage> {
         Text('${q['normId']} ${q['unitId']} · versión ${q['versionId']}', style: const TextStyle(fontSize: 12))])))),
       const SizedBox(height: 24), FilledButton(onPressed: () async { attempt = null; await persist(); if (mounted) setState(() {}); }, child: const Text('Configurar otro simulacro')),
     ]));
+    }
     final q = questions[index]; final answers = Json.from(attempt!['answers']);
     return Scaffold(appBar: AppBar(title: Text('Pregunta ${index + 1} de ${questions.length}')), body: PageBody(children: [
       Text('Tiempo restante: ${remaining < 0 ? 0 : remaining ~/ 60}:${(remaining < 0 ? 0 : remaining % 60).toString().padLeft(2, '0')}', style: const TextStyle(fontWeight: FontWeight.bold)), const SizedBox(height: 20),

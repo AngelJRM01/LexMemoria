@@ -14,7 +14,7 @@ String normalize(String value) {
 typedef Json = Map<String, dynamic>;
 
 class StudyCard {
-  final String id, deck, front, back, explanation, type, normId, unitId, versionId;
+  final String id, deck, front, back, explanation, type, normId, unitId, versionId, unitVersionHash;
   final String editorialState;
   final bool blocked;
   final List<String> options;
@@ -22,15 +22,15 @@ class StudyCard {
   final int revision;
   StudyCard({required this.id, required this.deck, required this.front, required this.back,
     this.explanation = '', this.type = 'qa', this.normId = '', this.unitId = '',
-    this.versionId = '', this.editorialState = 'user', this.blocked = false,
+    this.versionId = '', this.unitVersionHash = '', this.editorialState = 'user', this.blocked = false,
     this.options = const [], this.correct, this.revision = 1});
   Json toJson() => {'id': id, 'deck': deck, 'front': front, 'back': back,
     'explanation': explanation, 'type': type, 'normId': normId, 'unitId': unitId,
-    'versionId': versionId, 'editorialState': editorialState, 'blocked': blocked,
+    'versionId': versionId, 'unitVersionHash': unitVersionHash, 'editorialState': editorialState, 'blocked': blocked,
     'options': options, 'correct': correct, 'revision': revision};
   factory StudyCard.fromJson(Json j) => StudyCard(id: j['id'], deck: j['deck'], front: j['front'],
     back: j['back'], explanation: j['explanation'] ?? '', type: j['type'] ?? 'qa',
-    normId: j['normId'] ?? '', unitId: j['unitId'] ?? '', versionId: j['versionId'] ?? '',
+    normId: j['normId'] ?? '', unitId: j['unitId'] ?? '', versionId: j['versionId'] ?? '', unitVersionHash: j['unitVersionHash'] ?? '',
     editorialState: j['editorialState'] ?? 'user', blocked: j['blocked'] ?? false,
     options: List<String>.from(j['options'] ?? []), correct: j['correct'], revision: j['revision'] ?? 1);
 }
@@ -78,18 +78,18 @@ List<Json> initialCatalogue() => [
   {'id': 'BOE-A-1985-12666', 'short': 'Poder Judicial', 'title': 'Ley Orgánica 6/1985, de 1 de julio, del Poder Judicial', 'subject': 'Procesal'},
   {'id': 'BOE-A-2015-10565', 'short': 'Procedimiento Administrativo', 'title': 'Ley 39/2015, de 1 de octubre, del Procedimiento Administrativo Común de las Administraciones Públicas', 'subject': 'Administrativo'},
   {'id': 'BOE-A-2015-10566', 'short': 'Régimen Jurídico del Sector Público', 'title': 'Ley 40/2015, de 1 de octubre, de Régimen Jurídico del Sector Público', 'subject': 'Administrativo'},
-  {'id': 'BOE-A-2015-11719', 'short': 'Estatuto de los Trabajadores', 'title': 'Real Decreto Legislativo 2/2015, de 23 de octubre, por el que se aprueba el texto refundido de la Ley del Estatuto de los Trabajadores', 'subject': 'Laboral'},
+  {'id': 'BOE-A-2015-11430', 'short': 'Estatuto de los Trabajadores', 'title': 'Real Decreto Legislativo 2/2015, de 23 de octubre, por el que se aprueba el texto refundido de la Ley del Estatuto de los Trabajadores', 'subject': 'Laboral'},
   {'id': 'BOE-A-2003-23186', 'short': 'Ley General Tributaria', 'title': 'Ley 58/2003, de 17 de diciembre, General Tributaria', 'subject': 'Tributario'},
   {'id': 'BOE-A-1885-6627', 'short': 'Código de Comercio', 'title': 'Real Decreto de 22 de agosto de 1885 por el que se publica el Código de Comercio', 'subject': 'Mercantil'},
   {'id': 'BOE-A-2010-10544', 'short': 'Sociedades de Capital', 'title': 'Real Decreto Legislativo 1/2010, de 2 de julio, por el que se aprueba el texto refundido de la Ley de Sociedades de Capital', 'subject': 'Mercantil'},
   {'id': 'BOE-A-1998-16718', 'short': 'Jurisdicción Contencioso-administrativa', 'title': 'Ley 29/1998, de 13 de julio, reguladora de la Jurisdicción Contencioso-administrativa', 'subject': 'Administrativo'},
   {'id': 'BOE-A-2011-15936', 'short': 'Jurisdicción Social', 'title': 'Ley 36/2011, de 10 de octubre, reguladora de la jurisdicción social', 'subject': 'Laboral'},
   {'id': 'BOE-A-2017-12902', 'short': 'Contratos del Sector Público', 'title': 'Ley 9/2017, de 8 de noviembre, de Contratos del Sector Público', 'subject': 'Administrativo'},
-  {'id': 'BOE-A-2015-11724', 'short': 'Estatuto Básico del Empleado Público', 'title': 'Real Decreto Legislativo 5/2015, de 30 de octubre, por el que se aprueba el texto refundido de la Ley del Estatuto Básico del Empleado Público', 'subject': 'Administrativo'},
+  {'id': 'BOE-A-2015-11719', 'short': 'Estatuto Básico del Empleado Público', 'title': 'Real Decreto Legislativo 5/2015, de 30 de octubre, por el que se aprueba el texto refundido de la Ley del Estatuto Básico del Empleado Público', 'subject': 'Administrativo'},
   {'id': 'BOE-A-2018-16673', 'short': 'Protección de Datos', 'title': 'Ley Orgánica 3/2018, de 5 de diciembre, de Protección de Datos Personales y garantía de los derechos digitales', 'subject': 'Derechos Humanos'},
   {'id': 'BOE-A-2007-6115', 'short': 'Igualdad Efectiva', 'title': 'Ley Orgánica 3/2007, de 22 de marzo, para la igualdad efectiva de mujeres y hombres', 'subject': 'Derechos Humanos'},
   {'id': 'BOE-A-1985-5392', 'short': 'Bases del Régimen Local', 'title': 'Ley 7/1985, de 2 de abril, Reguladora de las Bases del Régimen Local', 'subject': 'Administrativo'},
-  {'id': 'BOE-A-1979-30178', 'short': 'Tribunal Constitucional', 'title': 'Ley Orgánica 2/1979, de 3 de octubre, del Tribunal Constitucional', 'subject': 'Constitucional'},
+  {'id': 'BOE-A-1979-23709', 'short': 'Tribunal Constitucional', 'title': 'Ley Orgánica 2/1979, de 3 de octubre, del Tribunal Constitucional', 'subject': 'Constitucional'},
 ].map((n) => <String, dynamic>{...n, 'coverage': 'identified', 'jurisdiction': 'Estado',
   'sourceUrl': 'https://www.boe.es/buscar/act.php?id=${n['id']}', 'reviewState': 'pending'}).toList();
 

@@ -7,6 +7,7 @@ from defusedxml import ElementTree as ET
 from defusedxml.common import DefusedXmlException
 import httpx
 from sqlalchemy import select
+from .catalogue import index_norm
 from .db import Record, Audit, uid, now
 
 BASE = 'https://www.boe.es/datosabiertos/api'
@@ -49,17 +50,26 @@ class BoeClient:
                 raise SourceError('BOE no disponible', retryable=transient,
                                   payload=response.content, source_url=url) from exc
             try:
-                ET.fromstring(response.content)
+                root = ET.fromstring(response.content)
+                status = root.findtext('./status/code')
+                if status is not None and status != '200':
+                    raise SourceError('BOE devuelve estado ' + status, retryable=status == '429' or status.startswith('5'),
+                                      payload=response.content, source_url=url)
             except (ET.ParseError, DefusedXmlException, ValueError) as exc:
                 raise SourceError('XML de BOE no válido; cuarentena', payload=response.content, source_url=url) from exc
             self.sleep(.25)
             return response.content
         raise SourceError('BOE no disponible', retryable=True, source_url=url)
 
-    def catalogue(self, offset=0, limit=100):
+    def catalogue(self, offset=0, limit=100, start=None, end=None):
         if not 0 <= offset or not 1 <= limit <= 1000:
             raise ValueError('Invalid pagination')
-        return self.get(f'/legislacion-consolidada?offset={offset}&limit={limit}')
+        query = f'/legislacion-consolidada?offset={offset}&limit={limit}'
+        for key, value in [('from', start), ('to', end)]:
+            if value is not None:
+                datetime.strptime(value, '%Y%m%d')
+                query += '&' + key + '=' + value
+        return self.get(query)
 
     def daily(self, civil_date):
         datetime.strptime(civil_date, '%Y%m%d')
@@ -123,9 +133,14 @@ def import_norm(session, client, official_id):
         data = dict(officialId=official_id, title=text_of(metadata, 'titulo') or official_id,
                     sourceUrl=source_url, source='BOE', jurisdiction='Estado',
                     publicationDate=text_of(metadata, 'fecha_publicacion'),
+                    eliUri=text_of(metadata, 'url_eli'), kind=text_of(metadata, 'rango'),
+                    authority=text_of(metadata, 'departamento'), sourceUpdatedAt=text_of(metadata, 'fecha_actualizacion'),
+                    sourceConsolidationState=text_of(metadata, 'estado_consolidacion'),
+                    licenceUrl='https://www.boe.es/informacion/aviso_legal/index.php#reutilizacion',
                     effectiveFrom=text_of(metadata, 'fecha_vigencia'),
                     coverage='imported', reviewState='pending', checkedAt=now(),
                     latestVersion=version_id, blocks=len(blocks), consolidatedInformative=True)
+        index_norm(session, official_id, data)
         if norm:
             old_version = norm.data.get('latestVersion')
             # Invalidate dependent cards before making the new snapshot visible.

@@ -1,0 +1,34 @@
+# Blueprint for review. Creating these services incurs hosting charges.
+# Supply an existing managed PostgreSQL URL; no database or account is created here.
+services:
+  - type: web
+    name: lexmemoria-api
+    runtime: python
+    plan: starter
+    rootDir: backend
+    buildCommand: pip install -r requirements.lock
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1 --no-access-log
+    healthCheckPath: /health
+    autoDeployTrigger: off
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.14
+      - key: DATABASE_URL
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+  - type: cron
+    name: lexmemoria-boe
+    runtime: python
+    plan: starter
+    rootDir: backend
+    schedule: '15 * * * *'
+    buildCommand: pip install -r requirements.lock
+    startCommand: python -m app.cli daily && python -m app.cli worker --limit 20
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.14
+      - key: DATABASE_URL
+        sync: false

@@ -6,7 +6,7 @@ Aplicación Flutter para estudiar Derecho español en Universidad y Oposiciones,
 
 - Cliente móvil Android/iOS y proyecto web adaptable, interfaz en español, cinco destinos, modo oscuro y tipografía del sistema.
 - Onboarding Universidad/Oposiciones/Ambos, acceso local sin registro, cambio de itinerario conservando datos.
-- Inventario de 20 referencias BOE. Búsqueda tolerante a tildes, materias, marcadores y seguimiento local. Las referencias **no incluyen textos descargados ni material jurídico certificado**.
+- Catálogo de 20 normas BOE con paquetes locales. Búsqueda tolerante a tildes, materias, marcadores y seguimiento local. Los textos son consolidaciones informativas; **no incluyen material educativo certificado**.
 - Descarga de normas importadas desde una API configurable, lectura offline, notas privadas, copia de referencias, voz mediante plataforma, selector histórico, consulta por fecha efectiva que rechaza metadatos ambiguos y comparación textual de párrafos.
 - Tarjetas personales QA, cloze, verdadero/falso, ordenación, caso y test; creación desde artículo; importación CSV con previsualización, límites y validación completa antes de guardar.
 - Almacén SQLCipher en Android/iOS con clave separada en Keychain/Keystore; migración verificada desde preferencias. La versión web conserva preferencias locales sin este cifrado. La integración nativa está pendiente de ejecución.
@@ -22,14 +22,18 @@ Consulta [la matriz de requisitos](docs/matriz-requisitos.md), [el estado de val
 
 ## Preparación
 
-Requisitos: Python 3.12, Flutter **3.47.9**, Java 17 y Android SDK para Android; macOS/Xcode/CocoaPods para iOS. El SDK Flutter se ha clonado en `/workspace/tools/flutter`, pero la descarga de Dart está bloqueada por la política de red de este entorno.
+Requisitos validados: Python 3.12, Flutter **3.47.9** y un JDK completo (validado con Java 21, bytecode Java 17). Android necesita SDK 34/35/36, NDK 28.2.13676358 y CMake 3.22.1; iOS necesita macOS/Xcode/CocoaPods.
 
 ```bash
 export PATH="/workspace/tools/flutter/bin:$PATH"
 ./scripts/setup.sh
 ```
 
-El script instala el backend con versiones fijadas, completa metadatos nativos mediante `flutter create` sin sobrescribir código existente, resuelve paquetes y ejecuta análisis/pruebas móviles. **Su parte Flutter está pendiente de ejecución.** Guarda `pubspec.lock` después de la primera resolución válida para fijar las dependencias del cliente.
+El script instala las versiones fijadas del backend y cliente, ejecuta análisis y pruebas. `mobile/pubspec.lock` está resuelto. No regenera ni sobrescribe el proyecto nativo.
+
+La aplicación incluye **20 normas oficiales del BOE con 11.777 bloques**, versiones, hashes, fechas y atribución. En Biblioteca abre una norma y pulsa Descargar texto para guardarla para lectura; no necesita servidor. Es texto consolidado informativo, sin certificación jurídica ni material educativo verificado. La actualización remota es opcional y debe configurarse en Perfil.
+
+[Avance V2 y límites](docs/AVANCE_V2_2026-11-05.md) · [Evidencia de validación](docs/VALIDACION.md) · [Despliegue propuesto en Render](docs/DESPLIEGUE.md)
 
 El checkout ya está aislado; usa `/workspace/LexMemoria` y no crees otro worktree.
 
@@ -74,9 +78,11 @@ CSV de tarjetas: UTF-8 con encabezados `pregunta,respuesta`, máximo 2 MB y 2000
 
 ```bash
 cd mobile
-flutter pub get
+flutter pub get --enforce-lockfile
 flutter run
 flutter build apk --debug
+# En este entorno, con proxy y JDK completo:
+JAVA_HOME=/workspace/tools/jdk/jdk-21.0.13+9 python3 ../scripts/build_android.py
 ```
 
 Para iOS: `flutter build ios --simulator` en macOS; firma y publicación requieren cuenta y perfiles propios. Los targets nativos proceden de las plantillas oficiales de Flutter 3.47.9. El wrapper Gradle 9.3.1 está verificado contra SHA-256 oficial y la distribución incluye checksum fijado. El identificador provisional es `es.lexmemoria.app`.

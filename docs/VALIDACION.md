@@ -1,42 +1,55 @@
-# Evidencia de validación
+# Evidencia de validación · 5 de noviembre de 2026
 
-## Ejecutado en esta máquina
+Resultados de esta iteración, sin publicación de entorno, servicios o aplicación. No equivalen a aceptación integral de la especificación.
 
-- **34 pruebas backend aprobadas**, `python -m pytest -q`, Python 3.12. Incluyen rotación/revocación de tokens, aislamiento de usuarios, rechazo de citas inexistentes, deduplicación de revisiones, conflicto de clave, bloqueo de tarjetas, exportación/borrado, ETag, promociones sin renovación/cobros, SM-2, puntuación, importación atómica, XML preservado con tabla, versiones antiguas conservadas, cuarentena, 429/reintentos, permisos editoriales y banco congelado de simulacro. Las subidas con IDs estables se prueban sin duplicación.
-- **Smoke HTTP real aprobado**: arranque con `scripts/start_backend.sh`, GET `/health`, crear identidad temporal, crear mazo privado, borrar la identidad y sus datos. El smoke no deja tarjetas o cuentas de prueba.
-- **Sintaxis Dart aprobada por tree-sitter-dart** en todos los archivos `.dart`, incluidos tests. Es solo parseo: no resuelve tipos/imports ni valida widgets o plugins.
-- `compileall` de módulos Python aprobado.
-- Wrapper Gradle descargado de la etiqueta oficial v9.3.1 y cotejado con SHA-256 oficial `b3a875ddc1f044746e1b1a55f645584505f4a10438c1afea9f15e92a7c42ec13`. Distribución fijada con SHA-256 en propiedades.
+| Comprobación | Resultado |
+| --- | --- |
+| Backend, Python 3.12.14, `python -m pytest -q` | **53 pruebas aprobadas** |
+| Flutter 3.47.9 / Dart 3.13.7, `flutter analyze` | **Sin incidencias** |
+| `flutter test` | **33 pruebas aprobadas** |
+| `scripts/setup.sh` con lockfile estricto | Ejecutado correctamente |
+| `pip check` | Sin dependencias incompatibles |
+| `flutter build web --release --no-web-resources-cdn` | Build generado |
+| APK Android debug | Build generado con JDK Temurin 21.0.13, Gradle 9.3.1 verificado, SDK 34/35/36 y NDK 28.2.13676358 |
+| Smoke HTTP real | Salud, búsqueda sin tildes, lectura de Constitución, tarjeta estructurada, espacio privado y supresión/revocación aprobados |
+| Chromium real | Invitado → Biblioteca → paquete local → artículo 1 de Constitución; sin errores JavaScript |
+| Recarga web sin conexión | No acreditada: el navegador de prueba no quedó controlado por un service worker |
+| Corpus empaquetado | **20 normas, 11.777 bloques**; hashes del manifiesto y referencias comprobados |
+| BOE real, sumario 2026-11-04 | 234 documentos capturados, eventos pendientes de análisis |
+| BOE real, actualizaciones consolidadas 2026-11-04 | 23 actualizaciones capturadas, checkpoint completo |
+| Backups SQLite | Copia consistente, restauración, integridad y rechazo de manipulación/sobrescritura probados |
+| Firebase servidor | Firmas RSA de prueba, emisor/audiencia/fechas/proveedor, vinculación y aislamiento probados; sin proyecto real |
 
-El runner muestra una advertencia de Starlette sobre futura migración del TestClient de httpx a httpx2; los 34 tests se completan. No se desactivaron aserciones ni verificación TLS/checksums.
+Las pruebas nuevas cubren revisiones inmutables, progreso conservado, `If-Match`, respuestas estructuradas, hashes de redacción histórica, búsqueda y cursor, informes idempotentes, avisos internos, espacios de estudio privados y comparación de conflictos. Flutter comprueba integridad de paquetes y recarga sin guardar el corpus completo en preferencias. Las ponderaciones universitarias conservan el peso de evaluaciones pendientes.
 
-## No ejecutado / bloqueado
+## Artefactos locales
 
-- Descarga de Dart/Flutter: **bloqueada por proxy CONNECT 403 a storage.googleapis.com**. Clonar Flutter 3.47.9 desde GitHub sí funcionó.
-- `flutter pub get`, `flutter analyze`, `flutter test`, renderizado y pruebas manuales de UI: **no ejecutados**. Se han escrito 24 tests Flutter (aprendizaje, almacenamiento y widget), pendientes de ejecución. No hay `pubspec.lock` resuelto.
-- Builds APK/AAB/web/iOS, instalación en dispositivo, firma y publicación: **no ejecutados**. Android SDK no está instalado e iOS necesita macOS/Xcode.
-- API BOE en vivo, importación de corpus real, licencia/revisión editorial: **no verificadas**. El catálogo inicial son 20 referencias identificadas; no se etiqueta texto educativo como verificado.
-- PostgreSQL real, conexiones en varios móviles, Keychain/Keystore real, voz nativa y permisos de plataforma: **no verificados**.
-- CI preparada, pero **no enviada ni ejecutada en GitHub**.
-- Compras sandbox/reales, APNs/FCM, OAuth/MFA, backups cifrados/restauración operativa, auditoría RGPD, rendimiento y accesibilidad con dispositivos: **pendientes**.
+- APK: `mobile/build/app/outputs/flutter-apk/app-debug.apk`.
+- Web: `mobile/build/web/`.
+- Captura de la lectura en Chromium: `/tmp/lex-reader.png` (evidencia temporal de esta sesión).
+- API OpenAPI: `docs/openapi.json` regenerado desde el código.
+
+No se ha instalado el APK en un dispositivo/emulador. La firma es de desarrollo; no usarla para publicar en tiendas. No se ha probado SQLCipher/Keychain/Keystore nativo ni iOS/macOS. No hay compra, push, login federado real, PostgreSQL ni despliegue remoto acreditados por estos resultados.
+
+## Advertencias observadas
+
+- Starlette avisa de la futura migración del TestClient de httpx a httpx2; las pruebas se completan.
+- El build JavaScript web pasa; el dry-run Wasm detecta dependencias incompatibles de secure storage/TTS. No se ha generado Wasm.
+- Plugins Android actuales avisan de una futura migración a Kotlin integrado. El APK actual compila. No se han ocultado verificaciones TLS, checksums ni aserciones.
+- Las pruebas de texto grande y el recorrido de Chromium son parciales; no sustituyen una auditoría de accesibilidad en todas las pantallas.
 
 ## Reproducción
 
-Backend:
-
-```sh
-cd /workspace/LexMemoria/backend
+```bash
+cd /workspace/LexMemoria
+export PATH="/workspace/tools/flutter/bin:$PATH"
+./scripts/setup.sh
+cd backend
 /workspace/lexmemoria-venv/bin/python -m pytest -q
+cd ../mobile
+flutter build web --release --no-web-resources-cdn
+cd ..
+JAVA_HOME=/workspace/tools/jdk/jdk-21.0.13+9 python3 scripts/build_android.py
 ```
 
-Una vez aplicado el acceso de red y preparado Android/macOS, ejecutar `scripts/setup.sh`, `flutter build apk --debug` y `flutter build ios --simulator` en las plataformas correspondientes. Los resultados anteriores no sustituyen esas comprobaciones.
-
-## Segunda iteración
-
-Siete pruebas adicionales cubren selección histórica por fecha efectiva, reforma futura, fecha de cambio inclusiva, metadatos incompletos, conflictos en la misma fecha, texto fuera de su intervalo y contrato HTTP `asOf`. Se añaden tests Flutter de vacaciones, descansos, previsión semanal y consulta histórica, todavía sin ejecutar por el bloqueo del SDK.
-
-## Tercera iteración
-
-34 pruebas backend aprobadas: se añaden lotes reanudables y deduplicados, backoff persistente, recuperación de lease, cuarentena/reintento manual, backfill de días fallidos, deduplicación diaria, cambio horario de Madrid, paginación de eventos, recuperación de identidad de un solo uso, revocación de sesiones antiguas y metadatos de exportación no suplantables.
-
-SQLCipher y almacenamiento seguro: versiones comprobadas en pub.dev. Código y tests de migración escritos; **no se han ejecutado plugins nativos**. La sincronización cliente tiene tests escritos de refresh, aislamiento de tokens por URL de API, restauración de historial y conservación de revisiones pendientes, también pendientes de Flutter.
+Para regenerar paquetes tras nuevas importaciones verificadas: `/workspace/lexmemoria-venv/bin/python scripts/build_legal_assets.py`. Esto preserva hashes/atribución y no certifica vigencia ni crea contenido educativo público.

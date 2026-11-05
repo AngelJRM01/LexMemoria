@@ -86,3 +86,65 @@ def backfill(session, client, start, end, limit=31):
             results.append({'day': day.isoformat(), 'status': 'failed'})
         day += timedelta(days=1)
     return results
+
+
+def watch_consolidations(session, client, day, page_size=100, max_pages=100):
+    """Resume catalogue updates by offset; queue imports, never certify changes."""
+    from sqlalchemy import select
+    from .jobs import enqueue
+    civil = date.fromisoformat(day) if isinstance(day, str) else day
+    key = 'consolidated:' + civil.isoformat()
+    run = session.get(Record, key)
+    if run and run.data.get('status') == 'complete':
+        return run.data
+    run = run or Record(id=key, kind='catalogue_run', data={'day': civil.isoformat(), 'offset': 0, 'documents': 0})
+    run.data = {**run.data, 'status': 'running', 'startedAt': now()}
+    session.add(run); session.commit()
+    try:
+        for _ in range(max_pages):
+            offset = run.data['offset']
+            raw = client.catalogue(offset, page_size, start=civil.strftime('%Y%m%d'), end=civil.strftime('%Y%m%d'))
+            root = ET.fromstring(raw)
+            data = root.find('./data')
+            if data is None:
+                raise SourceError('Catálogo sin estructura conocida', payload=raw)
+            items = data.findall('./item')
+            identifiers = []
+            for item in items:
+                id_ = item.findtext('identificador')
+                stamp = item.findtext('fecha_actualizacion')
+                if not id_ or not re.fullmatch(r'BOE-A-\d{4}-\d+', id_) or not stamp:
+                    raise SourceError('Catálogo con identificador o fecha ausente', payload=raw)
+                event_id = 'catalogue:' + hashlib.sha256((id_ + ':' + stamp).encode()).hexdigest()
+                if not session.get(Record, event_id):
+                    session.add(Record(id=event_id, kind='legal_event', data={
+                        'normId': id_, 'title': item.findtext('titulo'), 'type': 'consolidation_detected',
+                        'sourceUpdatedAt': stamp, 'detectedAt': now(), 'impact': 'possible', 'editorialState': 'pending',
+                        'sourceUrl': 'https://www.boe.es/buscar/act.php?id=' + id_}))
+                # Only refresh norms already in the selected corpus, avoiding uncontrolled mass downloads.
+                norm = session.get(Record, id_)
+                if norm and norm.kind == 'norm': identifiers.append(id_)
+            if identifiers:
+                enqueue(session, identifiers, 'consolidated:' + civil.isoformat() + ':' + str(offset))
+            page_id = key + ':page:' + str(offset)
+            if not session.get(Record, page_id):
+                session.add(Record(id=page_id, kind='raw_catalogue_page', data={
+                    'day': civil.isoformat(), 'offset': offset, 'rawXml': raw.decode(),
+                    'hash': hashlib.sha256(raw).hexdigest(), 'downloadedAt': now()}))
+            run.data = {**run.data, 'offset': offset + len(items), 'documents': run.data['documents'] + len(items),
+                        'status': 'complete' if len(items) < page_size else 'running', 'finishedAt': now()}
+            session.commit()
+            if run.data['status'] == 'complete': return run.data
+        run.data = {**run.data, 'status': 'paused', 'reason': 'page_budget'}
+        session.commit()
+        return run.data
+    except Exception as exc:
+        session.rollback(); run = session.get(Record, key)
+        run.data = {**run.data, 'status': 'failed', 'errorType': type(exc).__name__, 'finishedAt': now()}
+        session.commit(); raise
+
+
+def daily_cycle(session, client, day=None):
+    civil = day or madrid_day() - timedelta(days=1)
+    return {'summary': {k: v for k, v in watch_day(session, client, civil).items() if k != 'rawXml'},
+            'consolidations': watch_consolidations(session, client, civil)}

@@ -82,4 +82,49 @@ void main() {
     expect(s.list('syncConflicts').single['kind'], 'pending_reviews');
     s.dispose();
   });
+  test('offline edits upload every content revision before their review events', () async {
+    final seen = <String>[];
+    final store = AppStore(await SharedPreferences.getInstance(), {'apiUrl': 'https://example.test'}, client: MockClient((r) async {
+      final body = jsonDecode(r.body) as Map;
+      if (r.url.path == '/v1/decks') return http.Response('{"id":"deck"}', 201);
+      if (r.url.path == '/v1/cards') {
+        seen.add(body['back']); return http.Response('{"id":"remote-card","revision":1}', 201);
+      }
+      if (r.url.path == '/v1/cards/remote-card') {
+        expect(r.headers['If-Match'], '1'); seen.add(body['back']);
+        return http.Response('{"id":"remote-card","revision":2}', 200);
+      }
+      if (r.url.path == '/v1/reviews') {
+        expect(body['cardRevision'], 1); expect(body['latencyMs'], 200); return http.Response('{}', 201);
+      }
+      throw StateError('Unexpected request: ${r.url.path}');
+    }));
+    final sync = RemoteSync(store, secure: Vault());
+    await sync.saveSession({'accessToken': 'a', 'refreshToken': 'b', 'userId': 'u'});
+    await store.addCard(StudyCard(id: 'local-card', deck: 'D', front: 'Q', back: 'Original'));
+    await store.review(store.cards.single, 3, latencyMs: 200);
+    await store.editCard(StudyCard(id: 'local-card', deck: 'D', front: 'Q', back: 'Corrected', revision: 2), expectedRevision: 1);
+    await sync.upload(); await sync.upload();
+    expect(seen, ['Original', 'Corrected']);
+    expect(store.list('reviews').single['synced'], isTrue);
+    expect(store.data['remoteCardRevisions']['local-card'], 2);
+    store.dispose();
+  });
+  test('pull preserves local-only edits while server still has known revision', () async {
+    final snapshot = {'userId': 'u', 'records': [
+      {'kind': 'deck', 'id': 'deck', 'title': 'D'},
+      {'kind': 'card', 'id': 'remote', 'clientId': 'local', 'deckId': 'deck', 'front': 'Q', 'back': 'Original', 'revision': 1},
+    ]};
+    final store = AppStore(await SharedPreferences.getInstance(), {'apiUrl': 'https://example.test'}, client: MockClient((_) async => http.Response(jsonEncode(snapshot), 200)));
+    final sync = RemoteSync(store, secure: Vault());
+    await sync.saveSession({'accessToken': 'a', 'refreshToken': 'b', 'userId': 'u'});
+    await sync.pull();
+    await store.editCard(StudyCard(id: 'local', deck: 'D', front: 'Q', back: 'Local edit', revision: 2), expectedRevision: 1);
+    await sync.pull();
+    expect(store.cards.single.back, 'Local edit');
+    expect(store.cards.single.revision, 2);
+    expect(store.list('syncConflicts'), isEmpty);
+    store.dispose();
+  });
+
 }

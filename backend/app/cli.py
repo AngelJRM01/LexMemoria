@@ -4,12 +4,14 @@ from pathlib import Path
 from .db import connect
 from .boe import BoeClient, import_norm
 from .jobs import enqueue, batch_status, run_worker, retry_quarantined
-from .monitor import watch_day, madrid_day, backfill
+from .monitor import watch_day, madrid_day, backfill, daily_cycle, watch_consolidations
 
 
 def main():
     p = argparse.ArgumentParser(description='LexMemoria · importación y vigilancia BOE')
     sub = p.add_subparsers(dest='command', required=True)
+    cmd = sub.add_parser('daily'); cmd.add_argument('day', nargs='?')
+    cmd = sub.add_parser('consolidations'); cmd.add_argument('day')
     cmd = sub.add_parser('import'); cmd.add_argument('id')
     cmd = sub.add_parser('watch'); cmd.add_argument('day', nargs='?')
     cmd = sub.add_parser('enqueue'); cmd.add_argument('file'); cmd.add_argument('--key')
@@ -21,7 +23,11 @@ def main():
     _, factory = connect()
     client = BoeClient()
     with factory() as s:
-        if args.command == 'import': result = import_norm(s, client, args.id)
+        if args.command == 'daily':
+            from datetime import date
+            result = daily_cycle(s, client, date.fromisoformat(args.day) if args.day else None)
+        elif args.command == 'consolidations': result = watch_consolidations(s, client, args.day)
+        elif args.command == 'import': result = import_norm(s, client, args.id)
         elif args.command == 'watch': result = watch_day(s, client, args.day or madrid_day())
         elif args.command == 'enqueue':
             ids = [line.strip() for line in Path(args.file).read_text().splitlines() if line.strip() and not line.startswith('#')]
