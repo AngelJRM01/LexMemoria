@@ -1,0 +1,519 @@
+{
+  "source": "https://www.boe.es/legislacion/otros_diarios_oficiales.php",
+  "items": [
+    {
+      "title": "Diario Oficial de la Unión Europea (DOUE)",
+      "url": "http://eur-lex.europa.eu/JOIndex.do?ihmlang=es",
+      "host": "eur-lex.europa.eu",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Boletín Oficial de la Junta de Andalucía (BOJA) y base de datos de legislación",
+      "url": "https://www.juntadeandalucia.es/eboja",
+      "host": "www.juntadeandalucia.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Boletín Oficial de Aragón (BOA) y base de datos de legislación",
+      "url": "https://www.boa.aragon.es/",
+      "host": "www.boa.aragon.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Boletín Oficial del Principado de Asturias (BOPA) y base de datos de legislación",
+      "url": "https://sede.asturias.es/servicios-del-bopa",
+      "host": "sede.asturias.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Boletín Oficial de las Illes Balears (BOIB)",
+      "url": "http://www.caib.es/eboibfront/?lang=es",
+      "host": "www.caib.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Base de datos de legislación",
+      "url": "https://www.caib.es/sites/institutestudisautonomics/es/repositorio_normativo_autonomico_de_1983-2016-60823/",
+      "host": "www.caib.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Boletín Oficial de Canarias (BOC)",
+      "url": "http://www.gobiernodecanarias.org/boc/",
+      "host": "www.gobiernodecanarias.org",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Base de datos de legislación",
+      "url": "https://www3.gobiernodecanarias.org/libroazul/index.jsp",
+      "host": "www3.gobiernodecanarias.org",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Boletín Oficial de Cantabria (BOC) y base de datos de legislación",
+      "url": "https://boc.cantabria.es/boces/",
+      "host": "boc.cantabria.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Diario Oficial de Castilla-La Mancha (DOCM) y base de datos de legislación",
+      "url": "http://docm.castillalamancha.es/portaldocm/sumario.do",
+      "host": "docm.castillalamancha.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Boletín Oficial de Castilla y León (BOCYL)",
+      "url": "https://bocyl.jcyl.es/portada.do",
+      "host": "bocyl.jcyl.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Base de datos de legislación",
+      "url": "http://www.jcyl.es/web/jcyl/AdministracionPublica/es/Plantilla66y33/1246993004605/_/_/_",
+      "host": "www.jcyl.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Diari Oficial de la Generalitat de Catalunya (DOGC)",
+      "url": "https://dogc.gencat.cat/es/index.html?newLang=es_ES&language=es_ES",
+      "host": "dogc.gencat.cat",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Base de datos de legislación",
+      "url": "http://portaljuridic.gencat.cat/ca/",
+      "host": "portaljuridic.gencat.cat",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Diario Oficial de Extremadura (DOE) y base de datos de legislación",
+      "url": "http://doe.juntaex.es/",
+      "host": "doe.juntaex.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Diario Oficial de Galicia (DOG)",
+      "url": "https://www.xunta.gal/diario-oficial-galicia/portalPublicoHome.do?lang=es",
+      "host": "www.xunta.gal",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Base de datos de legislación",
+      "url": "http://www.lex.gal/portada",
+      "host": "www.lex.gal",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Boletín Oficial de la Rioja (BOR)",
+      "url": "http://www.larioja.org/bor/es",
+      "host": "www.larioja.org",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Base de datos de legislación",
+      "url": "http://www.larioja.org/normativa-autonomica/es",
+      "host": "www.larioja.org",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Boletín Oficial de la Comunidad de Madrid (BOCM)",
+      "url": "http://www.bocm.es/",
+      "host": "www.bocm.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Base de datos de legislación",
+      "url": "https://gestiona.comunidad.madrid/wleg_pub/secure/busquedaAvanzada/buscador.jsf",
+      "host": "gestiona.comunidad.madrid",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Boletín Oficial de la Región de Murcia (BORM)",
+      "url": "https://www.borm.es/#/home/",
+      "host": "www.borm.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Base de datos de legislación",
+      "url": "https://transparencia--carm--es.insuit.net/web/transparencia/legislacion-regional",
+      "host": "transparencia--carm--es.insuit.net",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Boletín Oficial de Navarra (BON)",
+      "url": "http://www.navarra.es/home_es/Actualidad/BON/",
+      "host": "www.navarra.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Base de datos de legislación",
+      "url": "http://www.lexnavarra.navarra.es/",
+      "host": "www.lexnavarra.navarra.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Boletín Oficial del País Vasco (BOPV)",
+      "url": "https://www.euskadi.eus/y22-bopv/es/bopv2/datos/Ultimo.shtml",
+      "host": "www.euskadi.eus",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Base de datos de legislación",
+      "url": "http://www.legegunea.euskadi.eus/",
+      "host": "www.legegunea.euskadi.eus",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Diari Oficial de la Generalitat Valenciana (DOGV) y base de datos de legislación",
+      "url": "https://dogv.gva.es/es/inici",
+      "host": "dogv.gva.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Boletín Oficial de la Ciudad Autónoma de Ceuta (BOCCE)",
+      "url": "http://www.ceuta.es/ceuta/documentos/",
+      "host": "www.ceuta.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Boletín Oficial de la Ciudad Autónoma de Melilla (BOME)",
+      "url": "https://bomemelilla.es/",
+      "host": "bomemelilla.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "A Coruña",
+      "url": "https://bop.dacoruna.gal/bopportal/",
+      "host": "bop.dacoruna.gal",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Albacete",
+      "url": "https://bop.dipualba.es/",
+      "host": "bop.dipualba.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Alicante",
+      "url": "http://sede.diputacionalicante.es/consultas-bop/",
+      "host": "sede.diputacionalicante.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Almería",
+      "url": "http://www.dipalme.org/Servicios/cmsdipro/index.nsf/bop_view.xsp?p=dipalme",
+      "host": "www.dipalme.org",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Araba/Álava",
+      "url": "http://www.araba.eus/botha/Inicio/SGBO5001.aspx",
+      "host": "www.araba.eus",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Ávila",
+      "url": "https://www.diputacionavila.es/boletin-oficial/",
+      "host": "www.diputacionavila.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Badajoz",
+      "url": "http://www.dip-badajoz.es/bop/",
+      "host": "www.dip-badajoz.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Barcelona",
+      "url": "http://bop.diba.cat",
+      "host": "bop.diba.cat",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Bizkaia",
+      "url": "https://www.bizkaia.eus/es/bob",
+      "host": "www.bizkaia.eus",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Burgos",
+      "url": "http://bopbur.diputaciondeburgos.es/",
+      "host": "bopbur.diputaciondeburgos.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Cáceres",
+      "url": "https://bop.dip-caceres.es/bop/index.html",
+      "host": "bop.dip-caceres.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Cádiz",
+      "url": "http://www.bopcadiz.org",
+      "host": "www.bopcadiz.org",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Castellón",
+      "url": "http://bop.dipcas.es/PortalBOP/boletin.do",
+      "host": "bop.dipcas.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Ciudad Real",
+      "url": "https://bop.dipucr.es/",
+      "host": "bop.dipucr.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Córdoba",
+      "url": "https://bop.dipucordoba.es/",
+      "host": "bop.dipucordoba.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Cuenca",
+      "url": "https://www.dipucuenca.es/boletin-oficial-de-la-provincia",
+      "host": "www.dipucuenca.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Gipuzkoa",
+      "url": "https://egoitza.gipuzkoa.eus/es/bog",
+      "host": "egoitza.gipuzkoa.eus",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Girona",
+      "url": "http://www.ddgi.cat/",
+      "host": "www.ddgi.cat",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Granada",
+      "url": "https://www.dipgra.es/bop/",
+      "host": "www.dipgra.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Guadalajara",
+      "url": "http://boletin.dguadalajara.es/",
+      "host": "boletin.dguadalajara.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Huelva",
+      "url": "https://sede.diphuelva.es/servicios/bop",
+      "host": "sede.diphuelva.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Huesca",
+      "url": "http://bop.dphuesca.es/",
+      "host": "bop.dphuesca.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Jaén",
+      "url": "http://bop.dipujaen.es/",
+      "host": "bop.dipujaen.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Las Palmas",
+      "url": "http://www.boplaspalmas.com",
+      "host": "www.boplaspalmas.com",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "León",
+      "url": "https://bop.dipuleon.es/",
+      "host": "bop.dipuleon.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Lleida",
+      "url": "https://ebop.diputaciolleida.cat/bop/",
+      "host": "ebop.diputaciolleida.cat",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Lugo",
+      "url": "http://www.deputacionlugo.gal/boletin-oficial-da-provincia-de-lugo",
+      "host": "www.deputacionlugo.gal",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Málaga",
+      "url": "http://www.bopmalaga.es/",
+      "host": "www.bopmalaga.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Ourense",
+      "url": "https://bop.depourense.es/portal/",
+      "host": "bop.depourense.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Palencia",
+      "url": "https://www.diputaciondepalencia.es/servicios/boletin-oficial-provincia",
+      "host": "www.diputaciondepalencia.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Pontevedra",
+      "url": "https://boppo.depo.gal/es",
+      "host": "boppo.depo.gal",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Salamanca",
+      "url": "https://sede.diputaciondesalamanca.gob.es/BOP/",
+      "host": "sede.diputaciondesalamanca.gob.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Santa Cruz de Tenerife",
+      "url": "http://www.bopsantacruzdetenerife.es/",
+      "host": "www.bopsantacruzdetenerife.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Segovia",
+      "url": "http://www.dipsegovia.es/bop",
+      "host": "www.dipsegovia.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Sevilla",
+      "url": "http://www.dipusevilla.es/bop/",
+      "host": "www.dipusevilla.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Soria",
+      "url": "http://bop.dipsoria.es/",
+      "host": "bop.dipsoria.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Tarragona",
+      "url": "http://www.diputaciodetarragona.cat/ebop/",
+      "host": "www.diputaciodetarragona.cat",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Teruel",
+      "url": "http://www.dpteruel.es/boletines.htm",
+      "host": "www.dpteruel.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Toledo",
+      "url": "http://bop.diputoledo.es/webEbop/inicio.jsp",
+      "host": "bop.diputoledo.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Valencia",
+      "url": "https://bop.dival.es/bop/drvisapi.dll",
+      "host": "bop.dival.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Valladolid",
+      "url": "https://bop.sede.diputaciondevalladolid.es/",
+      "host": "bop.sede.diputaciondevalladolid.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Zamora",
+      "url": "https://www.diputaciondezamora.es/opencms/servicios/BOP/bop/index.html",
+      "host": "www.diputaciondezamora.es",
+      "status": "not_downloaded"
+    },
+    {
+      "title": "Zaragoza",
+      "url": "http://bop.dpz.es/BOPZ/",
+      "host": "bop.dpz.es",
+      "status": "not_downloaded"
+    }
+  ],
+  "hosts": [
+    "boc.cantabria.es",
+    "bocyl.jcyl.es",
+    "boletin.dguadalajara.es",
+    "bomemelilla.es",
+    "bop.dacoruna.gal",
+    "bop.depourense.es",
+    "bop.diba.cat",
+    "bop.dip-caceres.es",
+    "bop.dipcas.es",
+    "bop.dipsoria.es",
+    "bop.dipualba.es",
+    "bop.dipucordoba.es",
+    "bop.dipucr.es",
+    "bop.dipujaen.es",
+    "bop.dipuleon.es",
+    "bop.diputoledo.es",
+    "bop.dival.es",
+    "bop.dphuesca.es",
+    "bop.dpz.es",
+    "bop.sede.diputaciondevalladolid.es",
+    "bopbur.diputaciondeburgos.es",
+    "boppo.depo.gal",
+    "docm.castillalamancha.es",
+    "doe.juntaex.es",
+    "dogc.gencat.cat",
+    "dogv.gva.es",
+    "ebop.diputaciolleida.cat",
+    "egoitza.gipuzkoa.eus",
+    "eur-lex.europa.eu",
+    "gestiona.comunidad.madrid",
+    "portaljuridic.gencat.cat",
+    "sede.asturias.es",
+    "sede.diphuelva.es",
+    "sede.diputacionalicante.es",
+    "sede.diputaciondesalamanca.gob.es",
+    "www.araba.eus",
+    "www.bizkaia.eus",
+    "www.boa.aragon.es",
+    "www.bocm.es",
+    "www.bopcadiz.org",
+    "www.boplaspalmas.com",
+    "www.bopmalaga.es",
+    "www.bopsantacruzdetenerife.es",
+    "www.borm.es",
+    "www.caib.es",
+    "www.ceuta.es",
+    "www.ddgi.cat",
+    "www.deputacionlugo.gal",
+    "www.dip-badajoz.es",
+    "www.dipalme.org",
+    "www.dipgra.es",
+    "www.dipsegovia.es",
+    "www.dipucuenca.es",
+    "www.dipusevilla.es",
+    "www.diputaciodetarragona.cat",
+    "www.diputacionavila.es",
+    "www.diputaciondepalencia.es",
+    "www.diputaciondezamora.es",
+    "www.dpteruel.es",
+    "www.euskadi.eus",
+    "www.gobiernodecanarias.org",
+    "www.jcyl.es",
+    "www.juntadeandalucia.es",
+    "www.larioja.org",
+    "www.legegunea.euskadi.eus",
+    "www.lex.gal",
+    "www.lexnavarra.navarra.es",
+    "www.navarra.es",
+    "www.xunta.gal",
+    "www3.gobiernodecanarias.org"
+  ],
+  "licence_review": "pending_per_source",
+  "coverage": "source_directory_only_not_a_downloaded_corpus",
+  "directory_fetched_at": "2026-11-05T12:23:14.723702+00:00",
+  "directory_sha256": "1bc2bd9f92f5159ea079d9293e6bcf531ee5e39510911f6f94b7391fac9a07a6"
+}

@@ -105,3 +105,7 @@ CI preparada para backend, análisis/tests Flutter, web, APK debug y simulador i
 La CI entrega `lexmemoria-android-preview-release`, con `app-release.apk` dentro. Es una compilación optimizada **release** firmada para pruebas, no una publicación en tiendas. Aparece como **LexMemoria Prueba**, con identificador separado: conserva la app anterior y no importa ni borra sus datos. No desinstales la original si contiene progreso o no consigue abrir su almacén.
 
 La firma de las compilaciones temporales de GitHub puede cambiar entre ejecuciones. Una distribución estable requiere configurar la clave de firma del titular; no se publica ningún keystore en Git ni como artefacto. Para diagnosticar un fallo de inicio, usa el botón Copiar diagnóstico de la versión nueva; el código no incluye notas, claves ni credenciales.
+
+## Descarga masiva del catálogo BOE
+
+`./scripts/download_corpus.sh --day 2026-11-05` enumera el catálogo completo observado y archiva las respuestas oficiales fuera del APK y de Git, con checkpoints, reintentos e integridad SHA-256. El inventario de este corte contiene 12.451 documentos, estatales y autonómicos; no equivale a toda la legislación española ni europea. Consultar [procedimiento, estados y límites](docs/DESCARGA_MASIVA.md). No se anuncia una descarga completa mientras queden pendientes o errores.
