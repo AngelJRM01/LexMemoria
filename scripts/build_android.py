@@ -8,9 +8,14 @@ from urllib.parse import urlparse
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--preview-release', action='store_true', help='Optimized separate preview app, signed for testing only; not for stores')
+parser.add_argument('--no-pub', action='store_true', help='Use dependencies already resolved with flutter pub get')
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 environment = os.environ.copy()
+if not environment.get('JAVA_HOME'):
+    bundled_javac = sorted(Path('/workspace/tools/jdk').glob('*/bin/javac'))
+    if bundled_javac:
+        environment['JAVA_HOME'] = str(bundled_javac[-1].parent.parent)
 sdk = environment.get('ANDROID_HOME', '/workspace/tools/android-sdk')
 environment['ANDROID_HOME'] = sdk
 environment['ANDROID_SDK_ROOT'] = sdk
@@ -32,4 +37,4 @@ if environment.get('JAVA_HOME') and not (Path(environment['JAVA_HOME'])/'bin/jav
 mode = '--release' if args.preview_release else '--debug'
 if args.preview_release:
     environment['LEXMEMORIA_PREVIEW_SIGNING'] = '1'
-raise SystemExit(subprocess.call([flutter, 'build', 'apk', mode], cwd=root/'mobile', env=environment))
+raise SystemExit(subprocess.call([flutter, 'build', 'apk', mode, *(['--no-pub'] if args.no_pub else [])], cwd=root/'mobile', env=environment))

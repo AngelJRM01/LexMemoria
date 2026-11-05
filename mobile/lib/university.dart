@@ -50,12 +50,13 @@ class _UniversityPageState extends State<UniversityPage> {
   @override
   Widget build(BuildContext context) => AnimatedBuilder(animation: widget.store, builder: (context, _) {
     final courses = widget.store.list('courses').asMap().entries.where((e) => (e.value['archived'] == true) == archived);
-    return Scaffold(appBar: AppBar(title: const Text('Mi universidad')), body: PageBody(children: [
-      const Text('Asignaturas, temas y evaluaciones personales. No son programas oficiales verificados.'),
+    return Scaffold(appBar: AppBar(title: const Text('Mis asignaturas')), body: SearchPageBody(header: [
+      const Text('Organiza tus materias, temas y evaluaciones.'),
       const SizedBox(height: 16), Wrap(spacing: 8, children: [
         FilterChip(label: const Text('Archivadas'), selected: archived, onSelected: (v) => setState(() => archived = v)),
         FilledButton.icon(onPressed: addCourse, icon: const Icon(Icons.add), label: const Text('Añadir asignatura')),
       ]),
+    ], children: [
       if (courses.isEmpty) const EmptyState(title: 'Organiza tu semestre', detail: 'Añade asignaturas, sus temas y las ponderaciones de tus evaluaciones.'),
       ...courses.map((e) => ListTile(leading: const Icon(Icons.school_outlined), title: Text(e.value['title']),
         subtitle: Text('${e.value['institution'] ?? ''} · ${e.value['semester'] ?? ''}'), trailing: const Icon(Icons.chevron_right),

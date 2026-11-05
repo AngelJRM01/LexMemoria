@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lexmemoria/models.dart';
@@ -6,7 +7,7 @@ import 'package:lexmemoria/persistence.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() => SharedPreferences.setMockInitialValues({'lexmemoria.v1': jsonEncode({'starterInstalled': true})}));
   test('review survives reload and can be undone without losing card', () async {
     final store = await AppStore.load(persistence: PreferencesPersistence(await SharedPreferences.getInstance()));
     final c = StudyCard(id: 'card-1', deck: 'Privado', front: 'Pregunta', back: 'Respuesta');

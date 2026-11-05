@@ -71,11 +71,12 @@ void main() {
     expect(store.bundledNorms.length, 20);
     final constitution = store.catalogue.firstWhere((n) => n['id'] == 'BOE-A-1978-31229');
     expect(constitution['units'], isNull);
+    final beforeDownload = prefs.getString('lexmemoria.v1')!.length;
     await store.downloadNorm(constitution);
     final loaded = store.catalogue.firstWhere((n) => n['id'] == constitution['id']);
     expect((loaded['units'] as List).length, greaterThan(100));
     expect(loaded['attribution'], contains('Agencia Estatal'));
-    expect(prefs.getString('lexmemoria.v1')!.length, lessThan(10000));
+    expect(prefs.getString('lexmemoria.v1')!.length - beforeDownload, lessThan(10000));
     final restored = await AppStore.load(persistence: PreferencesPersistence(prefs));
     expect(restored.catalogue.firstWhere((n) => n['id'] == constitution['id'])['units'], isNotNull);
     Object? integrityError;

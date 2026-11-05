@@ -109,3 +109,6 @@ La firma de las compilaciones temporales de GitHub puede cambiar entre ejecucion
 ## Descarga masiva del catálogo BOE
 
 `./scripts/download_corpus.sh --day 2026-11-05` enumera el catálogo completo observado y archiva las respuestas oficiales fuera del APK y de Git, con checkpoints, reintentos e integridad SHA-256. El inventario de este corte contiene 12.451 documentos, estatales y autonómicos; no equivale a toda la legislación española ni europea. Consultar [procedimiento, estados y límites](docs/DESCARGA_MASIVA.md). No se anuncia una descarga completa mientras queden pendientes o errores.
+# Experiencia de estudio 0.2.0
+
+Pantallas simplificadas, lector por fragmentos, filtros fijos y 20 mazos preparados con 13.914 tarjetas. Consulta [los cambios y su validación](docs/MEJORAS_ESTUDIO_2026-11-05.md), incluyendo el estado real de las cuentas y el alcance de las descargas masivas.
