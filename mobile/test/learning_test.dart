@@ -17,8 +17,16 @@ void main() {
     expect(() => schedule({}, 9, at), throwsArgumentError);
   });
   test('score distinguishes unanswered, wrong and correct', () {
-    final score = scoreExam([{'id': 'a', 'correct': 0}, {'id': 'b', 'correct': 1}, {'id': 'c', 'correct': 0}], {'a': 0, 'b': 0}, .25);
-    expect(score, {'correct': 1, 'wrong': 1, 'blank': 1, 'score': .75, 'total': 3});
+    final score = scoreExam([
+      {'id': 'a', 'correct': 0},
+      {'id': 'b', 'correct': 1},
+      {'id': 'c', 'correct': 0}
+    ], {
+      'a': 0,
+      'b': 0
+    }, .25);
+    expect(score,
+        {'correct': 1, 'wrong': 1, 'blank': 1, 'score': .75, 'total': 3});
   });
   test('reference inventory never claims downloaded or verified', () {
     final catalogue = initialCatalogue();

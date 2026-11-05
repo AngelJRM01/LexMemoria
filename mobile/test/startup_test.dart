@@ -13,42 +13,66 @@ class BrokenSnapshot implements LocalPersistence {
   @override
   Future<String?> read() async => snapshot;
   @override
-  Future<void> write(String snapshot) async => throw StateError('must not overwrite');
+  Future<void> write(String snapshot) async =>
+      throw StateError('must not overwrite');
   @override
-  Future<void> close() async { closed = true; }
+  Future<void> close() async {
+    closed = true;
+  }
 }
 
 class QueryOnlyDatabase implements sqlite.Database {
   final bool encrypted;
   QueryOnlyDatabase({this.encrypted = true});
   @override
-  Future<List<Map<String, Object?>>> rawQuery(String sql, [List<Object?>? arguments]) async {
-    if (sql == 'PRAGMA cipher_version') return encrypted ? [{'cipher_version': '4.10.0'}] : [];
-    if (sql == 'PRAGMA secure_delete = ON') return [{'secure_delete': 1}];
+  Future<List<Map<String, Object?>>> rawQuery(String sql,
+      [List<Object?>? arguments]) async {
+    if (sql == 'PRAGMA cipher_version') {
+      return encrypted
+          ? [
+              {'cipher_version': '4.10.0'}
+            ]
+          : [];
+    }
+    if (sql == 'PRAGMA secure_delete = ON') {
+      return [
+        {'secure_delete': 1}
+      ];
+    }
     throw UnsupportedError('Unexpected statement');
   }
+
   @override
   Future<void> execute(String sql, [List<Object?>? arguments]) async {
     throw StateError('Android execSQL cannot execute a PRAGMA returning rows');
   }
+
   @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnsupportedError('Unexpected database operation');
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnsupportedError('Unexpected database operation');
 }
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
-  test('cipher initialization uses queries for row-returning PRAGMAs', () async {
+  test('cipher initialization uses queries for row-returning PRAGMAs',
+      () async {
     await configureEncryptedDatabase(QueryOnlyDatabase());
-    await expectLater(configureEncryptedDatabase(QueryOnlyDatabase(encrypted: false)), throwsStateError);
+    await expectLater(
+        configureEncryptedDatabase(QueryOnlyDatabase(encrypted: false)),
+        throwsStateError);
   });
   test('invalid saved data is closed and preserved without reset', () async {
     final storage = BrokenSnapshot('damaged-json');
-    await expectLater(AppStore.load(persistence: storage), throwsA(isA<StartupFailure>().having((e) => e.code, 'code', 'SNAPSHOT_FORMAT')));
+    await expectLater(
+        AppStore.load(persistence: storage),
+        throwsA(isA<StartupFailure>()
+            .having((e) => e.code, 'code', 'SNAPSHOT_FORMAT')));
     expect(storage.snapshot, 'damaged-json');
     expect(storage.closed, isTrue);
   });
-  testWidgets('startup failure exposes a safe code and retry can recover', (tester) async {
+  testWidgets('startup failure exposes a safe code and retry can recover',
+      (tester) async {
     var attempts = 0;
     final prefs = await SharedPreferences.getInstance();
     final store = AppStore(prefs, {});
@@ -67,10 +91,12 @@ void main() {
     expect(tester.takeException(), isNull);
     store.dispose();
   });
-  testWidgets('native exception messages are not exposed in diagnostics', (tester) async {
-    await tester.pumpWidget(AppBootstrap(storeLoader: () => startupStep('SECURE_STORAGE', () async {
-      throw StateError('private note or encryption key');
-    })));
+  testWidgets('native exception messages are not exposed in diagnostics',
+      (tester) async {
+    await tester.pumpWidget(AppBootstrap(
+        storeLoader: () => startupStep('SECURE_STORAGE', () async {
+              throw StateError('private note or encryption key');
+            })));
     await tester.pumpAndSettle();
     expect(find.textContaining('SECURE_STORAGE'), findsOneWidget);
     expect(find.textContaining('private note'), findsNothing);

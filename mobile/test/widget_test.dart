@@ -8,11 +8,14 @@ import 'package:lexmemoria/persistence.dart';
 void main() {
   testWidgets('guest can open library without signing in', (tester) async {
     SharedPreferences.setMockInitialValues({});
-    final store = await AppStore.load(persistence: PreferencesPersistence(await SharedPreferences.getInstance()));
+    final store = await AppStore.load(
+        persistence:
+            PreferencesPersistence(await SharedPreferences.getInstance()));
     await tester.pumpWidget(LexMemoria(store: store));
     await tester.pumpAndSettle();
     final explore = find.text('Explorar sin cuenta');
-    await tester.scrollUntilVisible(explore, 250, scrollable: find.byType(Scrollable).first);
+    await tester.scrollUntilVisible(explore, 250,
+        scrollable: find.byType(Scrollable).first);
     await tester.tap(explore);
     await tester.pumpAndSettle();
     expect(store.onboarded, isTrue);
