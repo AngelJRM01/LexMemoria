@@ -67,11 +67,13 @@ class SearchPageBody extends StatelessWidget {
   final List<Widget> header, children;
   final IndexedWidgetBuilder? resultBuilder;
   final int resultCount;
+  final ScrollController? resultsController;
   const SearchPageBody(
       {super.key,
       required this.header,
       this.children = const [],
       this.resultBuilder,
+      this.resultsController,
       this.resultCount = 0});
   @override
   Widget build(BuildContext context) => SafeArea(
@@ -83,6 +85,7 @@ class SearchPageBody extends StatelessWidget {
               child: LayoutBuilder(builder: (context, size) {
                 if (size.maxHeight < 440) {
                   return ListView.builder(
+                      controller: resultsController,
                       padding: const EdgeInsets.fromLTRB(20, 16, 20, 56),
                       itemCount: header.length + children.length + resultCount,
                       itemBuilder: (context, i) => i < header.length
@@ -103,6 +106,7 @@ class SearchPageBody extends StatelessWidget {
                               children: header))),
                   Expanded(
                       child: ListView.builder(
+                          controller: resultsController,
                           padding: const EdgeInsets.fromLTRB(20, 8, 20, 56),
                           itemCount: children.length + resultCount,
                           itemBuilder: (context, i) => i < children.length

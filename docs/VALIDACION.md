@@ -74,3 +74,7 @@ El emulador local, sin KVM, presentó reinicios de servicios del propio sistema 
 - El alcance y las instrucciones de reproducción están en [Catálogo 0.3.0](CATALOGO_COMPLETO_2026-11-05.md). La revisión técnica no equivale a revisión jurídica humana ni acredita un recorrido completo en un OPPO físico. Los resultados remotos de GitHub Actions deben consultarse por separado.
 
 El cotejo completo de las 12.451 normas y 695.207 versiones de bloques pasa: [informe de fuente](validation/boe-source-0.3.0.json). La auditoría de los cuatro formatos verifica 2.702.607 ejercicios, sin huecos ni duplicados de cobertura entre procesos: [informe de ejercicios](validation/boe-exercises-0.3.0.json). Los informes conservan `legal_review`/`legalReview` sin revisión humana realizada.
+
+## Entrega 0.3.1+5 · lectura y búsqueda
+
+54 pruebas Flutter y 73 pruebas backend pasan. Las siete pruebas del archivador europeo se repitieron tras añadir la selección de documentos concretos, sin fallos. Análisis Flutter sin incidencias, web release y APK release correctos. [Comportamiento, pruebas y límites](LECTURA_0_3_1.md). [SHA-256 del APK](validation/android-0.3.1.json). El documento europeo CELEX 32015M7836 se descargó y verificó en el archivo real; el trabajador se reinició conservando checkpoints.

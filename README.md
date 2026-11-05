@@ -116,3 +116,7 @@ Pantallas simplificadas, lector por fragmentos, filtros fijos y 20 mazos prepara
 ## Catálogo completo de estudio 0.3.0
 
 12.451 normas con 684.375 fragmentos base, cuatro formatos automáticos y mazos temáticos personalizados. Descarga por norma, verificación de integridad y lectura sin conexión en Android/iOS. [Alcance, funcionamiento y validación](docs/CATALOGO_COMPLETO_2026-11-05.md). [Contenido público](https://github.com/AngelJRM01/LexMemoria/tree/legal-corpus-20261105).
+
+## Lectura 0.3.1
+
+Búsqueda dentro del texto de cada norma, apertura del fragmento encontrado y recuperación del punto de lectura con comprobación de versión y hash. Índices y artículos completos con filas por demanda. [Cambios y validación](docs/LECTURA_0_3_1.md).

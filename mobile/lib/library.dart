@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart' hide Badge;
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'models.dart';
 import 'store.dart';
 import 'widgets.dart';
 import 'study.dart';
 import 'remote.dart';
+import 'reading.dart';
 
 class LibraryPage extends StatefulWidget {
   final AppStore store;
@@ -179,6 +181,55 @@ class NormPage extends StatefulWidget {
 class _NormPageState extends State<NormPage> {
   String query = '';
   bool downloading = false;
+  bool fullText = false, indexing = false;
+  Map<String, String>? textIndex;
+  String? indexedVersion;
+
+  Future<void> searchText(Json norm, List<Json> units) async {
+    setState(() => fullText = true);
+    if (indexedVersion == norm['latestVersion'] && textIndex != null) return;
+    setState(() => indexing = true);
+    try {
+      final rows = units
+          .map((u) => <String, dynamic>{
+                'id': u['id'],
+                'title': u['title'],
+                'text':
+                    (u['versions'] as List? ?? []).lastOrNull?['text'] ?? '',
+              })
+          .toList();
+      final result = await compute(buildReadingIndex, rows);
+      if (mounted) {
+        setState(() {
+          textIndex = result;
+          indexedVersion = norm['latestVersion'];
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => fullText = false);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+                'No se pudo preparar la búsqueda. Puedes seguir usando el índice.')));
+      }
+    } finally {
+      if (mounted) setState(() => indexing = false);
+    }
+  }
+
+  Future<void> read(Json norm, Json unit) async {
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => ReaderPage(
+            store: widget.store,
+            norm: norm,
+            unit: unit,
+            initialQuery: fullText &&
+                    !normalize(unit['title']).contains(normalize(query.trim()))
+                ? query.trim()
+                : '')));
+    if (mounted) setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
@@ -205,9 +256,22 @@ class _NormPageState extends State<NormPage> {
   Widget build(BuildContext context) {
     final n = widget.store.catalogue.firstWhere((n) => n['id'] == widget.id);
     final all = (n['units'] as List? ?? []).map((u) => Json.from(u)).toList();
+    final needle = normalize(query.trim());
     final units = all
-        .where((u) => normalize('${u['title']}').contains(normalize(query)))
+        .where((u) =>
+            (!fullText || !indexing) &&
+            (fullText
+                    ? (textIndex?[u['id']] ?? '')
+                    : normalize('${u['title']}'))
+                .contains(needle))
         .toList();
+    final last = widget.store.data['lastReadUnits'];
+    final lastId = last is Map ? last[widget.id] : null;
+    final lastUnit = all.where((u) => u['id'] == lastId).firstOrNull;
+    final canResume = lastUnit != null &&
+        savedReadingVersion(
+                n, lastUnit, widget.store.readingPosition(widget.id, lastId)) !=
+            null;
     return Scaffold(
         appBar: AppBar(title: const Text('Leer norma'), actions: [
           IconButton(
@@ -229,76 +293,106 @@ class _NormPageState extends State<NormPage> {
                   ? Icons.bookmark
                   : Icons.bookmark_outline)),
         ]),
-        body: SearchPageBody(header: [
-          Text(n['short'] ?? n['title'],
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 12),
-          if (n['exhausted'] == true)
-            const Padding(
-                padding: EdgeInsets.only(bottom: 12),
-                child: Text(
-                    'Vigencia agotada según la fuente. Consulta las fechas antes de estudiar.')),
-          if (all.isNotEmpty)
-            TextField(
-                decoration: const InputDecoration(
-                    hintText: 'Buscar artículo en el índice',
-                    prefixIcon: Icon(Icons.search)),
-                onChanged: (v) => setState(() => query = v)),
-        ], children: [
-          if (all.isEmpty) ...[
-            const Text('Guarda el texto para leerlo sin conexión.'),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-                onPressed: downloading
-                    ? null
-                    : () async {
-                        setState(() => downloading = true);
-                        await perform(
-                            context, () => widget.store.downloadNorm(n),
-                            success: 'Texto disponible para leer');
-                        if (mounted) setState(() => downloading = false);
-                      },
-                icon: const Icon(Icons.download_outlined),
-                label: Text(downloading
-                    ? 'Preparando texto…'
-                    : 'Abrir y guardar texto')),
-          ],
-          ...units.map((u) => ListTile(
-              contentPadding: const EdgeInsets.symmetric(vertical: 6),
-              title: Text(u['title']),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => push(
-                  context, ReaderPage(store: widget.store, norm: n, unit: u)))),
-          if (all.isNotEmpty && units.isEmpty)
-            const EmptyState(
-                title: 'Sin coincidencias en el índice',
-                detail: 'Prueba otro número o título de artículo.'),
-          const SizedBox(height: 24),
-          Details('Fuente, fechas y seguimiento', children: [
-            Text(n['title']),
-            Text(n['id']),
-            Text('Ámbito: ${n['jurisdiction'] ?? 'No indicado'}'),
-            Text('Publicación: ${displayDate(n['publicationDate'])}'),
-            Text('Actualización: ${displayDate(n['sourceUpdatedAt'])}'),
-            Text('Guardado: ${displayDate(n['downloadedAt'], time: true)}'),
-            const Text(
-                'Fuente: Agencia Estatal Boletín Oficial del Estado. Texto consolidado informativo; comprueba la publicación oficial y las disposiciones transitorias.'),
-            TextButton.icon(
-                onPressed: () => perform(
-                    context, () => widget.store.toggle('follows', widget.id),
-                    success: 'Seguimiento actualizado'),
-                icon: const Icon(Icons.notifications_outlined),
-                label: Text(widget.store.has('follows', widget.id)
-                    ? 'Dejar de seguir'
-                    : 'Seguir cambios de esta norma')),
-            TextButton(
-                onPressed: () => openSource(context,
-                    'https://www.boe.es/informacion/aviso_legal/index.php#reutilizacion'),
-                child: const Text('Condiciones de reutilización')),
-          ]),
-        ]));
+        body: SearchPageBody(
+            header: [
+              Text(n['short'] ?? n['title'],
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 12),
+              if (n['exhausted'] == true)
+                const Padding(
+                    padding: EdgeInsets.only(bottom: 12),
+                    child: Text(
+                        'Vigencia agotada según la fuente. Consulta las fechas antes de estudiar.')),
+              if (all.isNotEmpty) ...[
+                if (canResume) ...[
+                  OutlinedButton.icon(
+                      onPressed: () => read(n, lastUnit),
+                      icon: const Icon(Icons.bookmark_added_outlined),
+                      label: Text('Continuar: ${lastUnit['title']}',
+                          maxLines: 1, overflow: TextOverflow.ellipsis)),
+                  const SizedBox(height: 12),
+                ],
+                TextField(
+                    decoration: InputDecoration(
+                        hintText: fullText
+                            ? 'Buscar en el texto de esta norma'
+                            : 'Buscar artículo en el índice',
+                        prefixIcon: Icon(Icons.search)),
+                    onChanged: (v) => setState(() => query = v)),
+                const SizedBox(height: 8),
+                Wrap(spacing: 8, children: [
+                  ChoiceChip(
+                      label: const Text('Índice'),
+                      selected: !fullText,
+                      onSelected: (_) => setState(() => fullText = false)),
+                  ChoiceChip(
+                      label: const Text('Texto'),
+                      selected: fullText,
+                      onSelected: indexing ? null : (_) => searchText(n, all)),
+                ]),
+                if (indexing) const LinearProgressIndicator(),
+              ],
+            ],
+            resultCount: units.length + 1,
+            resultBuilder: (context, i) {
+              if (i < units.length) {
+                final u = units[i];
+                return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(vertical: 6),
+                    title: Text(u['title']),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => read(n, u));
+              }
+              return Details('Fuente, fechas y seguimiento', children: [
+                Text(n['title']),
+                Text(n['id']),
+                Text('Ámbito: ${n['jurisdiction'] ?? 'No indicado'}'),
+                Text('Publicación: ${displayDate(n['publicationDate'])}'),
+                Text('Actualización: ${displayDate(n['sourceUpdatedAt'])}'),
+                Text('Guardado: ${displayDate(n['downloadedAt'], time: true)}'),
+                const Text(
+                    'Fuente: Agencia Estatal Boletín Oficial del Estado. Texto consolidado informativo; comprueba la publicación oficial y las disposiciones transitorias.'),
+                TextButton.icon(
+                    onPressed: () => perform(context,
+                        () => widget.store.toggle('follows', widget.id),
+                        success: 'Seguimiento actualizado'),
+                    icon: const Icon(Icons.notifications_outlined),
+                    label: Text(widget.store.has('follows', widget.id)
+                        ? 'Dejar de seguir'
+                        : 'Seguir cambios de esta norma')),
+                TextButton(
+                    onPressed: () => openSource(context,
+                        'https://www.boe.es/informacion/aviso_legal/index.php#reutilizacion'),
+                    child: const Text('Condiciones de reutilización')),
+              ]);
+            },
+            children: [
+              if (all.isEmpty) ...[
+                const Text('Guarda el texto para leerlo sin conexión.'),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                    onPressed: downloading
+                        ? null
+                        : () async {
+                            setState(() => downloading = true);
+                            await perform(
+                                context, () => widget.store.downloadNorm(n),
+                                success: 'Texto disponible para leer');
+                            if (mounted) setState(() => downloading = false);
+                          },
+                    icon: const Icon(Icons.download_outlined),
+                    label: Text(downloading
+                        ? 'Preparando texto…'
+                        : 'Abrir y guardar texto')),
+              ],
+              if (all.isNotEmpty && units.isEmpty && !indexing)
+                const EmptyState(
+                    title: 'Sin coincidencias',
+                    detail:
+                        'Prueba otro término, número o título de artículo.'),
+            ]));
   }
 }
 
@@ -355,8 +449,13 @@ class LegalParagraph extends StatelessWidget {
 class ReaderPage extends StatefulWidget {
   final AppStore store;
   final Json norm, unit;
+  final String initialQuery;
   const ReaderPage(
-      {super.key, required this.store, required this.norm, required this.unit});
+      {super.key,
+      required this.store,
+      required this.norm,
+      required this.unit,
+      this.initialQuery = ''});
   @override
   State<ReaderPage> createState() => _ReaderPageState();
 }
@@ -368,17 +467,74 @@ class _ReaderPageState extends State<ReaderPage> {
   double fontSize = 19;
   DateTime? studyDate;
   final tts = FlutterTts();
+  final resultsController = ScrollController();
+  late final TextEditingController searchController;
+  int naturalParagraph = 0;
   @override
   void initState() {
     super.initState();
+    query = widget.initialQuery;
+    searchController = TextEditingController(text: query);
     version = (widget.unit['versions'] as List).length - 1;
+    final saved =
+        widget.store.readingPosition(widget.norm['id'], widget.unit['id']);
+    final restored = savedReadingVersion(widget.norm, widget.unit, saved);
+    if (restored != null && query.isEmpty) {
+      version = restored;
+      final fragment = saved['fragment'];
+      if (fragment is int && fragment >= 0) paragraph = fragment;
+      naturalParagraph = paragraph;
+    }
+    if (query.isNotEmpty) paragraph = 0;
     fontSize = (widget.store.data['readerFontSize'] as num? ?? 19)
         .toDouble()
         .clamp(16, 28);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && version >= 0) {
+        if (query.isEmpty) {
+          rememberParagraph(paragraph);
+        } else {
+          final selected = (widget.unit['versions'] as List)[version];
+          final fragments =
+              articleParagraphs(selected['text'] ?? '', widget.unit['title']);
+          final first = fragments
+              .indexWhere((p) => normalize(p).contains(normalize(query)));
+          if (first >= 0) rememberParagraph(first);
+        }
+      }
+    });
+  }
+
+  void rememberParagraph(int index) {
+    final versions = widget.unit['versions'] as List;
+    if (studyDate != null || version < 0 || version >= versions.length) return;
+    final selected = Json.from(versions[version]);
+    final count =
+        articleParagraphs(selected['text'] ?? '', widget.unit['title']).length;
+    if (count == 0) return;
+    naturalParagraph = index.clamp(0, count - 1);
+    perform(
+        context,
+        () => widget.store.rememberReading(
+            widget.norm, widget.unit, selected, naturalParagraph));
+  }
+
+  void resetScroll() => WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && resultsController.hasClients) {
+          resultsController.jumpTo(0);
+        }
+      });
+
+  void moveFragment(int index, int absoluteIndex) {
+    setState(() => paragraph = index);
+    rememberParagraph(absoluteIndex);
+    resetScroll();
   }
 
   @override
   void dispose() {
+    searchController.dispose();
+    resultsController.dispose();
     tts.stop();
     super.dispose();
   }
@@ -428,7 +584,10 @@ class _ReaderPageState extends State<ReaderPage> {
                                     version = i!;
                                     studyDate = null;
                                     paragraph = 0;
+                                    naturalParagraph = 0;
                                   });
+                                  rememberParagraph(0);
+                                  resetScroll();
                                   Navigator.pop(sheet);
                                 }),
                             const SizedBox(height: 12),
@@ -445,6 +604,7 @@ class _ReaderPageState extends State<ReaderPage> {
                                       studyDate = date;
                                       paragraph = 0;
                                     });
+                                    resetScroll();
                                     if (sheet.mounted) Navigator.pop(sheet);
                                   }
                                 },
@@ -595,7 +755,8 @@ class _ReaderPageState extends State<ReaderPage> {
                       tooltip: 'Apartado anterior',
                       onPressed: current == 0
                           ? null
-                          : () => setState(() => paragraph = current - 1),
+                          : () =>
+                              moveFragment(current - 1, matches[current - 1]),
                       icon: const Icon(Icons.chevron_left)),
                   Expanded(
                       child: Text(
@@ -605,56 +766,76 @@ class _ReaderPageState extends State<ReaderPage> {
                       tooltip: 'Apartado siguiente',
                       onPressed: current + 1 >= matches.length
                           ? null
-                          : () => setState(() => paragraph = current + 1),
+                          : () =>
+                              moveFragment(current + 1, matches[current + 1]),
                       icon: const Icon(Icons.chevron_right)),
                 ])),
-        body: SearchPageBody(header: [
-          Text(widget.unit['title'],
-              style: Theme.of(context).textTheme.headlineSmall),
-          const SizedBox(height: 4),
-          Text('BOE · redacción de ${displayDate(v['effectiveFrom'])}',
-              style: Theme.of(context).textTheme.bodySmall),
-          const SizedBox(height: 12),
-          TextField(
-              decoration: const InputDecoration(
-                  hintText: 'Buscar en este artículo',
-                  prefixIcon: Icon(Icons.search),
-                  isDense: true),
-              onChanged: (value) => setState(() {
-                    query = value;
-                    paragraph = 0;
-                  })),
-          const SizedBox(height: 12),
-          Wrap(spacing: 8, runSpacing: 8, children: [
-            ChoiceChip(
-                label: const Text('Por fragmentos'),
-                selected: focus,
-                onSelected: (_) => setState(() => focus = true)),
-            ChoiceChip(
-                label: const Text('Artículo completo'),
-                selected: !focus,
-                onSelected: (_) => setState(() => focus = false)),
-          ]),
-        ], children: [
-          if (selection != null)
-            Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Text(selection['reason'])),
-          if (unavailable)
-            const EmptyState(
-                title: 'Redacción no resoluble para esta fecha',
-                detail:
-                    'Consulta la fuente oficial o elige otra redacción en las opciones de lectura.')
-          else if (matches.isEmpty)
-            const EmptyState(
-                title: 'Sin coincidencias',
-                detail: 'Prueba otro término o vacía la búsqueda.')
-          else ...[
-            for (final i in focus ? [matches[current]] : matches)
-              LegalParagraph(
-                  text: paragraphs[i], query: query, fontSize: fontSize)
-          ],
-        ]));
+        body: SearchPageBody(
+            resultsController: resultsController,
+            header: [
+              Text(widget.unit['title'],
+                  style: Theme.of(context).textTheme.headlineSmall),
+              const SizedBox(height: 4),
+              Text('BOE · redacción de ${displayDate(v['effectiveFrom'])}',
+                  style: Theme.of(context).textTheme.bodySmall),
+              const SizedBox(height: 12),
+              TextField(
+                  controller: searchController,
+                  decoration: const InputDecoration(
+                      hintText: 'Buscar en este artículo',
+                      prefixIcon: Icon(Icons.search),
+                      isDense: true),
+                  onChanged: (value) => setState(() {
+                        paragraph = value.isEmpty ? naturalParagraph : 0;
+                        query = value;
+                        resetScroll();
+                      })),
+              const SizedBox(height: 12),
+              Wrap(spacing: 8, runSpacing: 8, children: [
+                ChoiceChip(
+                    label: const Text('Por fragmentos'),
+                    selected: focus,
+                    onSelected: (_) {
+                      setState(() => focus = true);
+                      resetScroll();
+                    }),
+                ChoiceChip(
+                    label: const Text('Artículo completo'),
+                    selected: !focus,
+                    onSelected: (_) {
+                      setState(() => focus = false);
+                      resetScroll();
+                    }),
+              ]),
+            ],
+            resultCount: unavailable || matches.isEmpty
+                ? 0
+                : focus
+                    ? 1
+                    : matches.length,
+            resultBuilder: (context, i) {
+              final index = focus ? matches[current] : matches[i];
+              return LegalParagraph(
+                  key: ValueKey('${v['hash']}:$index'),
+                  text: paragraphs[index],
+                  query: query,
+                  fontSize: fontSize);
+            },
+            children: [
+              if (selection != null)
+                Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Text(selection['reason'])),
+              if (unavailable)
+                const EmptyState(
+                    title: 'Redacción no resoluble para esta fecha',
+                    detail:
+                        'Consulta la fuente oficial o elige otra redacción en las opciones de lectura.')
+              else if (matches.isEmpty)
+                const EmptyState(
+                    title: 'Sin coincidencias',
+                    detail: 'Prueba otro término o vacía la búsqueda.')
+            ]));
   }
 }
 

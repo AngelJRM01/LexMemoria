@@ -200,10 +200,13 @@ class EuropeanArchive(Archive):
             if next_cursor<=cursor:raise DownloadError('non_advancing_catalogue')
             cursor=next_cursor;self.set('eu_cursor',cursor);self.status()
 
-    def download_one(self):
+    def download_one(self, work=None):
         with self.db() as db:
             db.execute('BEGIN IMMEDIATE')
-            row=db.execute("SELECT * FROM eu_works WHERE status IN ('pending','retry') AND next_attempt<=? ORDER BY attempts,work LIMIT 1",(time.time(),)).fetchone()
+            query="SELECT * FROM eu_works WHERE status IN ('pending','retry') AND next_attempt<=?"
+            values=[time.time()]
+            if work is not None:query+=' AND work=?';values.append(work)
+            row=db.execute(query+' ORDER BY attempts,work LIMIT 1',values).fetchone()
             if row is None:return False
             db.execute("UPDATE eu_works SET status='running',attempts=attempts+1 WHERE work=?",(row['work'],))
         try:
@@ -238,7 +241,7 @@ class EuropeanArchive(Archive):
     def has_primary_text(self, work):
         with self.db() as db:
             documents=list(db.execute('SELECT d.content_type,o.path FROM eu_documents d JOIN objects o ON o.hash=d.hash WHERE d.work=?',(work,)))
-        if any(any(t in d['content_type'].lower() for t in ('html','xml','pdf')) for d in documents):return True
+        if any(any(t in d['content_type'].lower() for t in ('html','xml','pdf','msword')) for d in documents):return True
         for document in documents:
             if 'zip' not in document['content_type'].lower():continue
             try:
@@ -251,6 +254,18 @@ class EuropeanArchive(Archive):
                             return True
             except (OSError,ValueError,EOFError,zlib.error,zipfile.BadZipFile):continue
         return False
+
+    def requeue_supported(self):
+        """Retry only unsupported records whose preserved format is now supported."""
+        changed=0
+        with self.db() as db:
+            for row in db.execute("SELECT work,items FROM eu_works WHERE status='unsupported_format'").fetchall():
+                selected=select_manifestation(json.loads(row['items']))
+                if selected:
+                    db.execute("UPDATE eu_works SET items=?,status='pending',error=NULL,next_attempt=0 WHERE work=? AND status='unsupported_format'",
+                               (json.dumps(selected),row['work']))
+                    changed+=1
+        return changed
 
     def status(self):
         with self.db() as db:
@@ -337,7 +352,7 @@ class EuropeanArchive(Archive):
 
 
 def select_manifestation(items):
-    for format_ in ('xhtml','html','fmx4','pdfa1a','pdfa1b','pdfa2a','pdfa2b','pdf'):
+    for format_ in ('xhtml','html','fmx4','pdfa1a','pdfa1b','pdfa2a','pdfa2b','pdf','doc'):
         selected={i['url']:i for i in items if i['type'].lower()==format_}
         if selected:return list(selected.values())
     return []
@@ -353,6 +368,7 @@ def valid_document(raw, content_type, format_):
     if mime=='image/svg+xml':return b'<svg' in start
     if mime=='text/css':return b'<html' not in start and bool(raw.strip())
     if mime in ('application/zip','application/x-zip-compressed'):return zipfile.is_zipfile(io.BytesIO(raw))
+    if format_=='doc':return mime=='application/msword' and raw.startswith(b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1')
     if format_.startswith('pdf'):return raw.startswith(b'%PDF-')
     if format_ in ('xhtml','html'):return ('html' in content_type.lower()) and (b'<html' in start or b'<!doctype html' in start)
     if format_=='fmx4':return ('xml' in content_type.lower()) and start.startswith(b'<')
@@ -361,7 +377,7 @@ def valid_document(raw, content_type, format_):
 
 if __name__=='__main__':
     import argparse
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('command',choices=('run','status','verify'));p.add_argument('--root',default=ROOT)
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('command',choices=('run','status','verify','requeue-supported'));p.add_argument('--root',default=ROOT)
     args=p.parse_args();archive=EuropeanArchive(args.root)
     if args.command=='run':
         archive.run()
@@ -369,4 +385,5 @@ if __name__=='__main__':
     elif args.command=='verify':
         result=archive.verify();print(json.dumps(result,ensure_ascii=False))
         if not result['verification_passed']:raise SystemExit(2)
+    elif args.command=='requeue-supported':print(json.dumps({'requeued':archive.requeue_supported()}))
     else:print(json.dumps(archive.status(),ensure_ascii=False))

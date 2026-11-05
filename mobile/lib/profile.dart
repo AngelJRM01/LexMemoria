@@ -357,7 +357,7 @@ class SettingsPage extends StatelessWidget {
             ])),
         const SizedBox(height: 24),
         const Text(
-            'LexMemoria 0.3.0 · Versión de prueba\nProducto educativo independiente de las administraciones públicas.',
+            'LexMemoria 0.3.1 · Versión de prueba\nProducto educativo independiente de las administraciones públicas.',
             style: TextStyle(fontSize: 12)),
       ]));
 }

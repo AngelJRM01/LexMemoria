@@ -14,6 +14,28 @@ def test_manifestation_retains_all_items_and_supports_pdf_variants():
     assert select_manifestation([{'type':'unknown','url':'file'}])==[]
 
 
+def test_original_word_documents_archive_with_mime_and_container_validation(tmp_path):
+    archive=EuropeanArchive(tmp_path)
+    raw=b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1'+bytes(504)
+    assert valid_document(raw,'application/msword;charset=UTF-8','doc')
+    assert not valid_document(b'<html>error</html>','application/msword','doc')
+    assert not valid_document(raw,'text/html','doc')
+    items=[{'type':'doc','url':'https://publications.europa.eu/document'}]
+    assert select_manifestation(items)==items
+    assert select_manifestation(items+[{'type':'pdf','url':'pdf'}])==[{'type':'pdf','url':'pdf'}]
+    with archive.db() as db:
+        db.execute("INSERT INTO eu_works(work,celex,items,status) VALUES (?,?,?,'unsupported_format')",('word','32015M7836',json.dumps(items)))
+        db.execute("INSERT INTO eu_works(work,celex,items,status) VALUES (?,?,?,'unsupported_format')",('unknown','32015M7837',json.dumps([{'type':'unknown','url':'unknown'}])))
+    assert archive.requeue_supported()==1
+    assert archive.requeue_supported()==0
+    archive.fetch=lambda _: (raw,'application/msword;charset=UTF-8')
+    assert not archive.download_one('missing')
+    assert archive.download_one('word')
+    assert archive.has_primary_text('word')
+    assert archive.status()['states']=={'complete':1,'unsupported_format':1}
+    assert archive.verify()['verification_passed']
+
+
 def test_validation_distinguishes_text_attachments_and_error_pages():
     assert valid_document(b'%PDF-1.7\n','application/pdf','pdfa1b')
     assert not valid_document(b'<html>error</html>','text/html','pdf')

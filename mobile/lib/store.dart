@@ -267,6 +267,39 @@ class AppStore extends ChangeNotifier {
     await save();
   }
 
+  Json readingPosition(String normId, String unitId) {
+    final positions = data['readerPositions'];
+    final value =
+        positions is Map ? positions[jsonEncode([normId, unitId])] : null;
+    return value is Map ? Json.from(value) : {};
+  }
+
+  Future<void> rememberReading(
+      Json norm, Json unit, Json version, int fragment) async {
+    if (norm['latestVersion'] == null ||
+        version['hash'] is! String ||
+        (version['hash'] as String).isEmpty ||
+        fragment < 0) {
+      return;
+    }
+    data['readerPositions'] = {
+      if (data['readerPositions'] is Map) ...data['readerPositions'],
+      jsonEncode([norm['id'], unit['id']]): {
+        'normId': norm['id'],
+        'unitId': unit['id'],
+        'normVersion': norm['latestVersion'],
+        'unitVersionHash': version['hash'],
+        'fragment': fragment,
+        'updatedAt': DateTime.now().toUtc().toIso8601String(),
+      }
+    };
+    data['lastReadUnits'] = {
+      if (data['lastReadUnits'] is Map) ...data['lastReadUnits'],
+      norm['id']: unit['id'],
+    };
+    await save();
+  }
+
   Future<void> addCard(StudyCard c) async {
     data['cards'] = [...cards.map((v) => v.toJson()), c.toJson()];
     await save();
