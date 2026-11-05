@@ -8,6 +8,15 @@ Biblioteca y Mazos preparados permiten buscar y filtrar el catálogo completo. L
 
 Cada norma ofrece recuerdo literal, huecos, test de expresión literal y reconocimiento de artículos. La división de párrafos largos recorre el texto una sola vez y respeta caracteres Unicode completos. Los ejercicios se preparan automáticamente desde los textos citados; el usuario puede modificarlos después. Un nombre de mazo personalizado permite reunir varias normas y formatos en un tema. Instalar de nuevo la misma selección conserva tarjetas, modificaciones y progreso existentes.
 
+La auditoría completa verifica **2.702.607 ejercicios disponibles**, derivados al seleccionar una norma y un formato:
+
+| Formato | Ejercicios |
+| --- | ---: |
+| Recuerdo literal | 684.375 |
+| Huecos | 681.300 |
+| Test literal | 678.464 |
+| Reconocimiento de artículos | 658.468 |
+
 Hay **684.375 fragmentos base de recuerdo literal**. Los demás formatos omiten fragmentos sin palabras adecuadas, sin suficientes alternativas o con respuestas ambiguas. No son preguntas oficiales, explicaciones jurídicas ni casos revisados por profesionales. Cada tarjeta conserva norma, bloque, versión y hash de la fuente.
 
 Las veinte normas iniciales y sus 13.914 tarjetas de recuerdo siguen incluidas en el APK para comenzar sin red. El resto se descarga por norma desde la [rama pública de contenido](https://github.com/AngelJRM01/LexMemoria/tree/legal-corpus-20261105). No requiere cuenta ni servidor privado. El catálogo comprimido ocupa aproximadamente 1,9 MB; los paquetes suman 483.159.512 bytes, con un máximo individual de 8.132.143 bytes comprimidos.

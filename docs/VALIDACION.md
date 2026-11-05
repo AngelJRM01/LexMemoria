@@ -61,3 +61,16 @@ El error genérico comunicado por el usuario en OPPO Reno 10 Pro con Android 15 
 Las 37 pruebas Flutter y el análisis pasan. Se añaden pruebas de reintento, conservación de datos inválidos, diagnóstico sin información privada y regresión del contrato nativo de consultas. El APK `mobile/build/app/outputs/flutter-apk/app-release.apk` se ha compilado en modo release, con firma de pruebas válida y sin `application-debuggable`. Su identificador es `es.lexmemoria.app.preview` y su nombre visible **LexMemoria Prueba**, para no sustituir la instalación anterior.
 
 El emulador local, sin KVM, presentó reinicios de servicios del propio sistema (NetworkStack/Bluetooth) y no permitió completar la instalación y el recorrido completo. La prueba directa de SQLCipher sí se ejecutó. No se acredita aquí el arranque completo en OPPO ni en ese emulador. `integration_test/startup_test.dart` comprueba SQLCipher/Keystore reales, escritura y reapertura; GitHub ejecutará esa prueba en Android 15 antes de generar el artefacto `lexmemoria-android-preview-release`. Su ejecución remota queda pendiente de la nueva CI.
+
+
+## Entrega 0.3.0+4 · catálogo completo observado del BOE
+
+- **49 pruebas Flutter y 72 pruebas backend pasan**; análisis Flutter sin incidencias. Se comprueban los cuatro formatos, conservación de ediciones/progreso, citas, Unicode, preguntas ambiguas, caché nativa de archivos y rechazo de descargas alteradas. La regresión de división de texto incluye un párrafo de 150.000 caracteres Unicode.
+- La compilación web JavaScript release también pasa con el código final. No se ha compilado Wasm ni iOS en esta entrega.
+- Dos paquetes reales, uno estatal y otro autonómico, se importaron en una base temporal del backend y se repitió la importación sin duplicar registros.
+- El catálogo público se obtuvo por HTTPS sin autenticación y coincide byte a byte con el asset del APK: [comprobación](validation/public-catalogue-0.3.0.json).
+- APK release `es.lexmemoria.app.preview`, versión 0.3.0+4, sin `application-debuggable`, firma de pruebas válida y catálogo de 12.451 normas comprobado dentro del ZIP: [hash y datos del artefacto](validation/android-0.3.0.json). SHA-256: `a8e5927a42c47800d85bf2024cba73804a4ea96baec86094abcf1c1a25a00da8`.
+- La firma de pruebas local se conserva respecto al APK local 0.2.0. Esto no garantiza que coincida con un APK generado por un runner temporal de GitHub. No desinstalar una app que tenga progreso sin exportarlo antes.
+- El alcance y las instrucciones de reproducción están en [Catálogo 0.3.0](CATALOGO_COMPLETO_2026-11-05.md). La revisión técnica no equivale a revisión jurídica humana ni acredita un recorrido completo en un OPPO físico. Los resultados remotos de GitHub Actions deben consultarse por separado.
+
+El cotejo completo de las 12.451 normas y 695.207 versiones de bloques pasa: [informe de fuente](validation/boe-source-0.3.0.json). La auditoría de los cuatro formatos verifica 2.702.607 ejercicios, sin huecos ni duplicados de cobertura entre procesos: [informe de ejercicios](validation/boe-exercises-0.3.0.json). Los informes conservan `legal_review`/`legalReview` sin revisión humana realizada.

@@ -1,0 +1,10 @@
+{
+  "version": "0.3.0+4",
+  "package": "es.lexmemoria.app.preview",
+  "releaseMode": true,
+  "debuggable": false,
+  "bytes": 85295359,
+  "sha256": "a8e5927a42c47800d85bf2024cba73804a4ea96baec86094abcf1c1a25a00da8",
+  "catalogueNorms": 12451,
+  "applicationSourceCommit": "fe76472"
+}
