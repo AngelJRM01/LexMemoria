@@ -1,17 +1,92 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'store.dart';
 import 'shell.dart';
+import 'startup.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    final store = await AppStore.load();
-    runApp(LexMemoria(store: store));
-  } catch (_) {
-    runApp(const MaterialApp(home: Scaffold(body: Center(child: Padding(
-      padding: EdgeInsets.all(32), child: Text('No se han podido leer los datos locales. No se han borrado. Conserva los datos de la aplicación y contacta con soporte antes de restablecerla.'))))));
+  runApp(const AppBootstrap());
+}
+
+class AppBootstrap extends StatefulWidget {
+  final Future<AppStore> Function()? storeLoader;
+  const AppBootstrap({super.key, this.storeLoader});
+  @override
+  State<AppBootstrap> createState() => _AppBootstrapState();
+}
+
+class _AppBootstrapState extends State<AppBootstrap> {
+  late Future<AppStore> loading;
+  @override
+  void initState() {
+    super.initState();
+    loading = load();
   }
+
+  Future<AppStore> load() => widget.storeLoader?.call() ?? AppStore.load();
+  @override
+  Widget build(BuildContext context) => FutureBuilder<AppStore>(
+      future: loading,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) return LexMemoria(store: snapshot.data!);
+        final error = snapshot.error;
+        final code = error is StartupFailure ? error.code : 'STARTUP_UNKNOWN';
+        const mode = kReleaseMode
+            ? 'release'
+            : kProfileMode
+                ? 'profile'
+                : 'debug';
+        final diagnostic = 'LexMemoria 0.1.1+2 · $mode · $code';
+        return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            home: Scaffold(
+                body: SafeArea(
+                    child: Center(
+              child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(28),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 560),
+                    child: snapshot.hasError
+                        ? Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                                const Icon(Icons.lock_outline, size: 40),
+                                const SizedBox(height: 20),
+                                const Text('No se ha podido iniciar LexMemoria',
+                                    style: TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 16),
+                                const Text(
+                                    'No se han borrado tus datos. No desinstales la aplicación ni borres su almacenamiento. Puedes reintentar o compartir este código para diagnosticar el problema.'),
+                                const SizedBox(height: 16),
+                                SelectableText(diagnostic),
+                                const SizedBox(height: 24),
+                                Wrap(spacing: 12, runSpacing: 12, children: [
+                                  FilledButton(
+                                      onPressed: () =>
+                                          setState(() { loading = load(); }),
+                                      child: const Text('Reintentar')),
+                                  OutlinedButton(
+                                      onPressed: () => Clipboard.setData(
+                                          ClipboardData(text: diagnostic)),
+                                      child: const Text('Copiar diagnóstico')),
+                                ]),
+                              ])
+                        : const Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                                CircularProgressIndicator(),
+                                SizedBox(height: 20),
+                                Text('Abriendo tu espacio de estudio…')
+                              ]),
+                  )),
+            ))));
+      });
 }
 
 class LexMemoria extends StatelessWidget {

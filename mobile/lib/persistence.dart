@@ -43,11 +43,7 @@ class EncryptedPersistence implements LocalPersistence {
       onCreate: (db, _) async {
         await db.execute('CREATE TABLE app_state (id INTEGER PRIMARY KEY CHECK(id = 1), payload TEXT NOT NULL)');
       },
-      onOpen: (db) async {
-        final cipher = await db.rawQuery('PRAGMA cipher_version');
-        if (cipher.isEmpty) throw StateError('SQLCipher no está disponible; no se usará almacenamiento sin cifrar.');
-        await db.execute('PRAGMA secure_delete = ON');
-      });
+      onOpen: configureEncryptedDatabase);
     return EncryptedPersistence._(db);
   }
   @override
@@ -63,4 +59,17 @@ class EncryptedPersistence implements LocalPersistence {
   }
   @override
   Future<void> close() => database.close();
+}
+
+/// Android execSQL rejects PRAGMAs that return rows. Keep both initialization
+/// checks on the query API and fail closed if encryption is unavailable.
+Future<void> configureEncryptedDatabase(sqlite.Database db) async {
+  final cipher = await db.rawQuery('PRAGMA cipher_version');
+  if (cipher.isEmpty) {
+    throw StateError('SQLCipher no está disponible; no se usará almacenamiento sin cifrar.');
+  }
+  final secureDelete = await db.rawQuery('PRAGMA secure_delete = ON');
+  if (secureDelete.isEmpty || secureDelete.first.values.first != 1) {
+    throw StateError('No se ha podido activar el borrado seguro.');
+  }
 }

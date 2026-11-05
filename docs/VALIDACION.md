@@ -6,7 +6,7 @@ Resultados de esta iteración, sin publicación de entorno, servicios o aplicaci
 | --- | --- |
 | Backend, Python 3.12.14, `python -m pytest -q` | **53 pruebas aprobadas** |
 | Flutter 3.47.9 / Dart 3.13.7, `flutter analyze` | **Sin incidencias** |
-| `flutter test` | **33 pruebas aprobadas** |
+| `flutter test` | **37 pruebas aprobadas** |
 | `scripts/setup.sh` con lockfile estricto | Ejecutado correctamente |
 | `pip check` | Sin dependencias incompatibles |
 | `flutter build web --release --no-web-resources-cdn` | Build generado |
@@ -53,3 +53,11 @@ JAVA_HOME=/workspace/tools/jdk/jdk-21.0.13+9 python3 scripts/build_android.py
 ```
 
 Para regenerar paquetes tras nuevas importaciones verificadas: `/workspace/lexmemoria-venv/bin/python scripts/build_legal_assets.py`. Esto preserva hashes/atribución y no certifica vigencia ni crea contenido educativo público.
+
+## Corrección de arranque Android · 0.1.1+2
+
+El error genérico comunicado por el usuario en OPPO Reno 10 Pro con Android 15 ocultaba el paso de inicialización fallido. Se ha confirmado directamente con SQLCipher 4.10.0 en Android 15 que `execSQL("PRAGMA secure_delete = ON")` lanza `SQLiteException: Queries can be performed using SQLiteDatabase query or rawQuery methods only.` La misma instrucción con `rawQuery` devuelve `secure_delete=1`. La inicialización de la app usa ahora esa vía y continúa rechazando almacenamiento sin cifrar.
+
+Las 37 pruebas Flutter y el análisis pasan. Se añaden pruebas de reintento, conservación de datos inválidos, diagnóstico sin información privada y regresión del contrato nativo de consultas. El APK `mobile/build/app/outputs/flutter-apk/app-release.apk` se ha compilado en modo release, con firma de pruebas válida y sin `application-debuggable`. Su identificador es `es.lexmemoria.app.preview` y su nombre visible **LexMemoria Prueba**, para no sustituir la instalación anterior.
+
+El emulador local, sin KVM, presentó reinicios de servicios del propio sistema (NetworkStack/Bluetooth) y no permitió completar la instalación y el recorrido completo. La prueba directa de SQLCipher sí se ejecutó. No se acredita aquí el arranque completo en OPPO ni en ese emulador. `integration_test/startup_test.dart` comprueba SQLCipher/Keystore reales, escritura y reapertura; GitHub ejecutará esa prueba en Android 15 antes de generar el artefacto `lexmemoria-android-preview-release`. Su ejecución remota queda pendiente de la nueva CI.

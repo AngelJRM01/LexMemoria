@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """Build through the inherited HTTPS proxy, without weakening TLS verification."""
+import argparse
 import os
 from pathlib import Path
 import subprocess
 from urllib.parse import urlparse
 
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--preview-release', action='store_true', help='Optimized separate preview app, signed for testing only; not for stores')
+args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 environment = os.environ.copy()
 sdk = environment.get('ANDROID_HOME', '/workspace/tools/android-sdk')
@@ -25,4 +29,7 @@ flutter = environment.get('FLUTTER_BIN', '/workspace/tools/flutter/bin/flutter')
 # JAVA_HOME, if set, must point to a complete JDK including javac.
 if environment.get('JAVA_HOME') and not (Path(environment['JAVA_HOME'])/'bin/javac').is_file():
     raise SystemExit('JAVA_HOME no contiene javac; instala un JDK completo.')
-raise SystemExit(subprocess.call([flutter, 'build', 'apk', '--debug'], cwd=root/'mobile', env=environment))
+mode = '--release' if args.preview_release else '--debug'
+if args.preview_release:
+    environment['LEXMEMORIA_PREVIEW_SIGNING'] = '1'
+raise SystemExit(subprocess.call([flutter, 'build', 'apk', mode], cwd=root/'mobile', env=environment))

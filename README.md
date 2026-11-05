@@ -82,7 +82,7 @@ flutter pub get --enforce-lockfile
 flutter run
 flutter build apk --debug
 # En este entorno, con proxy y JDK completo:
-JAVA_HOME=/workspace/tools/jdk/jdk-21.0.13+9 python3 ../scripts/build_android.py
+JAVA_HOME=/workspace/tools/jdk/jdk-21.0.13+9 python3 ../scripts/build_android.py --preview-release
 ```
 
 Para iOS: `flutter build ios --simulator` en macOS; firma y publicación requieren cuenta y perfiles propios. Los targets nativos proceden de las plantillas oficiales de Flutter 3.47.9. El wrapper Gradle 9.3.1 está verificado contra SHA-256 oficial y la distribución incluye checksum fijado. El identificador provisional es `es.lexmemoria.app`.
@@ -99,3 +99,9 @@ flutter test
 ```
 
 CI preparada para backend, análisis/tests Flutter, web, APK debug y simulador iOS. No se ha publicado ni ejecutado remotamente este workflow. No se generan compras reales, cargos, notificaciones ni sellos editoriales ficticios.
+
+## APK de prueba sin modo debug
+
+La CI entrega `lexmemoria-android-preview-release`, con `app-release.apk` dentro. Es una compilación optimizada **release** firmada para pruebas, no una publicación en tiendas. Aparece como **LexMemoria Prueba**, con identificador separado: conserva la app anterior y no importa ni borra sus datos. No desinstales la original si contiene progreso o no consigue abrir su almacén.
+
+La firma de las compilaciones temporales de GitHub puede cambiar entre ejecuciones. Una distribución estable requiere configurar la clave de firma del titular; no se publica ningún keystore en Git ni como artefacto. Para diagnosticar un fallo de inicio, usa el botón Copiar diagnóstico de la versión nueva; el código no incluye notas, claves ni credenciales.

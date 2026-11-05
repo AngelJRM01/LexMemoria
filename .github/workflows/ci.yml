@@ -43,12 +43,24 @@ jobs:
           cache: true
       - run: flutter pub get --enforce-lockfile
         working-directory: mobile
-      - run: flutter build apk --debug
+      - name: Allow the runner user to use KVM
+        run: sudo setfacl -m "u:$(id -un):rw" /dev/kvm
+      - name: Verify native encrypted startup on Android 15
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: default
+          profile: pixel_6
+          script: cd mobile && flutter test integration_test/startup_test.dart -d emulator-5554 --no-pub
+      - run: flutter build apk --release
         working-directory: mobile
+        env:
+          LEXMEMORIA_PREVIEW_SIGNING: "1"
       - uses: actions/upload-artifact@v4
         with:
-          name: lexmemoria-android-debug
-          path: mobile/build/app/outputs/flutter-apk/app-debug.apk
+          name: lexmemoria-android-preview-release
+          path: mobile/build/app/outputs/flutter-apk/app-release.apk
   ios:
     runs-on: macos-latest
     steps:

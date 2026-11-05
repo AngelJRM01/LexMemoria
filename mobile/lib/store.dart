@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 import 'models.dart';
 import 'persistence.dart';
+import 'startup.dart';
 
 class AppStore extends ChangeNotifier {
   final SharedPreferences prefs;
@@ -21,28 +22,70 @@ class AppStore extends ChangeNotifier {
   Future<void> _write = Future.value();
   AppStore(this.prefs, this.data, {http.Client? client, LocalPersistence? persistence}) : client = client ?? http.Client(), persistence = persistence ?? PreferencesPersistence(prefs);
   static Future<AppStore> load({LocalPersistence? persistence}) async {
-    final prefs = await SharedPreferences.getInstance();
-    final storage = persistence ?? await EncryptedPersistence.open(prefs);
-    final saved = await storage.read();
-    final legacy = prefs.getString('lexmemoria.v1');
-    final raw = saved ?? legacy;
-    Json data;
-    try { data = raw == null ? {} : Json.from(jsonDecode(raw)); }
-    catch (_) { await storage.close(); throw StateError('No se han podido leer los datos guardados. Conserva una copia antes de restablecer la aplicación.'); }
-    if (saved == null && legacy != null && storage is! PreferencesPersistence) {
-      await storage.write(legacy);
-      if (await storage.read() != legacy) throw StateError('No se pudo verificar la migración. La copia anterior se conserva.');
-      await prefs.remove('lexmemoria.v1');
+    final prefs =
+        await startupStep('PREFERENCES', SharedPreferences.getInstance);
+    final LocalPersistence storage = persistence ??
+        await startupStep<LocalPersistence>(
+            'SECURE_STORAGE', () => EncryptedPersistence.open(prefs));
+    try {
+      final saved = await startupStep('READ_SNAPSHOT', storage.read);
+      final legacy = prefs.getString('lexmemoria.v1');
+      final raw = saved ?? legacy;
+      Json data;
+      try {
+        data = raw == null ? {} : Json.from(jsonDecode(raw));
+      } catch (_) {
+        throw StartupFailure('SNAPSHOT_FORMAT');
+      }
+      if (saved == null &&
+          legacy != null &&
+          storage is! PreferencesPersistence) {
+        await startupStep('MIGRATION_WRITE', () => storage.write(legacy));
+        if (await startupStep('MIGRATION_VERIFY', storage.read) != legacy) {
+          throw StartupFailure('MIGRATION_VERIFY');
+        }
+        await startupStep(
+            'MIGRATION_FINISH', () => prefs.remove('lexmemoria.v1'));
+      }
+      final store = AppStore(prefs, data, persistence: storage);
+      try {
+        final manifest = Json.from(jsonDecode(
+            await rootBundle.loadString('assets/legal-catalogue.json')));
+        store.bundledNorms = (manifest['items'] as List)
+            .map((v) => <String, dynamic>{
+                  ...Json.from(v),
+                  'bundledVersion': v['latestVersion']
+                })
+            .toList();
+      } catch (_) {
+        store.error =
+            'No se ha podido cargar el catálogo incluido (LEGAL_CATALOGUE). Tus tarjetas y notas se conservan.';
+      }
+      for (final norm
+          in store.list('norms').where((n) => n['bundledReady'] == true)) {
+        final asset = store.bundledNorms
+            .where((n) =>
+                n['id'] == norm['id'] &&
+                n['latestVersion'] == norm['latestVersion'])
+            .firstOrNull;
+        if (asset != null) {
+          try {
+            await store.loadBundledPack(asset);
+          } catch (_) {
+            store.error =
+                'No se ha podido abrir un paquete de lectura (LEGAL_PACK). Tus datos personales se conservan; vuelve a descargar el texto.';
+          }
+        }
+      }
+      return store;
+    } catch (_) {
+      try {
+        await storage.close();
+      } catch (_) {/* Preserve the original startup failure. */}
+      rethrow;
     }
-    final store = AppStore(prefs, data, persistence: storage);
-    final manifest = Json.from(jsonDecode(await rootBundle.loadString('assets/legal-catalogue.json')));
-    store.bundledNorms = (manifest['items'] as List).map((v) => <String, dynamic>{...Json.from(v), 'bundledVersion': v['latestVersion']}).toList();
-    for (final norm in store.list('norms').where((n) => n['bundledReady'] == true)) {
-      final asset = store.bundledNorms.where((n) => n['id'] == norm['id'] && n['latestVersion'] == norm['latestVersion']).firstOrNull;
-      if (asset != null) await store.loadBundledPack(asset);
-    }
-    return store;
   }
+
   bool get onboarded => data['onboarded'] == true;
   Json get profile => Json.from(data['profile'] ?? {});
   String get mode => profile['mode'] ?? 'Ambos';

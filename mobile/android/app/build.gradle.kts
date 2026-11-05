@@ -6,6 +6,9 @@ plugins {
 
 android {
     namespace = "es.lexmemoria.app"
+    buildFeatures {
+        resValues = true
+    }
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -17,6 +20,7 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "es.lexmemoria.app"
+        resValue("string", "app_name", "LexMemoria")
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -32,7 +36,14 @@ android {
     buildTypes {
         release {
             // Production signing must be configured with the owner's release key.
-            // Never reuse the debug certificate for a store release.
+            // An explicitly requested private preview may use the existing test
+            // certificate. A separate application ID preserves the original installation.
+            // This is not a store signing configuration.
+            if (System.getenv("LEXMEMORIA_PREVIEW_SIGNING") == "1") {
+                applicationIdSuffix = ".preview"
+                resValue("string", "app_name", "LexMemoria Prueba")
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
     }
 }

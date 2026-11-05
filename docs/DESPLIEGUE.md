@@ -23,3 +23,8 @@ Publicaciones editoriales continúan deshabilitadas: no activar `EDITORIAL_MFA_G
 `python -m app.backup restore copia.lexbackup restaurada.db --key-file /ruta/segura/clave` autentica y comprueba integridad y claves foráneas; rechaza sobrescribir un archivo existente. La restauración produce una base local sin cifrar, como SQLite de desarrollo: proteger sus permisos y no confundirlo con cifrado del disco.
 
 Las pruebas incluyen copia/recuperación y rechazo de manipulación. PostgreSQL en producción requiere backups cifrados del proveedor, restauración de ensayo, política de retención, región y objetivos RPO/RTO acordados. El comando SQLite no cubre PostgreSQL ni sustituye ese procedimiento.
+
+
+## Preview Android 0.1.1
+
+`JAVA_HOME=/ruta/a/jdk python3 scripts/build_android.py --preview-release` genera una release optimizada para pruebas privadas. La opción activa explícitamente la firma de pruebas y el sufijo `.preview`; no sirve como firma de tienda. La versión se instala en paralelo, bajo el nombre LexMemoria Prueba, por lo que no puede leer el almacén de la app original. En Android se excluyen de copias y transferencia automática tanto la base cifrada como las preferencias: la clave de Keystore no viaja con esos archivos. Exportación y recuperación remota siguen siendo los mecanismos de portabilidad soportados.

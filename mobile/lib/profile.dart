@@ -85,7 +85,7 @@ class ProfilePage extends StatelessWidget {
           if (context.mounted) await perform(context, store.reset);
         }
       }),
-    ])), const SizedBox(height: 24), const Text('LexMemoria 0.1.0 · Desarrollo\nProducto educativo independiente de las administraciones públicas.', style: TextStyle(fontSize: 12)),
+    ])), const SizedBox(height: 24), const Text('LexMemoria 0.1.1 · Versión de prueba\nProducto educativo independiente de las administraciones públicas.', style: TextStyle(fontSize: 12)),
   ]);
 }
 class PlansPage extends StatelessWidget {
