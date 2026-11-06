@@ -1,0 +1,22 @@
+{
+  "version": "0.5.0+8",
+  "package": "es.lexmemoria.app.preview",
+  "debuggable": false,
+  "signatureVerified": true,
+  "certificateSha1": "967643569eddb573c9153ce97b4b789671c29008",
+  "certificateSha256": "525f9dca164c4e161fc6acd8ef10ac5453cd10b090a001ebacbf0c486e921292",
+  "bytes": 87102881,
+  "sha256": "3a451bd920b816410cd3518cb246ec936ace6641e2aa194833ec37feffc559a9",
+  "firebaseProject": "lexmemoria-aa86a",
+  "googleConfigurationAndApkCertificateMatch": true,
+  "firebaseResourcesMatch": true,
+  "compiledApiUrl": "https://lexmemoria-api.onrender.com",
+  "compiledApiUrlVerifiedInArm64Artifact": true,
+  "catalogueNorms": 12451,
+  "googleRealSignInTested": false,
+  "physicalDeviceTested": false,
+  "firebaseConfigurationExcludedFromGit": true,
+  "rawGoogleServicesFileInApk": false,
+  "sourceCommit": "1325a0e217a3946fed59fe460c1d46a3b43520e3",
+  "purpose": "configured Google Android preview; real sign-in acceptance pending"
+}
