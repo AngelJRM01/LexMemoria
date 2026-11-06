@@ -64,3 +64,5 @@ La espera del limitador no retiene su mutex y puede interrumpirse para guardar u
 [Comprobación de los tres registros recuperados](validation/eu-recovered-2026-11-06.json). El intervalo operativo se ajustó conservadoramente a un segundo por petición tras observar la pausa de la fuente; cuatro transferencias simultáneas no significan cuatro peticiones por segundo.
 
 [Verificación posterior de los 55.171 archivos guardados](validation/eu-integrity-update-2026-11-06.json): integridad correcta y descarga global todavía incompleta.
+
+[Reanudación real tras la pausa de la fuente](validation/eu-resumption-2026-11-06.json): trabajador con cuatro transferencias, intervalo compartido de un segundo, crecimiento del archivo y páginas de inventario de 1.000 registros observadas. La descarga global sigue incompleta.

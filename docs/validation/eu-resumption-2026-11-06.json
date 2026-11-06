@@ -1,0 +1,16 @@
+{
+  "observed_at": "2026-11-06T07:03:41.011577+00:00",
+  "state": "running",
+  "download_workers": 4,
+  "request_interval": 1,
+  "files": 55305,
+  "states": {
+    "complete": 36042,
+    "metadata_only": 7534,
+    "pending": 141126,
+    "retry": 4,
+    "running": 4
+  },
+  "source_pause_preserved": true,
+  "whole_archive_complete": false
+}
