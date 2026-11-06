@@ -2,14 +2,14 @@
   "normsChecked": 12451,
   "allNormsChecked": true,
   "exercises": {
-    "qa": 684375,
-    "cloze": 2747278,
-    "test": 2827050,
-    "reference": 2127659
+    "qa": 2000386,
+    "cloze": 27152,
+    "test": 178696,
+    "reference": 1798560
   },
   "validationPassed": true,
   "legalReview": "not_performed",
-  "catalogueSha256": "e34b6db2adfb3eabc6c8d6651435cfa24b255a270edcd231952b988647a8c3b9",
-  "independentProcesses": 4,
-  "elapsedSeconds": 878.58
+  "catalogueSha256": "334e744e42f5b86a9f14279da93e27090c68f2a99a2a7f22ffb1c4635c5c1e79",
+  "independentProcesses": 6,
+  "elapsedSeconds": 287.48
 }
