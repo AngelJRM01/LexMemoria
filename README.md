@@ -120,3 +120,7 @@ Pantallas simplificadas, lector por fragmentos, filtros fijos y 20 mazos prepara
 ## Lectura 0.3.1
 
 Búsqueda dentro del texto de cada norma, apertura del fragmento encontrado y recuperación del punto de lectura con comprobación de versión y hash. Índices y artículos completos con filas por demanda. [Cambios y validación](docs/LECTURA_0_3_1.md).
+
+## Archivo europeo supervisado
+
+`./scripts/start_eu_download.sh` mantiene las descargas europeas con checkpoints, recuperación de fallos temporales y vigilancia posterior del catálogo. [Alcance, operación y evidencia](docs/DESCARGA_EUROPEA.md). La descarga sigue incompleta y depende de que el entorno permanezca encendido.

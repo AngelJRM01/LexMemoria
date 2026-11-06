@@ -44,11 +44,23 @@ class EuropeanArchive(Archive):
             CREATE TABLE IF NOT EXISTS eu_documents(url TEXT PRIMARY KEY,work TEXT NOT NULL,
               hash TEXT NOT NULL,content_type TEXT NOT NULL,fetched_at TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS eu_pages(cursor TEXT PRIMARY KEY,hash TEXT NOT NULL,count INTEGER NOT NULL,fetched_at TEXT NOT NULL);
+            CREATE INDEX IF NOT EXISTS eu_work_states ON eu_works(status);
+            CREATE INDEX IF NOT EXISTS eu_due_work ON eu_works(attempts,work)
+              WHERE status IN ('pending','retry');
             ''')
         self.rate = RateLimiter(.6)
         self.client = httpx.Client(timeout=httpx.Timeout(180, connect=20), follow_redirects=False,
                                   headers={'User-Agent':'LexMemoria/0.2 legal-source-archive (resumable)'})
         self.stop = threading.Event()
+        self.rate.defer(max(0,self.setting('eu_source_resume_after',0)-time.time()))
+
+    def defer_source(self, seconds):
+        with self.db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row=db.execute("SELECT value FROM settings WHERE key='eu_source_resume_after'").fetchone()
+            until=max(json.loads(row[0]) if row else 0,time.time()+seconds)
+            db.execute('INSERT OR REPLACE INTO settings VALUES (?,?)',('eu_source_resume_after',json.dumps(until)))
+        self.rate.defer(seconds)
 
     def fetch(self, url, params=None):
         for _ in range(6):
@@ -72,11 +84,11 @@ class EuropeanArchive(Archive):
                         retry=response.status_code in (202,408,429) or response.status_code>=500
                         delay=response.headers.get('Retry-After','60')
                         pause=min(3600,int(delay)) if delay.isdigit() else 60
-                        if retry:self.rate.defer(pause)
+                        if retry:self.defer_source(pause)
                         raise DownloadError('http_'+str(response.status_code),retryable=retry,retry_after=pause)
                     return raw,response.headers.get('content-type','')
             except httpx.HTTPError as exc:
-                self.rate.defer(30)
+                self.defer_source(30)
                 raise DownloadError('network_'+type(exc).__name__,retryable=True) from exc
         raise DownloadError('redirect_limit')
 
@@ -109,7 +121,7 @@ class EuropeanArchive(Archive):
                         url=urljoin(url,response.headers['location']);continue
                     if response.status_code!=200:
                         retry=response.status_code in (202,408,429) or response.status_code>=500
-                        if retry:self.rate.defer(60)
+                        if retry:self.defer_source(60)
                         raise DownloadError('http_'+str(response.status_code),retryable=retry,retry_after=60)
                     type_=response.headers.get('content-type','')
                     with tempfile.TemporaryFile(dir=self.root) as source:
@@ -153,11 +165,23 @@ class EuropeanArchive(Archive):
                             (hash_,size,target.stat().st_size,str(target.relative_to(self.root))))
                         return hash_,type_
             except httpx.HTTPError as exc:
-                self.rate.defer(30)
+                self.defer_source(30)
                 raise DownloadError('network_'+type(exc).__name__,retryable=True) from exc
         raise DownloadError('redirect_limit')
 
-    def discovery(self):
+    def discovery(self, refresh=False):
+        with (self.root/'eu-inventory.lock').open('a') as lock:
+            while True:
+                try:
+                    fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+                    break
+                except BlockingIOError:
+                    if self.stop.wait(.5):return
+            if self.stop.is_set():return
+            if refresh:self.request_inventory_refresh()
+            return self._discovery()
+
+    def _discovery(self):
         if self.setting('eu_discovery_complete'):return
         if self.setting('eu_expected_works') is None:
             rows,_=self.query('SELECT (COUNT(DISTINCT ?w) AS ?count) WHERE {'+SCOPE+'}')
@@ -168,8 +192,15 @@ class EuropeanArchive(Archive):
             query='SELECT DISTINCT ?w ?celex WHERE {'+SCOPE+after+'} ORDER BY ?w ?celex LIMIT 200'
             rows,digest=self.query(query)
             works={row['w']['value']:row['celex']['value'] for row in rows}
-            entries={work:[] for work in works}
-            ordered=list(works)
+            with self.db() as db:
+                known={r[0] for r in db.execute('SELECT work FROM eu_works WHERE work IN ('+
+                    ','.join('?' for _ in works)+") AND status NOT IN ('metadata_only','unsupported_format')",list(works))} if works else set()
+            # A reconciliation pass enumerates every ID but only retrieves
+            # manifestations for new or previously unavailable works. Existing
+            # archived files stay intact, even if a translation appears later.
+            new_works={w:c for w,c in works.items() if w not in known}
+            entries={work:[] for work in new_works}
+            ordered=list(new_works)
             # Avoid GROUP_CONCAT: the provider fails on long annex lists. Retrieve
             # individual item rows in bounded batches, including every page.
             for start in range(0,len(ordered),50):
@@ -188,13 +219,17 @@ class EuropeanArchive(Archive):
                     if len(file_rows)<1000:break
                     offset+=len(file_rows)
             with self.db() as db:
-                for work,celex in works.items():
+                for work,celex in new_works.items():
                     selected=select_manifestation(entries[work])
                     state='pending' if selected else 'unsupported_format' if entries[work] else 'metadata_only'
-                    db.execute('INSERT OR IGNORE INTO eu_works(work,celex,items,status) VALUES (?,?,?,?)',
+                    db.execute("""INSERT INTO eu_works(work,celex,items,status) VALUES (?,?,?,?)
+                        ON CONFLICT(work) DO UPDATE SET celex=excluded.celex,items=excluded.items,
+                        status=excluded.status,error=NULL,next_attempt=0
+                        WHERE eu_works.status IN ('metadata_only','unsupported_format')""",
                                (work,celex,json.dumps(selected or entries[work]),state))
                 db.execute('INSERT OR REPLACE INTO eu_pages VALUES (?,?,?,?)',(cursor,digest,len(works),utc()))
             if not rows:
+                self.set('eu_discovery_finished_at',utc())
                 self.set('eu_discovery_complete',True);break
             next_cursor=rows[-1]['w']['value']
             if next_cursor<=cursor:raise DownloadError('non_advancing_catalogue')
@@ -203,7 +238,11 @@ class EuropeanArchive(Archive):
     def download_one(self, work=None):
         with self.db() as db:
             db.execute('BEGIN IMMEDIATE')
-            query="SELECT * FROM eu_works WHERE status IN ('pending','retry') AND next_attempt<=?"
+            # The status index otherwise makes SQLite sort the whole pending
+            # queue for every file. The partial ordered index skips completed
+            # works and directly selects the next eligible queued work.
+            table='eu_works INDEXED BY eu_due_work' if work is None else 'eu_works'
+            query="SELECT * FROM "+table+" WHERE status IN ('pending','retry') AND next_attempt<=?"
             values=[time.time()]
             if work is not None:query+=' AND work=?';values.append(work)
             row=db.execute(query+' ORDER BY attempts,work LIMIT 1',values).fetchone()
@@ -267,17 +306,53 @@ class EuropeanArchive(Archive):
                     changed+=1
         return changed
 
+    def reconcile_inventory(self):
+        rows,digest=self.query('SELECT (COUNT(DISTINCT ?w) AS ?count) WHERE {'+SCOPE+'}')
+        if len(rows)!=1:raise DownloadError('invalid_inventory_count')
+        count=int(rows[0]['count']['value'])
+        if count<0:raise DownloadError('invalid_inventory_count')
+        with self.db() as db:local=db.execute('SELECT count(*) FROM eu_works').fetchone()[0]
+        initial=self.setting('eu_initial_expected_works',self.setting('eu_expected_works'))
+        self.set('eu_initial_expected_works',initial)
+        result={'initial_source_count':initial,'current_source_count':count,'local_count':local,
+                'consistent':self.setting('eu_discovery_complete') is True and count==local,
+                'response_hash':digest,'observed_at':utc()}
+        self.set('eu_inventory_reconciliation',result)
+        if result['consistent']:self.set('eu_expected_works',count)
+        return result
+
+    def request_inventory_refresh(self):
+        # Only the supervisor with no active worker calls this. No source rows
+        # or objects are removed; the next discovery reuses known work IDs.
+        self.set('eu_cursor','')
+        self.set('eu_discovery_complete',False)
+
+    def requeue_transient_failures(self, at=None):
+        at=time.time() if at is None else at
+        changed=0
+        with self.db() as db:
+            for row in db.execute("SELECT work,error,attempts FROM eu_works WHERE status='failed' AND next_attempt<=?",(at,)).fetchall():
+                if not transient_error(row['error']):continue
+                db.execute("UPDATE eu_works SET status='retry',attempts=0,next_attempt=? WHERE work=? AND status='failed'",(at+300,row['work']))
+                db.execute('INSERT INTO incidents(stage,resource,code,hash,at) VALUES (?,?,?,?,?)',
+                    ('eu_retry_round',row['work'],str(row['error'])+':after_'+str(row['attempts']),None,utc()))
+                changed+=1
+        return changed
+
     def status(self):
         with self.db() as db:
             states={r['status']:r['n'] for r in db.execute('SELECT status,count(*) n FROM eu_works GROUP BY status')}
             documents=db.execute('SELECT count(*) FROM eu_documents').fetchone()[0]
         expected=self.setting('eu_expected_works')
+        reconciliation=self.setting('eu_inventory_reconciliation')
+        consistent=reconciliation is None or reconciliation.get('consistent') is True
         result={'source':'Publications Office CDM','scope':'CELEX sectors 0 and 3 with a Spanish expression; primary textual manifestation',
                 'expected_works':expected,'identified':sum(states.values()),'states':states,'documents':documents,
                 'inventory_complete':bool(self.setting('eu_discovery_complete')),
-                'all_available_records_archived':bool(expected) and self.setting('eu_discovery_complete') is True and states.get('complete',0)+states.get('metadata_only',0)==expected and sum(states.values())==expected,
-                'all_texts_archived':bool(expected) and self.setting('eu_discovery_complete') is True and states.get('complete',0)==expected and sum(states.values())==expected,
+                'all_available_records_archived':consistent and bool(expected) and self.setting('eu_discovery_complete') is True and states.get('complete',0)+states.get('metadata_only',0)==expected and sum(states.values())==expected,
+                'all_texts_archived':consistent and bool(expected) and self.setting('eu_discovery_complete') is True and states.get('complete',0)==expected and sum(states.values())==expected,
                 'blocker':self.setting('eu_blocker'),'observed_at':utc(),'legal_review':'not_performed',
+                'inventory_reconciliation':reconciliation,
                 'attribution':'Fuente: Oficina de Publicaciones de la Unión Europea',
                 'licence_url':'https://op.europa.eu/en/web/about-us/legal-notices/publications-office-reuse-policy'}
         temporary=self.root/('status.'+str(threading.get_ident())+'.tmp')
@@ -358,6 +433,15 @@ def select_manifestation(items):
     return []
 
 
+def transient_error(code):
+    if not isinstance(code,str):return False
+    if code.startswith('http_'):
+        value=code[5:]
+        return value.isdigit() and (int(value) in (408,425,429) or 500<=int(value)<=599)
+    return code in {'network_'+name for name in ('ConnectError','ReadError','WriteError',
+        'ConnectTimeout','ReadTimeout','WriteTimeout','PoolTimeout','ProxyError','RemoteProtocolError')}
+
+
 def valid_document(raw, content_type, format_):
     start=raw.lstrip()[:1000].lower()
     mime=content_type.split(';')[0].lower().strip()
@@ -377,7 +461,7 @@ def valid_document(raw, content_type, format_):
 
 if __name__=='__main__':
     import argparse
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('command',choices=('run','status','verify','requeue-supported'));p.add_argument('--root',default=ROOT)
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('command',choices=('run','status','verify','requeue-supported','reconcile-inventory','refresh-inventory'));p.add_argument('--root',default=ROOT)
     args=p.parse_args();archive=EuropeanArchive(args.root)
     if args.command=='run':
         archive.run()
@@ -386,4 +470,8 @@ if __name__=='__main__':
         result=archive.verify();print(json.dumps(result,ensure_ascii=False))
         if not result['verification_passed']:raise SystemExit(2)
     elif args.command=='requeue-supported':print(json.dumps({'requeued':archive.requeue_supported()}))
+    elif args.command=='reconcile-inventory':print(json.dumps(archive.reconcile_inventory()))
+    elif args.command=='refresh-inventory':
+        archive.discovery(refresh=True)
+        print(json.dumps(archive.reconcile_inventory()))
     else:print(json.dumps(archive.status(),ensure_ascii=False))

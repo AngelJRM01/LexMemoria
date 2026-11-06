@@ -1,0 +1,39 @@
+{
+  "verified_at": "2026-11-06T05:35:59.459189+00:00",
+  "objects_checked": 47532,
+  "errors": [],
+  "verification_passed": true,
+  "eu_documents_checked": 49369,
+  "eu_works_checked": 184708,
+  "eu_status": {
+    "source": "Publications Office CDM",
+    "scope": "CELEX sectors 0 and 3 with a Spanish expression; primary textual manifestation",
+    "expected_works": 184706,
+    "identified": 184708,
+    "states": {
+      "complete": 32340,
+      "metadata_only": 7534,
+      "pending": 144824,
+      "retry": 8,
+      "running": 2
+    },
+    "documents": 49558,
+    "inventory_complete": true,
+    "all_available_records_archived": false,
+    "all_texts_archived": false,
+    "blocker": null,
+    "observed_at": "2026-11-06T05:35:59.642203+00:00",
+    "legal_review": "not_performed",
+    "inventory_reconciliation": {
+      "initial_source_count": 184706,
+      "current_source_count": 184726,
+      "local_count": 184708,
+      "consistent": false,
+      "response_hash": "44f108d29e966a29ff5ddd329888138f62896701b9d8bcfe24e89c028e61cdc7",
+      "observed_at": "2026-11-06T05:34:00.226015+00:00"
+    },
+    "attribution": "Fuente: Oficina de Publicaciones de la Unión Europea",
+    "licence_url": "https://op.europa.eu/en/web/about-us/legal-notices/publications-office-reuse-policy"
+  },
+  "download_complete": false
+}

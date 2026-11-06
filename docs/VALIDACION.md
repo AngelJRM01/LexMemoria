@@ -78,3 +78,7 @@ El cotejo completo de las 12.451 normas y 695.207 versiones de bloques pasa: [in
 ## Entrega 0.3.1+5 · lectura y búsqueda
 
 54 pruebas Flutter y 73 pruebas backend pasan. Las siete pruebas del archivador europeo se repitieron tras añadir la selección de documentos concretos, sin fallos. Análisis Flutter sin incidencias, web release y APK release correctos. [Comportamiento, pruebas y límites](LECTURA_0_3_1.md). [SHA-256 del APK](validation/android-0.3.1.json). El documento europeo CELEX 32015M7836 se descargó y verificó en el archivo real; el trabajador se reinició conservando checkpoints.
+
+## Archivo europeo supervisado · 6 de noviembre de 2026
+
+89 pruebas backend pasan. Se verificaron 47.532 objetos y 49.369 archivos del archivo real sin errores de integridad; el informe indica expresamente `download_complete: false`. Se probó recuperación desde checkpoints y adopción del trabajador vivo. [Evidencia, operación y límites](DESCARGA_EUROPEA.md). No hay cambios en el cliente móvil en esta intervención.
