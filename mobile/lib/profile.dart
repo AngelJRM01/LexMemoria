@@ -83,7 +83,17 @@ class _AccountPageState extends State<AccountPage> {
     setState(() => busy = true);
     await perform(context, () async {
       final remote = RemoteSync(widget.store);
-      if (widget.store.data['remoteUserId'] == null) await remote.activate();
+      if (widget.store.data['remoteUserId'] == null) {
+        var confirmed = false;
+        if (remote.needsAccountConfirmation) {
+          confirmed = await confirm(
+              context,
+              'Conectar estos datos a una cuenta nueva',
+              'Este espacio conserva datos vinculados a otra sesión. Continuar permite subir sus tarjetas y progreso a la cuenta nueva. Guarda antes una copia si quieres mantenerlos separados.');
+          if (!confirmed) return;
+        }
+        await remote.activate(confirmAccountChange: confirmed);
+      }
       await remote.upload();
       if (code == null) {
         final value = await remote.recoveryCode();
@@ -315,6 +325,20 @@ class SettingsPage extends StatelessWidget {
                       }
                     }),
               ],
+              if (store.data['restoreCheckpoint'] != null)
+                ListTile(
+                    leading: const Icon(Icons.restore),
+                    title: const Text(
+                        'Recuperar datos anteriores a la restauración'),
+                    onTap: () async {
+                      if (await confirm(context, 'Recuperar la copia anterior',
+                          'Se recuperarán los datos que había antes de la última restauración. El estado actual quedará como copia recuperable.')) {
+                        if (context.mounted) {
+                          await perform(context, store.recoverBeforeRestore,
+                              success: 'Copia anterior recuperada');
+                        }
+                      }
+                    }),
               ListTile(
                   leading: const Icon(Icons.file_download_outlined),
                   title: const Text('Exportar todos mis datos'),
@@ -336,7 +360,7 @@ class SettingsPage extends StatelessWidget {
                         }
                         if (!context.mounted ||
                             !await confirm(context, 'Restaurar copia',
-                                'Sustituirá los datos locales. Exporta primero una copia de los actuales.')) {
+                                'Sustituirá los datos locales y conservará una copia anterior recuperable en Ajustes. Esa copia también se incluirá al exportar tus datos.')) {
                           return;
                         }
                         await store.restore(utf8.decode(bytes));
@@ -360,7 +384,7 @@ class SettingsPage extends StatelessWidget {
             ])),
         const SizedBox(height: 24),
         const Text(
-            'LexMemoria 0.4.0 · Versión de prueba\nProducto educativo independiente de las administraciones públicas.',
+            'LexMemoria 0.4.1 · Versión de prueba\nProducto educativo independiente de las administraciones públicas.',
             style: TextStyle(fontSize: 12)),
       ]));
 }
@@ -432,7 +456,7 @@ class PrivacyPage extends StatelessWidget {
                 'Esta versión guarda datos en el almacenamiento local de la aplicación. No se envían notas ni respuestas a proveedores de IA. No hay publicidad ni analítica conectada. Las preferencias no implican suscripción a ningún servicio.')),
         const Section('Datos y conservación'),
         const Text(
-            'Se guardan perfiles, tarjetas, notas, respuestas de simulacros e historial hasta que los borres. En Android/iOS se utiliza SQLCipher con clave separada en Keychain/Keystore; en web se usan preferencias locales sin este cifrado adicional. Evita guardar datos especialmente sensibles. Exportar o compartir crea una copia bajo tu control.'),
+            'Se guardan perfiles, tarjetas, notas, respuestas de simulacros e historial hasta que los borres. En Android/iOS se utiliza SQLCipher con clave separada en Keychain/Keystore; en web se usan preferencias locales sin este cifrado adicional. Evita guardar datos especialmente sensibles. Exportar o compartir crea una copia JSON legible bajo tu control, incluida la copia anterior a la última restauración si existe.'),
         const Section('Conexiones'),
         const Text(
             'Los textos del catálogo ampliado se descargan desde GitHub al solicitarlos, sin enviar tarjetas, notas ni progreso. Los paquetes públicos se guardan aparte y se pueden volver a descargar. Al sincronizar se consulta la API que configures. Al abrir una fuente sales al navegador y se aplica la privacidad del sitio de destino. La sincronización necesita un servidor configurado. La cuenta con código de recuperación permite trasladar tarjetas y progreso; el código debe guardarse fuera del móvil. Google y Apple requieren configurar sus proveedores antes de habilitarlos.'),
@@ -460,6 +484,7 @@ class RecoveryPage extends StatefulWidget {
 class _RecoveryPageState extends State<RecoveryPage> {
   final input = TextEditingController();
   String? generated;
+  String? recoveryWarning;
   bool busy = false;
   @override
   void dispose() {
@@ -472,13 +497,33 @@ class _RecoveryPageState extends State<RecoveryPage> {
       toast(context, 'Introduce el código completo.');
       return;
     }
+    var confirmed = false;
+    final remote = RemoteSync(widget.store);
+    if (!widget.create && remote.needsAccountConfirmation) {
+      confirmed = await confirm(context, 'Recuperar cuenta en este espacio',
+          'Se conservarán los datos locales. Si el código pertenece a otra cuenta, al sincronizar podrás enviarle las tarjetas y el progreso de este espacio. Guarda una copia antes si quieres mantener las cuentas separadas.');
+      if (!confirmed || !mounted) return;
+    }
     setState(() => busy = true);
     await perform(context, () async {
-      final remote = RemoteSync(widget.store);
-      final code = widget.create
-          ? await remote.recoveryCode()
-          : await remote.recover(input.text);
-      if (mounted) setState(() => generated = code);
+      try {
+        final code = widget.create
+            ? await remote.recoveryCode()
+            : await remote.recover(input.text, confirmAccountChange: confirmed);
+        if (mounted) {
+          setState(() {
+            generated = code;
+            recoveryWarning = null;
+          });
+        }
+      } on RecoveryPersistenceFailure catch (failure) {
+        if (mounted) {
+          setState(() {
+            generated = failure.replacementCode;
+            recoveryWarning = failure.toString();
+          });
+        }
+      }
     });
     if (mounted) setState(() => busy = false);
   }
@@ -517,6 +562,7 @@ class _RecoveryPageState extends State<RecoveryPage> {
                       : 'Recuperar y cerrar otras sesiones')),
         ] else ...[
           const Badge('Guarda ahora el código nuevo'),
+          if (recoveryWarning != null) Text(recoveryWarning!),
           const SizedBox(height: 16),
           Paper(child: SelectableText(generated!)),
           const SizedBox(height: 16),
@@ -528,7 +574,7 @@ class _RecoveryPageState extends State<RecoveryPage> {
                   success: 'Código copiado'),
               icon: const Icon(Icons.copy),
               label: const Text('Copiar código')),
-          if (!widget.create)
+          if (!widget.create && recoveryWarning == null)
             FilledButton(
                 onPressed: () => perform(context, RemoteSync(widget.store).pull,
                     success: 'Tarjetas e historial descargados'),

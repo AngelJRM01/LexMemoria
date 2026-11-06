@@ -1,0 +1,72 @@
+{
+  "date": "2026-11-06",
+  "appVersion": "0.4.1+7",
+  "baselineCommit": "ae712a6",
+  "baseline": {
+    "backend": {
+      "passed": 94,
+      "evidence": "evidence/backend-baseline.txt"
+    },
+    "flutter": {
+      "passed": 63,
+      "evidence": "evidence/flutter-baseline.txt"
+    }
+  },
+  "current": {
+    "backend": {
+      "passed": 120,
+      "type": "unit and local HTTP/SQLite integration",
+      "evidence": "evidence/backend-final.txt"
+    },
+    "flutter": {
+      "passed": 82,
+      "type": "unit and widget; mocked platform/network where applicable",
+      "evidence": "evidence/flutter-final.txt"
+    },
+    "analyze": {
+      "passed": true,
+      "issues": 0,
+      "evidence": "evidence/flutter-analyze.txt"
+    },
+    "android": {
+      "releaseBuilt": true,
+      "evidence": "android-0.4.1.json"
+    },
+    "web": {
+      "releaseBuilt": true,
+      "evidence": "evidence/web-build.txt"
+    }
+  },
+  "notRun": [
+    "Native SQLCipher/Keychain/Keystore integration locally",
+    "OPPO physical update and data retention",
+    "iOS compilation and devices",
+    "Production PostgreSQL and real multidispositivo",
+    "Firebase Google/Apple real providers",
+    "FCM/APNs real delivery",
+    "Billing/StoreKit sandbox and production",
+    "Vulnerability database scan, full secret history and full security audit",
+    "TalkBack/VoiceOver real acceptance"
+  ],
+  "requirements": {
+    "count": 100,
+    "matrix": "matriz-requisitos.json",
+    "allPhasesComplete": false
+  },
+  "euProcessing": {
+    "sample": "eu-processing-sample.json",
+    "sampleChecked": 100,
+    "clientIntegrated": false,
+    "legalReview": "not_performed"
+  },
+  "approvalReview": {
+    "oneFlutterAttemptNotExecuted": "temporary usage-limit approval review failure; later retry succeeded through the same approved tool path"
+  },
+  "limitations": [
+    "Recovery idempotency for a lost network response remains pending.",
+    "EU non-HTML formats, oversized documents and mobile integration remain pending.",
+    "Offline SBOM/pattern scan does not prove absence of vulnerabilities or secrets."
+  ],
+  "recordedAt": "2026-11-06T09:27:02.875703+00:00",
+  "workingTreeCodeSha256": "be38f11eaf7da4f6e7d406479d2323fa52a6b5868a045759f6a0e5e4d7627b09"
+}

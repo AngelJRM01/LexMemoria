@@ -1,0 +1,1508 @@
+{
+  "sourceCommit": "ae712a68f75a99681f1d2079bccb68468705f1dd",
+  "workingTreeCodeSha256": "be38f11eaf7da4f6e7d406479d2323fa52a6b5868a045759f6a0e5e4d7627b09",
+  "codeFilesFingerprinted": 110,
+  "lockfiles": {
+    "backend/requirements.lock": "fd659abf23e46ffcb6d04b3c38372225a903d843a91f2c4390c402a2362c608e",
+    "mobile/pubspec.lock": "4f634c2de1b73d14311f1eff4cdbd4a07077e57364ce8b7f035abfd5f7b76540"
+  },
+  "sbom": {
+    "bomFormat": "CycloneDX",
+    "specVersion": "1.6",
+    "version": 1,
+    "components": [
+      {
+        "type": "library",
+        "name": "annotated-doc",
+        "version": "0.0.5",
+        "purl": "pkg:pypi/annotated-doc@0.0.5"
+      },
+      {
+        "type": "library",
+        "name": "annotated-types",
+        "version": "0.8.0",
+        "purl": "pkg:pypi/annotated-types@0.8.0"
+      },
+      {
+        "type": "library",
+        "name": "anyio",
+        "version": "4.16.0",
+        "purl": "pkg:pypi/anyio@4.16.0"
+      },
+      {
+        "type": "library",
+        "name": "certifi",
+        "version": "2026.10.23",
+        "purl": "pkg:pypi/certifi@2026.10.23"
+      },
+      {
+        "type": "library",
+        "name": "click",
+        "version": "8.5.0",
+        "purl": "pkg:pypi/click@8.5.0"
+      },
+      {
+        "type": "library",
+        "name": "defusedxml",
+        "version": "0.7.1",
+        "purl": "pkg:pypi/defusedxml@0.7.1"
+      },
+      {
+        "type": "library",
+        "name": "fastapi",
+        "version": "0.162.0",
+        "purl": "pkg:pypi/fastapi@0.162.0"
+      },
+      {
+        "type": "library",
+        "name": "h11",
+        "version": "0.16.0",
+        "purl": "pkg:pypi/h11@0.16.0"
+      },
+      {
+        "type": "library",
+        "name": "httpcore",
+        "version": "1.0.9",
+        "purl": "pkg:pypi/httpcore@1.0.9"
+      },
+      {
+        "type": "library",
+        "name": "httptools",
+        "version": "0.9.0",
+        "purl": "pkg:pypi/httptools@0.9.0"
+      },
+      {
+        "type": "library",
+        "name": "httpx",
+        "version": "0.28.1",
+        "purl": "pkg:pypi/httpx@0.28.1"
+      },
+      {
+        "type": "library",
+        "name": "idna",
+        "version": "3.20",
+        "purl": "pkg:pypi/idna@3.20"
+      },
+      {
+        "type": "library",
+        "name": "iniconfig",
+        "version": "2.3.1",
+        "purl": "pkg:pypi/iniconfig@2.3.1"
+      },
+      {
+        "type": "library",
+        "name": "opentelemetry-api",
+        "version": "1.45.2",
+        "purl": "pkg:pypi/opentelemetry-api@1.45.2"
+      },
+      {
+        "type": "library",
+        "name": "packaging",
+        "version": "26.3",
+        "purl": "pkg:pypi/packaging@26.3"
+      },
+      {
+        "type": "library",
+        "name": "pluggy",
+        "version": "1.7.0",
+        "purl": "pkg:pypi/pluggy@1.7.0"
+      },
+      {
+        "type": "library",
+        "name": "psycopg",
+        "version": "3.3.8",
+        "purl": "pkg:pypi/psycopg@3.3.8"
+      },
+      {
+        "type": "library",
+        "name": "psycopg-binary",
+        "version": "3.3.8",
+        "purl": "pkg:pypi/psycopg-binary@3.3.8"
+      },
+      {
+        "type": "library",
+        "name": "pydantic",
+        "version": "2.14.2",
+        "purl": "pkg:pypi/pydantic@2.14.2"
+      },
+      {
+        "type": "library",
+        "name": "pydantic_core",
+        "version": "2.50.2",
+        "purl": "pkg:pypi/pydantic_core@2.50.2"
+      },
+      {
+        "type": "library",
+        "name": "Pygments",
+        "version": "2.21.0",
+        "purl": "pkg:pypi/pygments@2.21.0"
+      },
+      {
+        "type": "library",
+        "name": "pytest",
+        "version": "9.2.0",
+        "purl": "pkg:pypi/pytest@9.2.0"
+      },
+      {
+        "type": "library",
+        "name": "python-dotenv",
+        "version": "1.2.4",
+        "purl": "pkg:pypi/python-dotenv@1.2.4"
+      },
+      {
+        "type": "library",
+        "name": "python-multipart",
+        "version": "0.0.33",
+        "purl": "pkg:pypi/python-multipart@0.0.33"
+      },
+      {
+        "type": "library",
+        "name": "PyYAML",
+        "version": "6.0.3",
+        "purl": "pkg:pypi/pyyaml@6.0.3"
+      },
+      {
+        "type": "library",
+        "name": "SQLAlchemy",
+        "version": "2.1.8",
+        "purl": "pkg:pypi/sqlalchemy@2.1.8"
+      },
+      {
+        "type": "library",
+        "name": "starlette",
+        "version": "1.10.0",
+        "purl": "pkg:pypi/starlette@1.10.0"
+      },
+      {
+        "type": "library",
+        "name": "typing-inspection",
+        "version": "0.4.4",
+        "purl": "pkg:pypi/typing-inspection@0.4.4"
+      },
+      {
+        "type": "library",
+        "name": "typing_extensions",
+        "version": "4.16.0",
+        "purl": "pkg:pypi/typing_extensions@4.16.0"
+      },
+      {
+        "type": "library",
+        "name": "uvicorn",
+        "version": "0.54.0",
+        "purl": "pkg:pypi/uvicorn@0.54.0"
+      },
+      {
+        "type": "library",
+        "name": "uvloop",
+        "version": "0.23.0",
+        "purl": "pkg:pypi/uvloop@0.23.0"
+      },
+      {
+        "type": "library",
+        "name": "watchfiles",
+        "version": "1.3.0",
+        "purl": "pkg:pypi/watchfiles@1.3.0"
+      },
+      {
+        "type": "library",
+        "name": "websockets",
+        "version": "17.4",
+        "purl": "pkg:pypi/websockets@17.4"
+      },
+      {
+        "type": "library",
+        "name": "cffi",
+        "version": "2.1.1",
+        "purl": "pkg:pypi/cffi@2.1.1"
+      },
+      {
+        "type": "library",
+        "name": "cryptography",
+        "version": "50.0.2",
+        "purl": "pkg:pypi/cryptography@50.0.2"
+      },
+      {
+        "type": "library",
+        "name": "pycparser",
+        "version": "3.12",
+        "purl": "pkg:pypi/pycparser@3.12"
+      },
+      {
+        "type": "library",
+        "name": "archive",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "4.6.0",
+        "purl": "pkg:pub/archive@4.6.0"
+      },
+      {
+        "type": "library",
+        "name": "args",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.7.0",
+        "purl": "pkg:pub/args@2.7.0"
+      },
+      {
+        "type": "library",
+        "name": "async",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.13.1",
+        "purl": "pkg:pub/async@2.13.1"
+      },
+      {
+        "type": "library",
+        "name": "boolean_selector",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.1.2",
+        "purl": "pkg:pub/boolean_selector@2.1.2"
+      },
+      {
+        "type": "library",
+        "name": "characters",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.4.1",
+        "purl": "pkg:pub/characters@1.4.1"
+      },
+      {
+        "type": "library",
+        "name": "clock",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.1.3",
+        "purl": "pkg:pub/clock@1.1.3"
+      },
+      {
+        "type": "library",
+        "name": "code_assets",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.1.0",
+        "purl": "pkg:pub/code_assets@2.1.0"
+      },
+      {
+        "type": "library",
+        "name": "collection",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.19.1",
+        "purl": "pkg:pub/collection@1.19.1"
+      },
+      {
+        "type": "library",
+        "name": "cross_file",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "0.3.5+5",
+        "purl": "pkg:pub/cross_file@0.3.5+5"
+      },
+      {
+        "type": "library",
+        "name": "crypto",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "3.0.8",
+        "purl": "pkg:pub/crypto@3.0.8"
+      },
+      {
+        "type": "library",
+        "name": "csv",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "6.0.0",
+        "purl": "pkg:pub/csv@6.0.0"
+      },
+      {
+        "type": "library",
+        "name": "dbus",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "0.7.15",
+        "purl": "pkg:pub/dbus@0.7.15"
+      },
+      {
+        "type": "library",
+        "name": "fake_async",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.3.3",
+        "purl": "pkg:pub/fake_async@1.3.3"
+      },
+      {
+        "type": "library",
+        "name": "ffi",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.2.0",
+        "purl": "pkg:pub/ffi@2.2.0"
+      },
+      {
+        "type": "library",
+        "name": "file",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "7.0.1",
+        "purl": "pkg:pub/file@7.0.1"
+      },
+      {
+        "type": "library",
+        "name": "file_picker",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "10.3.10",
+        "purl": "pkg:pub/file_picker@10.3.10"
+      },
+      {
+        "type": "library",
+        "name": "fixnum",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.1.1",
+        "purl": "pkg:pub/fixnum@1.1.1"
+      },
+      {
+        "type": "library",
+        "name": "flutter",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "sdk"
+          },
+          {
+            "name": "lexmemoria:lockfileVersion",
+            "value": "0.0.0"
+          }
+        ]
+      },
+      {
+        "type": "library",
+        "name": "flutter_driver",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "sdk"
+          },
+          {
+            "name": "lexmemoria:lockfileVersion",
+            "value": "0.0.0"
+          }
+        ]
+      },
+      {
+        "type": "library",
+        "name": "flutter_lints",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "5.0.0",
+        "purl": "pkg:pub/flutter_lints@5.0.0"
+      },
+      {
+        "type": "library",
+        "name": "flutter_localizations",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "sdk"
+          },
+          {
+            "name": "lexmemoria:lockfileVersion",
+            "value": "0.0.0"
+          }
+        ]
+      },
+      {
+        "type": "library",
+        "name": "flutter_plugin_android_lifecycle",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.0.35",
+        "purl": "pkg:pub/flutter_plugin_android_lifecycle@2.0.35"
+      },
+      {
+        "type": "library",
+        "name": "flutter_secure_storage",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "9.2.4",
+        "purl": "pkg:pub/flutter_secure_storage@9.2.4"
+      },
+      {
+        "type": "library",
+        "name": "flutter_secure_storage_linux",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.2.3",
+        "purl": "pkg:pub/flutter_secure_storage_linux@1.2.3"
+      },
+      {
+        "type": "library",
+        "name": "flutter_secure_storage_macos",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "3.1.3",
+        "purl": "pkg:pub/flutter_secure_storage_macos@3.1.3"
+      },
+      {
+        "type": "library",
+        "name": "flutter_secure_storage_platform_interface",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.1.2",
+        "purl": "pkg:pub/flutter_secure_storage_platform_interface@1.1.2"
+      },
+      {
+        "type": "library",
+        "name": "flutter_secure_storage_web",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.2.1",
+        "purl": "pkg:pub/flutter_secure_storage_web@1.2.1"
+      },
+      {
+        "type": "library",
+        "name": "flutter_secure_storage_windows",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "3.1.2",
+        "purl": "pkg:pub/flutter_secure_storage_windows@3.1.2"
+      },
+      {
+        "type": "library",
+        "name": "flutter_test",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "sdk"
+          },
+          {
+            "name": "lexmemoria:lockfileVersion",
+            "value": "0.0.0"
+          }
+        ]
+      },
+      {
+        "type": "library",
+        "name": "flutter_tts",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "4.2.5",
+        "purl": "pkg:pub/flutter_tts@4.2.5"
+      },
+      {
+        "type": "library",
+        "name": "flutter_web_plugins",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "sdk"
+          },
+          {
+            "name": "lexmemoria:lockfileVersion",
+            "value": "0.0.0"
+          }
+        ]
+      },
+      {
+        "type": "library",
+        "name": "fuchsia_remote_debug_protocol",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "sdk"
+          },
+          {
+            "name": "lexmemoria:lockfileVersion",
+            "value": "0.0.0"
+          }
+        ]
+      },
+      {
+        "type": "library",
+        "name": "hooks",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.2.0",
+        "purl": "pkg:pub/hooks@2.2.0"
+      },
+      {
+        "type": "library",
+        "name": "http",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.6.0",
+        "purl": "pkg:pub/http@1.6.0"
+      },
+      {
+        "type": "library",
+        "name": "http_parser",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "4.1.2",
+        "purl": "pkg:pub/http_parser@4.1.2"
+      },
+      {
+        "type": "library",
+        "name": "integration_test",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "sdk"
+          },
+          {
+            "name": "lexmemoria:lockfileVersion",
+            "value": "0.0.0"
+          }
+        ]
+      },
+      {
+        "type": "library",
+        "name": "intl",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "0.20.3",
+        "purl": "pkg:pub/intl@0.20.3"
+      },
+      {
+        "type": "library",
+        "name": "jni",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.1.2",
+        "purl": "pkg:pub/jni@1.1.2"
+      },
+      {
+        "type": "library",
+        "name": "jni_flutter",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.0.4+1",
+        "purl": "pkg:pub/jni_flutter@1.0.4+1"
+      },
+      {
+        "type": "library",
+        "name": "jni_util",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.0.0",
+        "purl": "pkg:pub/jni_util@1.0.0"
+      },
+      {
+        "type": "library",
+        "name": "js",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "0.6.7",
+        "purl": "pkg:pub/js@0.6.7"
+      },
+      {
+        "type": "library",
+        "name": "leak_tracker",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "11.0.2",
+        "purl": "pkg:pub/leak_tracker@11.0.2"
+      },
+      {
+        "type": "library",
+        "name": "leak_tracker_flutter_testing",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "3.0.10",
+        "purl": "pkg:pub/leak_tracker_flutter_testing@3.0.10"
+      },
+      {
+        "type": "library",
+        "name": "leak_tracker_testing",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "3.0.2",
+        "purl": "pkg:pub/leak_tracker_testing@3.0.2"
+      },
+      {
+        "type": "library",
+        "name": "lints",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "5.1.1",
+        "purl": "pkg:pub/lints@5.1.1"
+      },
+      {
+        "type": "library",
+        "name": "logging",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.3.0",
+        "purl": "pkg:pub/logging@1.3.0"
+      },
+      {
+        "type": "library",
+        "name": "matcher",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "0.12.20",
+        "purl": "pkg:pub/matcher@0.12.20"
+      },
+      {
+        "type": "library",
+        "name": "material_color_utilities",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "0.13.0",
+        "purl": "pkg:pub/material_color_utilities@0.13.0"
+      },
+      {
+        "type": "library",
+        "name": "meta",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.19.0",
+        "purl": "pkg:pub/meta@1.19.0"
+      },
+      {
+        "type": "library",
+        "name": "mime",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.1.0",
+        "purl": "pkg:pub/mime@2.1.0"
+      },
+      {
+        "type": "library",
+        "name": "objective_c",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "9.6.2",
+        "purl": "pkg:pub/objective_c@9.6.2"
+      },
+      {
+        "type": "library",
+        "name": "package_config",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "3.0.0",
+        "purl": "pkg:pub/package_config@3.0.0"
+      },
+      {
+        "type": "library",
+        "name": "path",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.9.1",
+        "purl": "pkg:pub/path@1.9.1"
+      },
+      {
+        "type": "library",
+        "name": "path_provider",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.1.6",
+        "purl": "pkg:pub/path_provider@2.1.6"
+      },
+      {
+        "type": "library",
+        "name": "path_provider_android",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.3.1",
+        "purl": "pkg:pub/path_provider_android@2.3.1"
+      },
+      {
+        "type": "library",
+        "name": "path_provider_foundation",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.6.0",
+        "purl": "pkg:pub/path_provider_foundation@2.6.0"
+      },
+      {
+        "type": "library",
+        "name": "path_provider_linux",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.2.2",
+        "purl": "pkg:pub/path_provider_linux@2.2.2"
+      },
+      {
+        "type": "library",
+        "name": "path_provider_platform_interface",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.1.3",
+        "purl": "pkg:pub/path_provider_platform_interface@2.1.3"
+      },
+      {
+        "type": "library",
+        "name": "path_provider_windows",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.3.0",
+        "purl": "pkg:pub/path_provider_windows@2.3.0"
+      },
+      {
+        "type": "library",
+        "name": "petitparser",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "7.1.0",
+        "purl": "pkg:pub/petitparser@7.1.0"
+      },
+      {
+        "type": "library",
+        "name": "platform",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "3.2.0",
+        "purl": "pkg:pub/platform@3.2.0"
+      },
+      {
+        "type": "library",
+        "name": "plugin_platform_interface",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.1.8",
+        "purl": "pkg:pub/plugin_platform_interface@2.1.8"
+      },
+      {
+        "type": "library",
+        "name": "posix",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "6.5.4",
+        "purl": "pkg:pub/posix@6.5.4"
+      },
+      {
+        "type": "library",
+        "name": "process",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "5.0.6",
+        "purl": "pkg:pub/process@5.0.6"
+      },
+      {
+        "type": "library",
+        "name": "pub_semver",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.2.1",
+        "purl": "pkg:pub/pub_semver@2.2.1"
+      },
+      {
+        "type": "library",
+        "name": "record_use",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.1.1",
+        "purl": "pkg:pub/record_use@1.1.1"
+      },
+      {
+        "type": "library",
+        "name": "share_plus",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "11.1.0",
+        "purl": "pkg:pub/share_plus@11.1.0"
+      },
+      {
+        "type": "library",
+        "name": "share_plus_platform_interface",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "6.1.0",
+        "purl": "pkg:pub/share_plus_platform_interface@6.1.0"
+      },
+      {
+        "type": "library",
+        "name": "shared_preferences",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.5.6",
+        "purl": "pkg:pub/shared_preferences@2.5.6"
+      },
+      {
+        "type": "library",
+        "name": "shared_preferences_android",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.5.4",
+        "purl": "pkg:pub/shared_preferences_android@2.5.4"
+      },
+      {
+        "type": "library",
+        "name": "shared_preferences_foundation",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.6.1",
+        "purl": "pkg:pub/shared_preferences_foundation@2.6.1"
+      },
+      {
+        "type": "library",
+        "name": "shared_preferences_linux",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.4.1",
+        "purl": "pkg:pub/shared_preferences_linux@2.4.1"
+      },
+      {
+        "type": "library",
+        "name": "shared_preferences_platform_interface",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.4.2",
+        "purl": "pkg:pub/shared_preferences_platform_interface@2.4.2"
+      },
+      {
+        "type": "library",
+        "name": "shared_preferences_web",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.4.3",
+        "purl": "pkg:pub/shared_preferences_web@2.4.3"
+      },
+      {
+        "type": "library",
+        "name": "shared_preferences_windows",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.4.1",
+        "purl": "pkg:pub/shared_preferences_windows@2.4.1"
+      },
+      {
+        "type": "library",
+        "name": "sky_engine",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "sdk"
+          },
+          {
+            "name": "lexmemoria:lockfileVersion",
+            "value": "0.0.0"
+          }
+        ]
+      },
+      {
+        "type": "library",
+        "name": "source_span",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.10.2",
+        "purl": "pkg:pub/source_span@1.10.2"
+      },
+      {
+        "type": "library",
+        "name": "sqflite_common",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.5.15",
+        "purl": "pkg:pub/sqflite_common@2.5.15"
+      },
+      {
+        "type": "library",
+        "name": "sqflite_sqlcipher",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "3.4.1",
+        "purl": "pkg:pub/sqflite_sqlcipher@3.4.1"
+      },
+      {
+        "type": "library",
+        "name": "stack_trace",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.12.2",
+        "purl": "pkg:pub/stack_trace@1.12.2"
+      },
+      {
+        "type": "library",
+        "name": "stream_channel",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.1.4",
+        "purl": "pkg:pub/stream_channel@2.1.4"
+      },
+      {
+        "type": "library",
+        "name": "string_scanner",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.4.1",
+        "purl": "pkg:pub/string_scanner@1.4.1"
+      },
+      {
+        "type": "library",
+        "name": "sync_http",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "0.3.1",
+        "purl": "pkg:pub/sync_http@0.3.1"
+      },
+      {
+        "type": "library",
+        "name": "synchronized",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "3.5.0",
+        "purl": "pkg:pub/synchronized@3.5.0"
+      },
+      {
+        "type": "library",
+        "name": "term_glyph",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.2.2",
+        "purl": "pkg:pub/term_glyph@1.2.2"
+      },
+      {
+        "type": "library",
+        "name": "test_api",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "0.7.12",
+        "purl": "pkg:pub/test_api@0.7.12"
+      },
+      {
+        "type": "library",
+        "name": "typed_data",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.4.0",
+        "purl": "pkg:pub/typed_data@1.4.0"
+      },
+      {
+        "type": "library",
+        "name": "url_launcher",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "6.3.3",
+        "purl": "pkg:pub/url_launcher@6.3.3"
+      },
+      {
+        "type": "library",
+        "name": "url_launcher_android",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "6.3.33",
+        "purl": "pkg:pub/url_launcher_android@6.3.33"
+      },
+      {
+        "type": "library",
+        "name": "url_launcher_ios",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "6.4.2",
+        "purl": "pkg:pub/url_launcher_ios@6.4.2"
+      },
+      {
+        "type": "library",
+        "name": "url_launcher_linux",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "3.2.3",
+        "purl": "pkg:pub/url_launcher_linux@3.2.3"
+      },
+      {
+        "type": "library",
+        "name": "url_launcher_macos",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "3.2.6",
+        "purl": "pkg:pub/url_launcher_macos@3.2.6"
+      },
+      {
+        "type": "library",
+        "name": "url_launcher_platform_interface",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.3.2",
+        "purl": "pkg:pub/url_launcher_platform_interface@2.3.2"
+      },
+      {
+        "type": "library",
+        "name": "url_launcher_web",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.4.3",
+        "purl": "pkg:pub/url_launcher_web@2.4.3"
+      },
+      {
+        "type": "library",
+        "name": "url_launcher_windows",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "3.1.6",
+        "purl": "pkg:pub/url_launcher_windows@3.1.6"
+      },
+      {
+        "type": "library",
+        "name": "uuid",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "4.6.0",
+        "purl": "pkg:pub/uuid@4.6.0"
+      },
+      {
+        "type": "library",
+        "name": "vector_math",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "2.4.4",
+        "purl": "pkg:pub/vector_math@2.4.4"
+      },
+      {
+        "type": "library",
+        "name": "vm_service",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "15.4.0",
+        "purl": "pkg:pub/vm_service@15.4.0"
+      },
+      {
+        "type": "library",
+        "name": "web",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.1.2",
+        "purl": "pkg:pub/web@1.1.2"
+      },
+      {
+        "type": "library",
+        "name": "webdriver",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "3.2.0",
+        "purl": "pkg:pub/webdriver@3.2.0"
+      },
+      {
+        "type": "library",
+        "name": "win32",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "5.15.0",
+        "purl": "pkg:pub/win32@5.15.0"
+      },
+      {
+        "type": "library",
+        "name": "xdg_directories",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "1.1.0",
+        "purl": "pkg:pub/xdg_directories@1.1.0"
+      },
+      {
+        "type": "library",
+        "name": "xml",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "7.1.0",
+        "purl": "pkg:pub/xml@7.1.0"
+      },
+      {
+        "type": "library",
+        "name": "yaml",
+        "properties": [
+          {
+            "name": "lexmemoria:source",
+            "value": "hosted"
+          }
+        ],
+        "version": "3.1.4",
+        "purl": "pkg:pub/yaml@3.1.4"
+      }
+    ]
+  },
+  "secretPatternScan": {
+    "scope": "tracked and unignored working-tree text files <= 2 MB; three patterns; no history or external secrets",
+    "findings": []
+  },
+  "vulnerabilityDatabaseScan": {
+    "status": "NOT_RUN",
+    "limitation": "Offline inventory and pip check do not prove absence of vulnerable dependencies."
+  },
+  "supplyChainRisks": [
+    "CI actions use version tags rather than immutable commit SHAs.",
+    "Native Android/iOS transitive dependencies are not fully enumerated by these two lockfiles."
+  ]
+}

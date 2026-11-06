@@ -8,8 +8,16 @@ def validate_exercise(data):
     correct = data.get('correct')
     if kind not in ('qa', 'cloze', 'truefalse', 'order', 'case', 'test'):
         raise ValueError('Tipo de ejercicio desconocido')
-    if kind == 'cloze' and not re.search(r'\{\{c[1-9]\d*::[^{}]+\}\}', data['front']):
-        raise ValueError('Añade un hueco válido: {{c1::respuesta}}')
+    if kind == 'cloze':
+        holes = re.findall(r'\{\{c([1-9]\d*)::([^{}]+)\}\}', data['front'])
+        if not holes or len({key for key, _ in holes}) > 64:
+            raise ValueError('Añade entre 1 y 64 huecos válidos: {{c1::respuesta}}')
+        answers = {}
+        for key, value in holes:
+            if key in answers and answers[key] != value:
+                raise ValueError('Un mismo número de hueco debe tener la misma respuesta')
+            answers[key] = value
+
     if kind in ('test', 'truefalse') or (kind == 'case' and options):
         if not 2 <= len(options) <= 6 or correct is None or not 0 <= correct < len(options):
             raise ValueError('Opciones o solución no válidas')
@@ -27,6 +35,15 @@ def grade_exercise(data, response):
     if response is None:
         return None
     options = data.get('options', [])
+    if data['type'] == 'cloze':
+        answers = dict(re.findall(r'\{\{c([1-9]\d*)::([^{}]+)\}\}', data['front']))
+        if (not isinstance(response, dict) or len(response) > 64 or
+            not set(response).issubset(answers) or
+            any(not isinstance(v, str) or len(v) > 2000 for v in response.values())):
+            raise ValueError('Responde usando los números de hueco y textos válidos')
+        normalize = lambda value: ' '.join(value.strip().lower().split())
+        return bool(answers) and all(normalize(response.get(key, '')) == normalize(value)
+            for key, value in answers.items())
     if data['type'] == 'order':
         if not isinstance(response, list) or len(response) != len(options) or set(response) != set(range(len(options))):
             raise ValueError('La respuesta debe ordenar todos los elementos sin duplicados')

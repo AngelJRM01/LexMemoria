@@ -13,6 +13,7 @@ import 'startup.dart';
 import 'prepared.dart';
 import 'pack_cache.dart';
 import 'catalogue.dart';
+import 'backup.dart';
 
 class AppStore extends ChangeNotifier {
   final SharedPreferences prefs;
@@ -30,6 +31,7 @@ class AppStore extends ChangeNotifier {
   String? error;
   bool syncing = false;
   Future<void> _write = Future.value();
+  int _writeGeneration = 0;
   AppStore(this.prefs, this.data,
       {http.Client? client,
       LocalPersistence? persistence,
@@ -290,6 +292,7 @@ class AppStore extends ChangeNotifier {
 
   Future<void> save() {
     final snapshot = jsonEncode(data);
+    _writeGeneration++;
     _write = _write.catchError((_) {}).then((_) async {
       await persistence.write(snapshot);
     });
@@ -298,8 +301,10 @@ class AppStore extends ChangeNotifier {
   }
 
   Future<void> setProfile(Json p) async {
-    data['profile'] = {...profile, ...p};
-    await save();
+    await _commitMutation(() => {
+          ...data,
+          'profile': {...profile, ...p}
+        });
   }
 
   Json readingPosition(String normId, String unitId) {
@@ -336,118 +341,166 @@ class AppStore extends ChangeNotifier {
   }
 
   Future<void> addCard(StudyCard c) async {
-    data['cards'] = [...cards.map((v) => v.toJson()), c.toJson()];
-    await save();
+    await _commitMutation(() => {
+          ...data,
+          'cards': [...cards.map((v) => v.toJson()), c.toJson()]
+        });
   }
 
   Future<void> editCard(StudyCard card, {required int expectedRevision}) async {
-    final previous = cards.where((c) => c.id == card.id).firstOrNull;
-    if (previous == null || previous.revision != expectedRevision) {
-      throw StateError(
-          'La tarjeta ha cambiado. Conserva el borrador y vuelve a abrirla.');
-    }
-    if (jsonEncode({...previous.toJson()}..remove('revision')) ==
-        jsonEncode({...card.toJson()}..remove('revision'))) {
-      return;
-    }
-    data['cardHistory'] = [
-      ...list('cardHistory'),
-      {
-        ...previous.toJson(),
-        'archivedAt': DateTime.now().toUtc().toIso8601String()
+    await _commitMutation(() {
+      final previous = cards.where((c) => c.id == card.id).firstOrNull;
+      if (previous == null || previous.revision != expectedRevision) {
+        throw StateError(
+            'La tarjeta ha cambiado. Conserva el borrador y vuelve a abrirla.');
       }
-    ];
-    data['cards'] =
-        cards.map((c) => c.id == card.id ? card.toJson() : c.toJson()).toList();
-    await save();
+      if (jsonEncode({...previous.toJson()}..remove('revision')) ==
+          jsonEncode({...card.toJson()}..remove('revision'))) {
+        return data;
+      }
+      return {
+        ...data,
+        'cardHistory': [
+          ...list('cardHistory'),
+          {
+            ...previous.toJson(),
+            'archivedAt': DateTime.now().toUtc().toIso8601String()
+          }
+        ],
+        'cards': cards
+            .map((c) => c.id == card.id ? card.toJson() : c.toJson())
+            .toList()
+      };
+    });
   }
 
   Future<void> add(String key, Json value) async {
-    data[key] = [...list(key), value];
-    await save();
+    await _commitMutation(() => {
+          ...data,
+          key: [...list(key), value]
+        });
   }
 
   Future<void> toggle(String key, String id) async {
-    final values = List<String>.from(data[key] ?? []);
-    values.contains(id) ? values.remove(id) : values.add(id);
-    data[key] = values;
-    await save();
+    await _commitMutation(() {
+      final values = List<String>.from(data[key] ?? []);
+      values.contains(id) ? values.remove(id) : values.add(id);
+      return {...data, key: values};
+    });
   }
 
   bool has(String key, String id) => (data[key] as List? ?? []).contains(id);
   Future<void> review(StudyCard card, int rating,
       {int latencyMs = 0, dynamic response}) async {
-    final current = cards.where((c) => c.id == card.id).firstOrNull;
-    if (current == null || current.revision != card.revision) {
-      throw StateError('La tarjeta ha cambiado; abre una sesión nueva.');
-    }
-    if (current.blocked) {
-      throw StateError('Tarjeta bloqueada por revisión normativa');
-    }
-    final at = DateTime.now().toUtc();
-    final previous = state(card.id);
-    final event = <String, dynamic>{
-      'id': const Uuid().v4(),
-      'cardId': card.id,
-      'cardRevision': card.revision,
-      'rating': rating,
-      'occurredAt': at.toIso8601String(),
-      'previous': previous,
-      'latencyMs': latencyMs,
-      'response': response,
-      'algorithm': 'sm2-1'
-    };
-    data['states'] = {
-      ...(data['states'] as Map? ?? {}),
-      card.id: schedule(previous, rating, at)
-    };
-    data['reviews'] = [...list('reviews'), event];
-    data['session'] = null;
-    await save();
+    await _commitMutation(() {
+      final current = cards.where((c) => c.id == card.id).firstOrNull;
+      if (current == null || current.revision != card.revision) {
+        throw StateError('La tarjeta ha cambiado; abre una sesión nueva.');
+      }
+      if (current.blocked) {
+        throw StateError('Tarjeta bloqueada por revisión normativa');
+      }
+      final at = DateTime.now().toUtc();
+      final previous = state(card.id);
+      final event = <String, dynamic>{
+        'id': const Uuid().v4(),
+        'cardId': card.id,
+        'cardRevision': card.revision,
+        'rating': rating,
+        'occurredAt': at.toIso8601String(),
+        'previous': previous,
+        'latencyMs': latencyMs,
+        'response': response,
+        'algorithm': 'sm2-1'
+      };
+      return {
+        ...data,
+        'states': {
+          ...(data['states'] as Map? ?? {}),
+          card.id: schedule(previous, rating, at)
+        },
+        'reviews': [...list('reviews'), event],
+        'session': null
+      };
+    });
   }
 
   Future<void> undoLast() async {
-    final events = list('reviews');
-    if (events.isEmpty) return;
-    final last = events.last;
-    if (last['synced'] == true) {
-      throw StateError(
-          'La revisión sincronizada conserva su historial y no se puede deshacer.');
-    }
-    events.removeLast();
-    data['reviews'] = events;
-    data['states'] = {
-      ...(data['states'] as Map? ?? {}),
-      last['cardId']: last['previous']
-    };
-    await save();
+    await _commitMutation(() {
+      final events = list('reviews');
+      if (events.isEmpty) return data;
+      final last = events.last;
+      if (last['synced'] == true) {
+        throw StateError(
+            'La revisión sincronizada conserva su historial y no se puede deshacer.');
+      }
+      events.removeLast();
+      return {
+        ...data,
+        'reviews': events,
+        'states': {
+          ...(data['states'] as Map? ?? {}),
+          last['cardId']: last['previous']
+        }
+      };
+    });
   }
 
   Future<void> reset() async {
-    data = {};
+    await _replaceSnapshot({});
     bundledPacks.clear();
-    await save();
+  }
+
+  Future<void> _replaceSnapshot(Json replacement) {
+    final before = jsonEncode(data);
+    final expected = _writeGeneration;
+    return _commitMutation(() {
+      if (_writeGeneration != expected || jsonEncode(data) != before) {
+        throw StateError('Tus datos han cambiado. Repite la operación.');
+      }
+      return replacement;
+    });
+  }
+
+  Future<void> _commitMutation(Json Function() mutate) {
+    final operation = _write.catchError((_) {}).then((_) async {
+      final before = jsonEncode(data);
+      final expected = _writeGeneration;
+      // Compute against the latest committed state, not the state from when a
+      // second click queued the operation. Sequential edits must not lose data.
+      final encoded = jsonEncode(mutate());
+      await persistence.write(encoded);
+      if (_writeGeneration != expected || jsonEncode(data) != before) {
+        await persistence.write(jsonEncode(data));
+        throw StateError('Tus datos han cambiado. La sustitución se canceló.');
+      }
+      data = Json.from(jsonDecode(encoded));
+      _writeGeneration++;
+      notifyListeners();
+    });
+    _write = operation;
+    return operation;
   }
 
   Future<void> restore(String text) async {
-    final parsed = jsonDecode(text);
-    if (parsed is! Map ||
-        parsed['schemaVersion'] != 1 ||
-        parsed['data'] is! Map) {
-      throw const FormatException('Copia incompatible');
+    final restored = decodeStudyBackup(text);
+    final previous = Json.from(jsonDecode(jsonEncode(data)))
+      ..remove('restoreCheckpoint')
+      ..remove('auth');
+    // One recoverable checkpoint, rather than recursively nested full backups.
+    restored['restoreCheckpoint'] = {
+      'at': DateTime.now().toUtc().toIso8601String(),
+      'data': previous
+    };
+    await _replaceSnapshot(restored);
+  }
+
+  Future<void> recoverBeforeRestore() async {
+    final checkpoint = data['restoreCheckpoint'];
+    if (checkpoint is! Map || checkpoint['data'] is! Map) {
+      throw StateError('No hay una copia anterior a la restauración.');
     }
-    final restored = Json.from(parsed['data']);
-    for (final c in restored['cards'] as List? ?? []) {
-      StudyCard.fromJson(Json.from(c));
-    }
-    // A local backup never restores server authentication.
-    restored.remove('auth');
-    restored.remove('remoteUserId');
-    restored.remove('remoteCardIds');
-    restored.remove('remoteCardRevisions');
-    restored.remove('workspaceBase');
-    data = restored;
-    await save();
+    await restore(jsonEncode({'schemaVersion': 1, 'data': checkpoint['data']}));
   }
 
   String export() => const JsonEncoder.withIndent('  ').convert({

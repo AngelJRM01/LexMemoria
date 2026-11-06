@@ -1,0 +1,610 @@
+{
+  "observedAt": "2026-11-06T09:21:28.331724+00:00",
+  "checked": 100,
+  "scope": "First extracted documents ordered by source URL; sample, not entire EU corpus",
+  "allPassed": true,
+  "clientIntegrated": false,
+  "legalReview": "not_performed",
+  "checks": [
+    {
+      "celex": "32022D2391",
+      "rawSha256": "4007f195c216969c4843a03c655426d42afe38a1cc7b67cbc6d78d06f76d3c94",
+      "derivedSha256": "4021000630c24e6ba07b81c0c9cece2e733aed016d3b7f936ebde1b658570131",
+      "paragraphs": 42
+    },
+    {
+      "celex": "31987D0132",
+      "rawSha256": "8fb1a9f4fb14a68ab7cd72be095cb4c9e21764f39c9386cef91e3ff0dc16bbc9",
+      "derivedSha256": "01231c130d2bea9f0bd4aa78736377654050485ffbd5413e191727ca51099f08",
+      "paragraphs": 5
+    },
+    {
+      "celex": "31986D0559",
+      "rawSha256": "d847f9001cc143acd3526aaf1dc16d27d87f8b10c3b79191381cc4b2f83bdf9b",
+      "derivedSha256": "14a08afe7d98eab13fa3934aa4edfa21f14fb3db05402f0f6ec05f549d16ce1b",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32024D2181",
+      "rawSha256": "ae0db9a96d315cd8387196e669756fb3a65a7c74b3e1df77f2854f6c571024e6",
+      "derivedSha256": "7915960584edcbfcb1ab286f33f281225d01d2f944449059d74312d78f7387ab",
+      "paragraphs": 41
+    },
+    {
+      "celex": "32008M5207",
+      "rawSha256": "d6e229a95460e6fc3cb605f66593df971afc59e4a38e5fdd63d34c858dc5f10f",
+      "derivedSha256": "77f3c2b853f09f8de7770568fde40073c34a041ccbb6dd98c99f693589e9a800",
+      "paragraphs": 13
+    },
+    {
+      "celex": "02019R0631-20240101",
+      "rawSha256": "8c6bd9b801dbccf6f330461b2e8ff8cb41d3fa295d01d91455027905996161aa",
+      "derivedSha256": "09df87eff78c6ab74a661b65cd84742cc865404d8f8778bf415b6e767a5478d6",
+      "paragraphs": 1458
+    },
+    {
+      "celex": "32009D0835",
+      "rawSha256": "5394e4f54072597fcb7aa483e2de6e6dbcace58a01bb6b6687c42f95259386e8",
+      "derivedSha256": "c3de8a5abfd74c62d9880ceb1c9ba165c401154aabc34457483c52aa0636cf30",
+      "paragraphs": 57
+    },
+    {
+      "celex": "02008L0008-20080220",
+      "rawSha256": "575d27e4b93516ec82e30e445679d2a440e16858177ccf85e56816554e3bb85c",
+      "derivedSha256": "d51d4436cb20a5fae3035f8aa31d39310ff6c6f970cd28cc1e08d8534ab0d62c",
+      "paragraphs": 344
+    },
+    {
+      "celex": "02020R1213-20230322",
+      "rawSha256": "391e8afb2110235d3d4b57ddf4c428f46d43295b615a32ec86aeb6c4cde3a475",
+      "derivedSha256": "904ee77d356d0539314a848c7297c274467857f8b6bd472e202c574404883b9d",
+      "paragraphs": 125
+    },
+    {
+      "celex": "02010R1062-20170307",
+      "rawSha256": "9174274623f7d3ff376099001e30181a908354bdf6d6d09aa055661269f42694",
+      "derivedSha256": "5696f2e94d1d537807d65db004a18885723f1ac6d931ae41d3923fcd03c64240",
+      "paragraphs": 293
+    },
+    {
+      "celex": "32010R0712",
+      "rawSha256": "0436df6818b6cc803a150702e8cab05a992b363ff5936e9638403648876c77ea",
+      "derivedSha256": "635e4534dc273f2b60a192d92faf0c65c77c391158611b9ba68350661f9b0ac3",
+      "paragraphs": 131
+    },
+    {
+      "celex": "02005R1898-20060101",
+      "rawSha256": "4a718454d4684f4f1e788b3a477b4940982d6ac92e2e2d3f612d56e6e1a123a3",
+      "derivedSha256": "4000b8e93bfb1c679edd3acb874af5551b1316551210342b893547d0b26d2cb6",
+      "paragraphs": 2113
+    },
+    {
+      "celex": "31991R3864",
+      "rawSha256": "3edc9e5401116e360e8e8f2a8c8cd76b35a36d0cf84945e1f75ed9f144cf66eb",
+      "derivedSha256": "75bbdea8de25c0c5350efa7587248ef178d2067510cceddc79013b66eefb28c9",
+      "paragraphs": 5
+    },
+    {
+      "celex": "31997R2465",
+      "rawSha256": "d7229e2837304b2b35debb62cab95ece0e55e1c4b98544ab7004cc2cd4e54931",
+      "derivedSha256": "756fd7cc1009e762244b99aa710c1e68ff1a37ca53d874de65a5741601b462ae",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32001D0539",
+      "rawSha256": "fb18a01b636093ecb480989bfa326b78a760c80291f4ca1c630efe296d7d844c",
+      "derivedSha256": "4af93c8495c859cb7750d2e94dfbe4ed63f45d48221180d3c5cc47f3935688b8",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32019R1783",
+      "rawSha256": "6c065416a4ae8c6672d089a702ce94e0886dd8347a105befdbf55e64a71a84f6",
+      "derivedSha256": "3e785b3b11b897a592c4f0596de79331f2dfbf6a5c1b78c0dbeb325dc403bcab",
+      "paragraphs": 118
+    },
+    {
+      "celex": "32010D0206",
+      "rawSha256": "c3f7468b30d655b8d31a472aa921b585f38154a7dd8091b67b6ec7de5968939f",
+      "derivedSha256": "3862f4c9110f981c5e775d1c7288f3823574e206bb40cd586e49a31c1e33dcba",
+      "paragraphs": 44
+    },
+    {
+      "celex": "32009B0924",
+      "rawSha256": "104e680927caf740c18ed368145396a3f09a5c41931809650f1e0d5823f45b86",
+      "derivedSha256": "5e4438590647d3f11ca0a67569412168c726a6ee39bba9f0d4cb164dc6330ebe",
+      "paragraphs": 166
+    },
+    {
+      "celex": "32016R0639",
+      "rawSha256": "41d9fb6c380e296a9cf3fcd29adefd9b15552e5a7a405b19209c26ffb307d207",
+      "derivedSha256": "4c8d33e85adc32cf2ad4d4d1adde8f251911a5c5ddd503a73b34da6dda486da2",
+      "paragraphs": 105
+    },
+    {
+      "celex": "02019R1021-20221213",
+      "rawSha256": "82409e5986593c55ae4f909780b65629df3420ddc9458d81c10a6fd92da03456",
+      "derivedSha256": "2184cb9457f210042a01e86acb3ed39ee303aca26d9230120c336e4b1059f634",
+      "paragraphs": 901
+    },
+    {
+      "celex": "31987R1421",
+      "rawSha256": "837346a697c2fb044b64a8a9479b0638ddaab0638da37805462a1703a0402d18",
+      "derivedSha256": "9419dec62031834f33a6f58a50154e43e87c9b02a90bd96152056a064c2617bc",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32004M3397",
+      "rawSha256": "3c324ccfa4e3a37a50ac65ac246eb9d33a36ab9cd2865000db9914b6d0f2abbc",
+      "derivedSha256": "7866a08fe7c6f31c6c4efb596ee7ab1b40d073e555cf63c0ce432814ab8b97df",
+      "paragraphs": 15
+    },
+    {
+      "celex": "32025D1064",
+      "rawSha256": "56918a7d906d38d2c1b54d47c8642e19931393d8f0a9b4be9b4a13a59e22c693",
+      "derivedSha256": "ba62de427942fd087629e63c08331226e3ac4c1f9bc0573aa34075075fe0d47d",
+      "paragraphs": 197
+    },
+    {
+      "celex": "32004R1646",
+      "rawSha256": "76f4d796225c57b83c04277c6010fe6e39f0bf5985e23d43f3cbbe29184f7200",
+      "derivedSha256": "48639c0f9be2c625c5fb769edaa79b13234e12bf3628399bf4ba18d55101e381",
+      "paragraphs": 216
+    },
+    {
+      "celex": "32001R1171",
+      "rawSha256": "6651ad8a1d22f85f6b667e6a89439198ca1cdac85beb91df0cff004af546e3ee",
+      "derivedSha256": "6eda9ca2746d846f34442d078078323bee7acf6968bba0dc76fe7c9c567af71a",
+      "paragraphs": 5
+    },
+    {
+      "celex": "31990R1317",
+      "rawSha256": "59f87d0dbdc40e78c08bebdffddd6ce521ba1036a082bc714abbfcde820f2f28",
+      "derivedSha256": "f33dbf5ede0fd8f62b92dfc6113081524337713cd706d59e477fa9f2f02df7d9",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32010L0065",
+      "rawSha256": "8bd63d022ea2c4e98a57cef441e37b0dfb09198c4d730e4758459c981d11e8ae",
+      "derivedSha256": "b38d86a255322d4466a6b18a8d40a74c9aafeb8b92425144486f0b06610d3b08",
+      "paragraphs": 348
+    },
+    {
+      "celex": "31997R1418",
+      "rawSha256": "57eb9b60a76752d62e95a19f55c572969f258909f184f0528ae5a5ba95933364",
+      "derivedSha256": "39f183ebfe6a98eed34dc5778a46fe73f9a74f7456fa7057309fa6f08cd5e8d7",
+      "paragraphs": 5
+    },
+    {
+      "celex": "31998D0591",
+      "rawSha256": "ada71e00889a9162ea104371aadf1ab1a273ea8b8d95adc502919d447f1b78cc",
+      "derivedSha256": "e5c2a9254410ba7662705cb997b1f8719479fa6fc95eb231ecc22f02d80cff4d",
+      "paragraphs": 5
+    },
+    {
+      "celex": "02012R0267-20231011",
+      "rawSha256": "600448841244a7ee42ce9fc2ceee609481266bfe6e27d0eed379d6bd1f88c53a",
+      "derivedSha256": "4a52973fb13f93213fff9a2b8235f6e68285cdea95f0de64f822c12aef7db58f",
+      "paragraphs": 4905
+    },
+    {
+      "celex": "32015D0137",
+      "rawSha256": "55ba43b4d587e5a749a14999bca6e56255fdb3a1280366401f672c00fd5c4470",
+      "derivedSha256": "a5eb7067628e5d1a2d39e30f99a8cc723b9c2e1be8ebfae303a6a71d9a45754b",
+      "paragraphs": 29
+    },
+    {
+      "celex": "02013R0170-20150823",
+      "rawSha256": "76578ff57390e7ebe9b557bbff067173cc23fc75a936d81192cc3325f34d40c0",
+      "derivedSha256": "8b502e225c053f096cb20cc10148f69a2d042aa341f3e3a825d2964d318af4b2",
+      "paragraphs": 320
+    },
+    {
+      "celex": "32006R0661",
+      "rawSha256": "5f593c802ef6e2931f328f4209727b5a5b3e8d58762919ae77b244288ba1e7dc",
+      "derivedSha256": "f93eda9582a91053f4a4182c8a299cb1e849cb85fbb3ce3a0c9f8e88d9dc97f9",
+      "paragraphs": 32
+    },
+    {
+      "celex": "32019R1383R(09)",
+      "rawSha256": "26d0d9cb15d10c024220d0e152a5d4878148e8c35757b7d451ccf61f5bb7da62",
+      "derivedSha256": "835a49f699c2247ba9d6668439b7a611566cfcb6713d03f0f12cef3f9ff30755",
+      "paragraphs": 111
+    },
+    {
+      "celex": "32006R1589",
+      "rawSha256": "e4a9c9000678257a926e864f374804a4fd77d50d877c175d5244c17994bcbe8e",
+      "derivedSha256": "df962c090bd725f5897924e64f48b7a9fc88f95765228634f3aaf88a0d4c64a2",
+      "paragraphs": 49
+    },
+    {
+      "celex": "01997D0004-20070101",
+      "rawSha256": "dca9622f7d8def3cd3a67c8674cf05488d8248281e1c800028a4dc3a39576fc3",
+      "derivedSha256": "023afbde7e8bac0d38db7ed83706b11f31075dc661907b905257450a2bd00762",
+      "paragraphs": 991
+    },
+    {
+      "celex": "31999L0016",
+      "rawSha256": "2bf2b0c9202a226ea7e352390fac7fe0b1c409a6bc5f75aec501da1b30be6809",
+      "derivedSha256": "b2fb2f2ff2f5c83096e3b37a4c3774b56e21d09e624195c76f8e2a957795c5cc",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32014R0200",
+      "rawSha256": "9272f2667f131020c4bddfe9a47961df8dea76efd8f8824a6fb3ed894439e2e2",
+      "derivedSha256": "b629db52a881f714dccbbf56175bf9e721f7343aa5e02263c1df27cb36617efa",
+      "paragraphs": 57
+    },
+    {
+      "celex": "01999D0217-20130422",
+      "rawSha256": "b4e4882f94e1c4dd208a2cf421497e1cf388da4d8b27b54b088b2e69367d2861",
+      "derivedSha256": "c96cd07d24a247350928a36ed36905c139a61500a6f151546f9236589f97f627",
+      "paragraphs": 13
+    },
+    {
+      "celex": "31988R1970",
+      "rawSha256": "04e41de99fa1df7f80a4555b36c84601be81cfd9fc457d17f2940f2aaf91e927",
+      "derivedSha256": "220331bc51991a3d999ad405c29935fd12c1c0fb2049f0fd73e00e3048fbf179",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32026D0495",
+      "rawSha256": "6c442679d55ef522b52840098543a29f2a1f3249663d801487fbf4ed031657dd",
+      "derivedSha256": "070cfa189a3c6f3cce0979c381c59746af9707209b90a46870f9a8eb464adb94",
+      "paragraphs": 45
+    },
+    {
+      "celex": "32005D0611",
+      "rawSha256": "f525a20202a59c55b484b0d390ceb2f15583094804dd8fe2c9f47bb226b9eb03",
+      "derivedSha256": "137fea59ea70ac02f8a2ecf2ab242bbefb18ce5866194d2c8ee9a75904685d2e",
+      "paragraphs": 40
+    },
+    {
+      "celex": "02009R0987-20180101",
+      "rawSha256": "4ad9df5675df426bedd1f02bfefeeb8c418acd9dbeaa1c1ca97540c076dd9103",
+      "derivedSha256": "a8a11c85da6fed47205b2a8365cd59ecfdc27c2e30b7072f7dc61bdd50278ce6",
+      "paragraphs": 1005
+    },
+    {
+      "celex": "32025D1262",
+      "rawSha256": "2176b623b67b3ae5a0ee79a01c4c2fa9b0bca996d4401007149f6ec9167796fc",
+      "derivedSha256": "d58ec7c6bf509681965b881cc537e18ccaad6f29c58adc5925fe7dfd9260ea95",
+      "paragraphs": 73
+    },
+    {
+      "celex": "32004D0927",
+      "rawSha256": "9109c68cb233829e41ab92317ad65e05fa8c1ad6a4daa407a288f894087fc65b",
+      "derivedSha256": "22e48c58a807aeab99fac0a65a45779200cb7030d506da795f565fd73fa14720",
+      "paragraphs": 54
+    },
+    {
+      "celex": "31992D0570",
+      "rawSha256": "17ccd27cfee812909c754c0da4ae7cc77a1fcb726feed2faaa1057804a1c6f36",
+      "derivedSha256": "8ce487d96614dff94c84674669e1e1f498d2e234cfc27512fbb2655f35a8d85d",
+      "paragraphs": 5
+    },
+    {
+      "celex": "31988R0570",
+      "rawSha256": "46df99f8014fd4d95cff5f6bd11b1b7b33ec1c9dcc5d0f25cb79a0b9a073c33d",
+      "derivedSha256": "45c34ed9c9c96e244bf3a9e709b7f9116358320f5c421009d5887f0850ad66d5",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32001R1839",
+      "rawSha256": "196c6d964ea9ba7debb20193aca3209bcbc9870a465ad37d84c3fbe729f3bbcc",
+      "derivedSha256": "c9f1b8870fcf963283f127912c603cbe7b59e046aed4c49bd3dabe16d34af259",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32024D3083",
+      "rawSha256": "9c54092d159510a89e8c9b11f180eaf186494e1aa9e8c253bf4757a7e512f260",
+      "derivedSha256": "653b5f6b75b68913d5e061e2705eddd74b33c86f1174d352a8a3a08c43a52f00",
+      "paragraphs": 116
+    },
+    {
+      "celex": "32014H0897",
+      "rawSha256": "ec6c38a4ad0ed171610274121ba3e30ee420765992974af0af64673ab9050520",
+      "derivedSha256": "1b603c64573251a33ca11712693ba911cad1908c1f34ee784ade47cefaf97e70",
+      "paragraphs": 298
+    },
+    {
+      "celex": "32006R0394",
+      "rawSha256": "3db22e4ca62145a61c55d44d5a36e040c832f5d76ac26d710a39291f293cd0ed",
+      "derivedSha256": "4d39bbce90b9c49074f9e9da4786bdb01a90aeb67db9916d090bd9c5f403ae8b",
+      "paragraphs": 3403
+    },
+    {
+      "celex": "32013R0345",
+      "rawSha256": "866bf92b6e480730624ead61d7693d1cad81cfd015b180fe6c117e9ec73deabd",
+      "derivedSha256": "608a6a1a4a843e1f5f298ff355da74bfdd29a46dbddc3780a9962b10a1739183",
+      "paragraphs": 431
+    },
+    {
+      "celex": "31996L0006",
+      "rawSha256": "ed3cf055ef72247fed817fcd716305b638650493df9181067aeb65c41b412ad5",
+      "derivedSha256": "66e5f1b417f57373790b3f66a1bea23c1c0b63914cc3e15ea9ac1f04bcc2780b",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32020R0646",
+      "rawSha256": "386cd80d603b945f602e60dd245b36d083f915d0ffc15b4521e0c29fe40eeed8",
+      "derivedSha256": "db73381f63d446d5598d91ec3fdd653d9fa202c0824671c2cdf68ba5b19dcf11",
+      "paragraphs": 81
+    },
+    {
+      "celex": "32004R0886",
+      "rawSha256": "e8c1731ec73693dde76089d2ef93e0de20e9ab44a3904387da1df6284e455514",
+      "derivedSha256": "147ffc65c79f2fde0bbb14dd481e7da7d3e9da90920ff37a1a6813fd377c1ed4",
+      "paragraphs": 358
+    },
+    {
+      "celex": "02019R0833-20220725",
+      "rawSha256": "666410a63f376d2d9ff600c3f6ae6bd14a1f03d7e70d32d6a1f168c8746deb4b",
+      "derivedSha256": "14ca8bc7af1eb90985b89916ad346b070c5c4c52468a60bbb4f3482ad26f433f",
+      "paragraphs": 1779
+    },
+    {
+      "celex": "32022R1292",
+      "rawSha256": "224b9e9f6d4adc97e08b78ada6d5ede8ce5b545c7efb4d603367326c4efc8439",
+      "derivedSha256": "caeec7f03bf88b3f89f542832b1af165f3331575044dc1e92007dcc8ade4e331",
+      "paragraphs": 49
+    },
+    {
+      "celex": "32016B1575",
+      "rawSha256": "ac85dcb61d77f56c577e8ba5510638bc72ab6081c6ca0eb127eb7518ea12f1a6",
+      "derivedSha256": "912608522756fade09b7aa4af1b4414ce3a21379a7c9d9abc59f5d77d7f52e6e",
+      "paragraphs": 46
+    },
+    {
+      "celex": "32014B0582",
+      "rawSha256": "511f6caea35440793a717b629a5d5e08df74f24cf46e02c63f9f3cd28b9fb85c",
+      "derivedSha256": "73365123a5c34bb47a77010c3aa5c835f7374095f7ce8a56c8708e3f1c0a5b34",
+      "paragraphs": 45
+    },
+    {
+      "celex": "32010R0928",
+      "rawSha256": "e5b66caae9d9b944ca7fc51eafd99c0bc2b862013105769ffac4078501b264e5",
+      "derivedSha256": "114d97a42618af3f58c25d4062ea1d5d3314901d6775ffda2487b6c650e4322c",
+      "paragraphs": 44
+    },
+    {
+      "celex": "31984R0797",
+      "rawSha256": "c9d0c3dbd75f044841599dbb1f5c728d1dce969e050da5058353bee194e1719b",
+      "derivedSha256": "f2d72a0073d59aeb11ae254d6b15f9a1685a177117e727a043036f0758a47510",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32007R1023",
+      "rawSha256": "68bbbed6a9c00cb87eb3a80fcf9c9d0246c5ca68b11d564e145eb07dec33556d",
+      "derivedSha256": "00210a1c935dcb8d8418b8bbd43566a05552cbcdc316442ff9b7e55ed55f31ee",
+      "paragraphs": 114
+    },
+    {
+      "celex": "02008D0411-20140514",
+      "rawSha256": "98cefa9542374883f2efb88291b95d621d25a6f3c1110573364bc9f4c9be495a",
+      "derivedSha256": "e0126a0ae745ab4f90409c6397a4f0d32d4e323b73ee9c9a4b13e5f77a759c26",
+      "paragraphs": 215
+    },
+    {
+      "celex": "31979D0556",
+      "rawSha256": "cf1bdd371af67d0d3bc8a88998f070b6c66c2cde33910076d420912b230be946",
+      "derivedSha256": "bbd1394cd93003dd1f2fae43725fb46a17dce59c7498ec2d0a003533003a3bbe",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32016R0452",
+      "rawSha256": "ff132418d6de997c9c470a15d829b8585753edb377ff92c2995801ea5f1acf85",
+      "derivedSha256": "98ab5d831478a29a429dcbb9110c06878522eb42e36fc7a982826d19e80a4972",
+      "paragraphs": 61
+    },
+    {
+      "celex": "32003E0297",
+      "rawSha256": "ff36ff592ca66ddbf2bcefcbc2b370e315c3f3abb306af0d5a5c17d7a018fbd0",
+      "derivedSha256": "a609f747366683b20728370e51bafeab6d6135e0d93b02f0eb22d3d2847ce8f4",
+      "paragraphs": 5
+    },
+    {
+      "celex": "02014R0208-20190709",
+      "rawSha256": "22728db68ae680c976fa6d5ff44367a179362ecb8fdb367536ce7db39d41930c",
+      "derivedSha256": "a4c26bfd94e21cc882cabcce1fc5ccb508aec8ccbcb47433acaa4512547b1f21",
+      "paragraphs": 360
+    },
+    {
+      "celex": "02007D0742-20091204",
+      "rawSha256": "de34f57eb776e980ad141bee8115eb184b0b7571857b5a003c911d8f01ecbd86",
+      "derivedSha256": "1ed0bb2ee0c00f2efc78a7a02b5b9aa72f0cdac105508153efb767f7edacd89c",
+      "paragraphs": 312
+    },
+    {
+      "celex": "01978L0933-20060327",
+      "rawSha256": "c13e557ef8bce49b4e429243e376bbbaba6a51c53059bac0cd271064070f4fe7",
+      "derivedSha256": "4ed3e1db6fd6401d0eff67575f9d3e9bfd0f379b6b913b5054a6bc797c4c5236",
+      "paragraphs": 751
+    },
+    {
+      "celex": "32025R1511R(01)",
+      "rawSha256": "d7d3942e85e6c742d4cf19b14596a263d1c97bcab10d49947a056420c2bfa2a7",
+      "derivedSha256": "a3f846b19d70501496fcc0bb8aaaa3fcccea787dced36e12a89d8f89847a5028",
+      "paragraphs": 9
+    },
+    {
+      "celex": "32007A0622(01)",
+      "rawSha256": "c687ae408253a0a17df6a6bb0a71f5ece4bf68bb2fec4639658ca0344781b9da",
+      "derivedSha256": "009a5097b49308295103372829b3c2c1cb8ad5a07ba2c0a694227140634474ec",
+      "paragraphs": 20
+    },
+    {
+      "celex": "32014R0653",
+      "rawSha256": "735f815325f4094a83d1d6bff1932beecb1bac42295fdd11d423ee05e61a06d5",
+      "derivedSha256": "ab8f304292572950d0aeb17d1f9b675480dc1f68611c85bd59b3cd7a280d156f",
+      "paragraphs": 141
+    },
+    {
+      "celex": "32002R0810",
+      "rawSha256": "979df3e50ec8c8276f5a212dcf3eacac0b29ccea0a04ef3204aec299abbd3360",
+      "derivedSha256": "3414fb5dd8a7112da70dc7da63c12521dd75c2cfca42a4f5cfb56a2dcf54b462",
+      "paragraphs": 5
+    },
+    {
+      "celex": "31991R1210",
+      "rawSha256": "1d5462658cd1873546a2a2bf649fcf47a0709b2e84d2d8d9cc5c205d580c1979",
+      "derivedSha256": "3debfc8e7e16e69b844d8ee98000b19d81e1d7538e322f8b183db368266b97d7",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32002R0740",
+      "rawSha256": "46e2dda9e59ffaf553d8261acc4c970f282bb709b7d8a6523402615baaaa186c",
+      "derivedSha256": "1e4320e28830d2a5194ccc8331379d95291d44d536cb7b59c15a963dcb7f2f80",
+      "paragraphs": 5
+    },
+    {
+      "celex": "31996R1285",
+      "rawSha256": "9af18852969b75fe146410c50e22d13ed9584caa7a757b8c99717e102dd93b55",
+      "derivedSha256": "b7137311c2487c955eb7664f9c690abba6922cea671cccadfac0ea890daddb67",
+      "paragraphs": 5
+    },
+    {
+      "celex": "31993D0287",
+      "rawSha256": "28facc3dfd21d112e60d52c8c026f4aa0f591a5e1d8ca84cca657dff01463ac9",
+      "derivedSha256": "e8a7c69325f2bed8e25af56be751cd39ff3b6dd493b999f1420e97b8d0ec3adf",
+      "paragraphs": 5
+    },
+    {
+      "celex": "31999Y0521(01)",
+      "rawSha256": "080d165cb300330e24e28b15507bd8f1e448710c7d278175b6866ddc56758217",
+      "derivedSha256": "0fa5d0014f8c628fd742ce4a9a194d99e5d78b95b0507d35fe8868e810df16f4",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32007D0768",
+      "rawSha256": "885bf48ffe54cf4dd6f9e124c83581059a11d27811fd3a570dded8d99502d479",
+      "derivedSha256": "0ee49bafdb87f3679c2a85b8e77610e72dee4906e6fe100171fb3c0b30f95ffd",
+      "paragraphs": 119
+    },
+    {
+      "celex": "32006R0766",
+      "rawSha256": "ec3509788609e63fc8bfaa3d55f87d59014295740ae7169f5994eb893194625d",
+      "derivedSha256": "28e654bfb133998317fc273299573f862242dd02394223014c6e9dd395d6d133",
+      "paragraphs": 101
+    },
+    {
+      "celex": "31995R1390",
+      "rawSha256": "724772043a1da8c4619961c057cfc2a4b61a5f279db3b14ad73102da1d4ff6cf",
+      "derivedSha256": "f458ebf75658b07f7125d722c3b906f5975660d141a997ebbaec1ded473d9177",
+      "paragraphs": 5
+    },
+    {
+      "celex": "31985R0679",
+      "rawSha256": "a3b05309f427656ac8e09fccddf1c8e25a1e1e105e776e837e9c42ea9898261e",
+      "derivedSha256": "fb716919334f304186dd5e76c4b5ab2c7d59a854e54d418f9d4e61041b0b1414",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32015R0123",
+      "rawSha256": "f30c973161dc0348affdee57a1847e900a462d09ca473c2c7f3c4b5347d2d79f",
+      "derivedSha256": "a4a257a9ff791054bfa8113b9730868db16f6caf39ccb65ffbe5254c8391331a",
+      "paragraphs": 48
+    },
+    {
+      "celex": "32013D0634",
+      "rawSha256": "26c0736467874910bc0a15d3ce26ec0e90691fce7a4377499dc602d95d81c715",
+      "derivedSha256": "09aeaf3b823f438db3e2902b2bbd2b558ffabba0a15053b34e5bb95d9b2ab7eb",
+      "paragraphs": 565
+    },
+    {
+      "celex": "32011R0892",
+      "rawSha256": "b9e4f939dbb124cf0e2bd8550c19e867c0180c50b525a3b6cd61dd863dd8a62c",
+      "derivedSha256": "b2e0cb527ebfba5165ae2b4fec7b6b6f7a739a6fac4d464de1d73e39f7ce9bf4",
+      "paragraphs": 121
+    },
+    {
+      "celex": "31996D0644",
+      "rawSha256": "ea14decfb89c535e95df0ff052a23ab3492117f73114d75dcf6cc2ea926eee4d",
+      "derivedSha256": "9e72d92d3fd830c90700b3bffc65d7e2fce01fa303cb7de0c362096445dd3543",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32001D0705",
+      "rawSha256": "c4a6fbe28de5624d54c9fc7c0defe023454a03a59c64ca4ce6fbdd95349e5e92",
+      "derivedSha256": "dcf1e8e9a02f57eb3d4dc039318b3ebeeb9f0685bc56b131369980447e48112d",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32024D0444",
+      "rawSha256": "88a83030cdee4a32a1e128eb5d59f1de7fa3ef2026a1230f940c501eff4755bd",
+      "derivedSha256": "cb5e289787fe61a8c0b280b237e2239efb4c0293d446e9f7aff1acd238f192a8",
+      "paragraphs": 35
+    },
+    {
+      "celex": "32023R0571",
+      "rawSha256": "51dcc3a763b3bcffd46bd6eaae9cb59732a89f6e89b631510d02379643102174",
+      "derivedSha256": "80bf01338d94c79ed3301fba2caa253a2ce967e5f296636e8154bd3cc5c47e81",
+      "paragraphs": 1228
+    },
+    {
+      "celex": "31999R0710",
+      "rawSha256": "69e27b1be6d34401f31e41419bae94be604c8560d0b9bead37f7bdb398a3af99",
+      "derivedSha256": "e9890a1352eadc98ca0a755a556307abc79aa602f7c442eb24ad8644ca5ed910",
+      "paragraphs": 5
+    },
+    {
+      "celex": "01997S1401-19981004",
+      "rawSha256": "43c56638a345e9229b9104ef43fa80c1a8cb7ad9fd302c6372f5353517e3025c",
+      "derivedSha256": "c00715464cb8c42ee48dee728eba9b72498e25207cbfc9c4d2736a448b338b1e",
+      "paragraphs": 590
+    },
+    {
+      "celex": "32004D0527",
+      "rawSha256": "94e4e58b3d55ae159c320b209c6052b5557f7cb61f7db9f4a9d33b01b9c52eb7",
+      "derivedSha256": "f73ec77ef621da39bd18907a4216787487465e816e5ad2b29487064679ef36d1",
+      "paragraphs": 39
+    },
+    {
+      "celex": "32000R2450",
+      "rawSha256": "2175cd9ac2a972f2a011bf753e8f7111bf2ede48108008d5f2d47b5da1372bd4",
+      "derivedSha256": "5d5f53b19fa32f4f7b77e58e772f338014af14d38ea65372c711070ec1d8740f",
+      "paragraphs": 5
+    },
+    {
+      "celex": "31996R0902",
+      "rawSha256": "adfe7a60a43d5f46dd99ae31b44d4a718c84079d8dd0434a7a6cb1defef5f2cf",
+      "derivedSha256": "dae5a837b1c7c92cafd765a3129199ab197e9304579fe4f2b2b2248e90b645af",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32016D1190",
+      "rawSha256": "605416004d02aee591c03b37d4dfa8e4dea0daa1390518c5f33c170cacfaa01e",
+      "derivedSha256": "addb06adb67663f9d0a135f71d547f00f2d4ebe9e5c33dd8fda6fdf38e60c04b",
+      "paragraphs": 81
+    },
+    {
+      "celex": "02002R0881-20260822",
+      "rawSha256": "5cd765b5eeb67f9c5206a01a846d2fe9b69198599be20ef99c15b44cff841fe3",
+      "derivedSha256": "067104d41a92d06fad67a784a718a6b5149dbae87d2f081441809058f78630d7",
+      "paragraphs": 4721
+    },
+    {
+      "celex": "32001D0014",
+      "rawSha256": "1043aa3f4ce28070ff0e33e942c7f73132a95dc8d467644a9e7c3139531a9616",
+      "derivedSha256": "ff5068a38847f51fa1fe5323dcf1ec1bec17963092ce2f32dbfa2c756efc1e16",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32000D0751",
+      "rawSha256": "607a46548953d07adc8d72466a6ee5fce57ca5928b6e6ddc83f383df1bb5d96c",
+      "derivedSha256": "a51cd1d5f46de7fe72bee0630c1725feebd87eb9248b43b8e99998a448f33ce5",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32001D0171",
+      "rawSha256": "09108b98d5b460054a5bcd23c12dd3bde2ad7653001f9f2f97f0cafd8ed8c396",
+      "derivedSha256": "15931b5412629ef845730fc0e33980bf6512d09f4e23847e2e739cafdd69d3c7",
+      "paragraphs": 5
+    },
+    {
+      "celex": "32001R1687",
+      "rawSha256": "5375fe56abb26e14f7f91d4e5dd7a528f2e5127fbc6d6c7be886b25d56eab23e",
+      "derivedSha256": "dc1a2699b2b7c065192c0feb89d57cdc163089ae64ae280fcc86d9cba70eee64",
+      "paragraphs": 5
+    }
+  ]
+}

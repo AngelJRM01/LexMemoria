@@ -1,0 +1,65 @@
+00:00 +0: loading mobile/test/learning_test.dart
+00:00 +0: mobile/test/learning_test.dart: SM-2 intervals and lapse preserve versioned history inputs
+00:00 +1: mobile/test/learning_test.dart: score distinguishes unanswered, wrong and correct
+00:00 +2: mobile/test/learning_test.dart: reference inventory never claims downloaded or verified
+00:00 +3: mobile/test/learning_test.dart: search normalizes accents without changing source
+00:00 +4: mobile/test/network_store_test.dart: catalogue pages preserve downloaded rows and send cursor
+00:00 +5: mobile/test/network_store_test.dart: failed catalogue request preserves cache and clears loading
+00:00 +6: mobile/test/network_store_test.dart: legal feed deduplicates id and keeps editorial uncertainty
+00:00 +7: mobile/test/network_store_test.dart: API URLs reject credentials and nonlocal cleartext
+00:00 +8: mobile/test/persistence_test.dart: multi-megabyte snapshots retain Unicode at native cursor-safe chunk boundaries
+00:01 +9: mobile/test/persistence_test.dart: legacy data is removed only after verified destination write
+00:01 +10: mobile/test/persistence_test.dart: legacy data is removed only after verified destination write
+00:01 +11: mobile/test/persistence_test.dart: legacy data is removed only after verified destination write
+00:02 +12: mobile/test/product_v2_test.dart: true false accepts response then reveals feedback
+00:02 +13: mobile/test/product_v2_test.dart: true false accepts response then reveals feedback
+00:03 +14: mobile/test/product_v2_test.dart: ordering exposes accessible controls and records order
+00:03 +15: mobile/test/product_v2_test.dart: guest layout supports text scale 200 percent
+00:03 +16: mobile/test/remote_test.dart: expired token refreshes without exporting credentials
+00:03 +17: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:03 +18: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:03 +19: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:03 +20: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:03 +21: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:03 +22: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:05 +23: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:05 +24: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:05 +25: mobile/test/startup_test.dart: startup failure exposes a safe code and retry can recover
+00:05 +26: mobile/test/startup_test.dart: startup failure exposes a safe code and retry can recover
+00:07 +27: mobile/test/store_test.dart: review survives reload and can be undone without losing card
+00:07 +28: mobile/test/store_test.dart: review survives reload and can be undone without losing card
+00:07 +29: mobile/test/store_test.dart: blocked cards cannot enter queue or be graded
+00:07 +30: mobile/test/store_test.dart: blocked cards cannot enter queue or be graded
+00:07 +31: mobile/test/store_test.dart: blocked cards cannot enter queue or be graded
+00:07 +32: mobile/test/store_test.dart: blocked cards cannot enter queue or be graded
+00:07 +33: mobile/test/store_test.dart: blocked cards cannot enter queue or be graded
+00:07 +34: mobile/test/store_test.dart: changing track preserves progress and backup roundtrip
+00:08 +35: mobile/test/store_test.dart: new metadata quarantines stale offline pack and blocks linked card
+00:08 +36: mobile/test/widget_test.dart: guest can open library without signing in
+00:09 +37: mobile/test/widget_test.dart: guest can open library without signing in
+00:10 +38: mobile/test/widget_test.dart: guest can open library without signing in
+00:11 +39: mobile/test/widget_test.dart: guest can open library without signing in
+00:13 +40: mobile/test/browsing_exercises_test.dart: library paginates, jumps to a page and resets on search
+00:14 +41: mobile/test/browsing_exercises_test.dart: library paginates, jumps to a page and resets on search
+00:14 +42: mobile/test/browsing_exercises_test.dart: library paginates, jumps to a page and resets on search
+00:14 +43: mobile/test/browsing_exercises_test.dart: library paginates, jumps to a page and resets on search
+00:14 +44: mobile/test/corpus_test.dart: public packs verify, persist separately and reopen offline without bloating user backup
+00:14 +45: mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
+00:15 +46: mobile/test/browsing_exercises_test.dart: long articles produce brief multi-target clozes and source-based expression tests
+00:15 +47: mobile/test/reading_test.dart: reading positions survive portable backup and reject changed source identities
+00:15 +48: mobile/test/browsing_exercises_test.dart: each numbered cloze accepts an answer and reveals individual feedback
+00:15 +49: mobile/test/reading_test.dart: reader resumes exact fragment and clears search without losing it
+00:17 +50: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:18 +51: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:18 +52: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:19 +53: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:21 +54: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:21 +55: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:21 +56: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:21 +57: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:23 +58: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:23 +59: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:24 +60: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:24 +61: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:26 +62: mobile/test/browsing_exercises_test.dart: renewal archives unedited v1 questions while retaining edits, states and history
+00:26 +63: All tests passed!

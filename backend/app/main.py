@@ -26,7 +26,7 @@ def create_app(database_url=None):
     engine, factory = connect(database_url)
     with factory() as session:
         rebuild_index(session)
-    app = FastAPI(title='LexMemoria', version='0.1.0')
+    app = FastAPI(title='LexMemoria', version='0.4.1')
     origins = [v.strip() for v in os.getenv('CORS_ORIGINS', '').split(',') if v.strip()]
     if origins:
         app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=False,
@@ -170,6 +170,11 @@ def create_app(database_url=None):
 
     class Refresh(BaseModel):
         refreshToken: str = Field(min_length=20, max_length=256)
+
+    @app.get('/v1/auth/session')
+    def current_session(user=Depends(identity)):
+        # Minimal authenticated identity proof for safe client-session upgrades.
+        return {'userId': user.id}
 
     @app.post('/v1/auth/refresh')
     def refresh(body: Refresh, s=Depends(db)):
@@ -475,7 +480,7 @@ def create_app(database_url=None):
         idempotencyKey: str = Field(min_length=8, max_length=128)
         state: dict = Field(default_factory=dict)
         latencyMs: int = Field(default=0, ge=0, le=86400000)
-        response: int | list[int] | None = None
+        response: int | list[int] | dict[str, str] | None = None
 
     @app.post('/v1/reviews', status_code=201)
     def review(body: ReviewInput, user=Depends(identity), s=Depends(db)):

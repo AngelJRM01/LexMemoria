@@ -30,3 +30,7 @@ La aplicación es ejecutable en web y dispone de APK Android release de prueba, 
 Faltan SQLCipher/Keychain/Keystore en dispositivos reales, comportamiento multidispositivo con red inestable, TalkBack/VoiceOver, teclado, escalado y rotación en toda la aplicación, pruebas de carga/consumo y auditoría de dependencias/seguridad completa. Un build correcto o una prueba visual de Chromium no acredita estos puntos.
 
 El titular debe concretar presupuesto/región/proveedor, proyecto Firebase, productos/precios, responsable editorial jurídico, convocatorias piloto, identidad del responsable del tratamiento, contacto, menores, RGPD, políticas de conservación y licencias comerciales. Usar ajustes seguros para las credenciales; nunca enviarlas al chat ni guardarlas en Git.
+
+## Seguimiento V3
+
+La [matriz V3](v3/MATRIZ_REQUISITOS.md) y el [plan con aceptación por fase](v3/PLAN_Y_EVIDENCIAS.md) detallan el siguiente incremento 0.4.1. La extracción europea HTML ya puede ejecutarse por lotes en paralelo a la descarga; todavía faltan otros formatos, estructura jurídica y distribución al móvil. Persisten la aceptación nativa/dispositivos, recuperación idempotente si se pierde toda la respuesta de red de un código de recuperación, CVE/seguridad completa y los bloqueos de producción. Ninguna fase completa se da por cerrada.

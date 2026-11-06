@@ -1,0 +1,12 @@
+{
+  "version": "0.4.1+7",
+  "package": "es.lexmemoria.app.preview",
+  "debuggable": false,
+  "signatureVerified": true,
+  "certificateSha256": "525f9dca164c4e161fc6acd8ef10ac5453cd10b090a001ebacbf0c486e921292",
+  "bytes": 85787027,
+  "sha256": "3d77d914dd1032cb2690a14df28c072a8c7f98095a9f8f5913f7985493b85a09",
+  "catalogueNorms": 12451,
+  "physicalDeviceTested": false,
+  "nativeMigrationTestRunLocally": false
+}

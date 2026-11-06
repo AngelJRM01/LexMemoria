@@ -128,3 +128,7 @@ Búsqueda dentro del texto de cada norma, apertura del fragmento encontrado y re
 ## Navegación y ejercicios 0.4.0
 
 Materias con contenido, filtro por las 17 comunidades del catálogo, paginación con salto de página y ejercicios breves con varios huecos interactivos. La renovación conserva las ediciones e historial anteriores. [Cambios y validación](docs/MEJORAS_0_4_0.md).
+
+## Auditoría y desarrollo V3 · 0.4.1
+
+[Matriz de 100 requisitos y reglas](docs/v3/MATRIZ_REQUISITOS.md) y [orden de implementación, evidencia y aceptación por fase](docs/v3/PLAN_Y_EVIDENCIAS.md). Primer incremento: restauración recuperable y escrituras de estudio confirmadas antes de publicar el estado, sesiones vinculadas a cuenta/servidor, compatibilidad de respuestas de varios huecos y extracción incremental de HTML europeo en un archivo derivado separado. Las fases siguen abiertas; las integraciones externas y la aceptación nativa no se consideran aprobadas por pruebas locales.

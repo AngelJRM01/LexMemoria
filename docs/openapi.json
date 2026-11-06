@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "LexMemoria",
-    "version": "0.1.0"
+    "version": "0.4.1"
   },
   "paths": {
     "/v1/auth/oidc": {
@@ -115,6 +115,44 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/session": {
+      "get": {
+        "summary": "Current Session",
+        "operationId": "current_session_v1_auth_session_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }
@@ -2127,6 +2165,12 @@
                   "type": "integer"
                 },
                 "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
               },
               {
                 "type": "null"

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:uuid/uuid.dart';
 import 'models.dart';
@@ -23,6 +24,16 @@ class NativeCredentialVault implements CredentialVault {
   Future<void> delete(String key) => storage.delete(key: key);
 }
 
+class RecoveryPersistenceFailure implements Exception {
+  final String replacementCode;
+  RecoveryPersistenceFailure(this.replacementCode);
+  @override
+  String toString() =>
+      'No se pudo guardar la sesión recuperada. Conserva el código nuevo.';
+}
+
+final _refreshes = Expando<Map<String, Future<Json>>>();
+
 class RemoteSync {
   final AppStore store;
   final CredentialVault secure;
@@ -36,6 +47,100 @@ class RemoteSync {
   }
 
   String get prefix => 'lexmemoria:$base';
+
+  bool get needsAccountConfirmation =>
+      store.data['localDataOwnerId'] != null ||
+      store.data['remoteUserId'] != null;
+
+  void _confirmAccountOperation(bool confirmed) {
+    if (needsAccountConfirmation && !confirmed) {
+      throw StateError(
+          'Confirma el cambio de cuenta antes de conectar estos datos.');
+    }
+  }
+
+  Future<Json> _boundSession(String server) async {
+    final encoded = await secure.read('lexmemoria:$server:session');
+    if (encoded == null) return _upgradeLegacySession(server);
+    final session = Json.from(jsonDecode(encoded));
+    if (store.data['remoteUserId'] != session['userId'] ||
+        store.data['remoteServer'] != server ||
+        base != server ||
+        store.data['localDataOwnerId'] != session['userId'] ||
+        store.data['localDataServer'] != server) {
+      throw StateError(
+          'La sesión no corresponde a estos datos o servidor. Recupera tu cuenta.');
+    }
+    return session;
+  }
+
+  Future<Json> _upgradeLegacySession(String server) async {
+    final expected = store.data['remoteUserId'];
+    final oldPrefix = 'lexmemoria:$server';
+    final access = await secure.read('$oldPrefix:access');
+    final refresh = await secure.read('$oldPrefix:refresh');
+    if (expected is! String ||
+        access == null ||
+        refresh == null ||
+        base != server) {
+      throw StateError(
+          'Recupera tu cuenta para verificar la sesión. Tus datos se conservan.');
+    }
+    final proof = http.Request('GET', Uri.parse('$server/v1/auth/session'))
+      ..followRedirects = false
+      ..headers['Authorization'] = 'Bearer $access';
+    final response = await (() async =>
+            http.Response.fromStream(await store.client.send(proof)))()
+        .timeout(const Duration(seconds: 30));
+    if (base != server || store.data['remoteUserId'] != expected) {
+      throw StateError('La cuenta o servidor ha cambiado. Reintenta.');
+    }
+    Json verified;
+    if (response.statusCode == 401) {
+      verified = await send('/v1/auth/refresh',
+          body: {'refreshToken': refresh}, auth: false, retry: false);
+    } else if (response.statusCode == 200) {
+      verified = {
+        ...Json.from(jsonDecode(response.body)),
+        'accessToken': access,
+        'refreshToken': refresh
+      };
+    } else {
+      throw StateError(
+          'No se pudo verificar la sesión anterior. Actualiza el servidor o recupera tu cuenta.');
+    }
+    if (verified['userId'] != expected ||
+        store.data['remoteUserId'] != expected) {
+      throw StateError(
+          'La sesión anterior pertenece a otra cuenta. No se ha vinculado.');
+    }
+    await saveSession(verified);
+    return _boundSession(server);
+  }
+
+  Future<Json> _refreshSession(Json previous, String server) async {
+    final pending = _refreshes[store] ??= {};
+    final key = '$server:${previous['userId']}';
+    final existing = pending[key];
+    if (existing != null) return existing;
+    final operation = () async {
+      final current = await _boundSession(server);
+      if (current['accessToken'] != previous['accessToken']) return current;
+      final refreshed = await send('/v1/auth/refresh',
+          body: {'refreshToken': current['refreshToken']},
+          auth: false,
+          retry: false);
+      await saveSession(refreshed);
+      return refreshed;
+    }();
+    pending[key] = operation;
+    try {
+      return await operation;
+    } finally {
+      if (identical(pending[key], operation)) pending.remove(key);
+    }
+  }
+
   Future<Json> send(String path,
           {Json? body, bool auth = true, bool retry = true}) =>
       request('POST', path, body: body, auth: auth, retry: retry);
@@ -44,34 +149,41 @@ class RemoteSync {
       bool auth = true,
       bool retry = true,
       Json extraHeaders = const {}}) async {
-    final token = auth ? await secure.read('$prefix:access') : null;
+    final server = base;
+    final session = auth ? await _boundSession(server) : null;
+    if (base != server) throw StateError('El servidor ha cambiado. Reintenta.');
+    final token = session?['accessToken'] as String?;
     if (auth && token == null) {
       throw StateError('Activa o recupera tu identidad de sincronización.');
     }
-    final uri = Uri.parse('$base$path');
+    final uri = Uri.parse('$server$path');
     final headers = <String, String>{
       ...extraHeaders.map((k, v) => MapEntry(k, v.toString())),
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token'
     };
-    final response = await (method == 'GET'
-            ? store.client.get(uri, headers: headers)
-            : method == 'DELETE'
-                ? store.client.delete(uri, headers: headers)
-                : method == 'PUT'
-                    ? store.client.put(uri,
-                        headers: headers, body: jsonEncode(body ?? {}))
-                    : store.client.post(uri,
-                        headers: headers, body: jsonEncode(body ?? {})))
+    final outgoing = http.Request(method, uri)
+      ..followRedirects = false
+      ..headers.addAll(headers);
+    if (method != 'GET' && method != 'DELETE') {
+      outgoing.body = jsonEncode(body ?? {});
+    }
+    final response = await (() async =>
+            http.Response.fromStream(await store.client.send(outgoing)))()
         .timeout(const Duration(seconds: 30));
+    if (base != server ||
+        (auth &&
+            (store.data['remoteUserId'] != session!['userId'] ||
+                store.data['remoteServer'] != server))) {
+      throw StateError(
+          'La cuenta o el servidor ha cambiado durante la operación.');
+    }
+    if (response.statusCode >= 300 && response.statusCode < 400) {
+      throw StateError(
+          'El servidor intenta redirigir una operación privada. No se han reenviado credenciales.');
+    }
     if (response.statusCode == 401 && auth && retry) {
-      final refresh = await secure.read('$prefix:refresh');
-      if (refresh == null) {
-        throw StateError('Sesión caducada. Tu progreso local se conserva.');
-      }
-      final session = await send('/v1/auth/refresh',
-          body: {'refreshToken': refresh}, auth: false, retry: false);
-      await saveSession(session);
+      await _refreshSession(session!, server);
       return request(method, path,
           body: body, retry: false, extraHeaders: extraHeaders);
     }
@@ -86,10 +198,35 @@ class RemoteSync {
     return Json.from(jsonDecode(response.body));
   }
 
-  Future<void> saveSession(Json session) async {
-    await secure.write('$prefix:access', session['accessToken']);
-    await secure.write('$prefix:refresh', session['refreshToken']);
-    if (store.data['remoteUserId'] != session['userId']) {
+  Future<void> saveSession(Json session,
+      {bool confirmAccountChange = false}) async {
+    final server = base;
+    for (final key in ['userId', 'accessToken', 'refreshToken']) {
+      if (session[key] is! String || (session[key] as String).isEmpty) {
+        throw StateError(
+            'Respuesta de sesión no válida. Tus datos se conservan.');
+      }
+    }
+    final owner = store.data['localDataOwnerId'] ?? store.data['remoteUserId'];
+    final ownerServer =
+        store.data['localDataServer'] ?? store.data['remoteServer'];
+    if (owner != null &&
+        (owner != session['userId'] ||
+            (ownerServer != null && ownerServer != server)) &&
+        !confirmAccountChange) {
+      throw StateError(
+          'No se pueden vincular datos de otra cuenta sin confirmación.');
+    }
+    // One secure-store value: never pair a new access token with an old refresh.
+    await secure.write(
+        '$prefix:session',
+        jsonEncode({
+          'userId': session['userId'],
+          'accessToken': session['accessToken'],
+          'refreshToken': session['refreshToken']
+        }));
+    if (store.data['remoteUserId'] != session['userId'] ||
+        store.data['remoteServer'] != server) {
       store.data['reviews'] =
           store.list('reviews').map((e) => {...e, 'synced': false}).toList();
       store.data.remove('remoteCardIds');
@@ -97,40 +234,64 @@ class RemoteSync {
       store.data.remove('workspaceBase');
     }
     store.data['remoteUserId'] = session['userId'];
+    store.data['remoteServer'] = server;
+    store.data['localDataOwnerId'] = session['userId'];
+    store.data['localDataServer'] = server;
     await store.save();
+    await secure.delete('$prefix:access');
+    await secure.delete('$prefix:refresh');
   }
 
-  Future<void> activate() async {
-    await saveSession(await send('/v1/auth/guest', auth: false));
+  Future<void> activate({bool confirmAccountChange = false}) async {
+    _confirmAccountOperation(confirmAccountChange);
+    await saveSession(await send('/v1/auth/guest', auth: false),
+        confirmAccountChange: confirmAccountChange);
+  }
+
+  Future<void> _clearSession() async {
+    await secure.delete('$prefix:session');
+    await secure.delete('$prefix:access');
+    await secure.delete('$prefix:refresh');
+    store.data.remove('remoteUserId');
+    store.data.remove('remoteServer');
+    // Keep data ownership after logout: another login must not silently upload it.
+    await store.save();
   }
 
   Future<void> disconnect() async {
     try {
       await send('/v1/auth/logout');
     } finally {
-      await secure.delete('$prefix:access');
-      await secure.delete('$prefix:refresh');
-      store.data.remove('remoteUserId');
-      await store.save();
+      await _clearSession();
     }
   }
 
   Future<Json> exportRemote() => request('GET', '/v1/account/export');
   Future<String> recoveryCode() async =>
       (await send('/v1/auth/recovery-code'))['recoveryCode'];
-  Future<String> recover(String code) async {
+  Future<String> recover(String code,
+      {bool confirmAccountChange = false}) async {
+    _confirmAccountOperation(confirmAccountChange);
     final session = await send('/v1/auth/recover',
         body: {'recoveryCode': code.trim()}, auth: false);
-    await saveSession(session);
-    return session['recoveryCode'];
+    final replacement = session['recoveryCode'];
+    if (replacement is! String || replacement.length < 20) {
+      throw StateError(
+          'El servidor no entregó un código de recuperación válido.');
+    }
+    try {
+      await saveSession(session, confirmAccountChange: confirmAccountChange);
+    } catch (_) {
+      // The old code was already consumed remotely. Never hide its replacement
+      // just because Keychain/Keystore or the local disk rejected the session.
+      throw RecoveryPersistenceFailure(replacement);
+    }
+    return replacement;
   }
 
   Future<void> eraseRemote() async {
     await request('DELETE', '/v1/account?confirmation=ELIMINAR');
-    await secure.delete('$prefix:access');
-    await secure.delete('$prefix:refresh');
-    store.data.remove('remoteUserId');
-    await store.save();
+    await _clearSession();
   }
 
   Future<void> pull() async {
@@ -138,6 +299,10 @@ class RemoteSync {
     final records =
         (snapshot['records'] as List).map((v) => Json.from(v)).toList();
     final userId = snapshot['userId'];
+    if (userId != store.data['remoteUserId']) {
+      throw StateError(
+          'La respuesta pertenece a otra cuenta. No se ha importado nada.');
+    }
     final decks = {
       for (final r in records.where((r) => r['kind'] == 'deck'))
         r['id']: r['title']
