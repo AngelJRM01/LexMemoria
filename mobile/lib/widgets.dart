@@ -68,12 +68,14 @@ class SearchPageBody extends StatelessWidget {
   final IndexedWidgetBuilder? resultBuilder;
   final int resultCount;
   final ScrollController? resultsController;
+  final Widget? footer;
   const SearchPageBody(
       {super.key,
       required this.header,
       this.children = const [],
       this.resultBuilder,
       this.resultsController,
+      this.footer,
       this.resultCount = 0});
   @override
   Widget build(BuildContext context) => SafeArea(
@@ -84,16 +86,21 @@ class SearchPageBody extends StatelessWidget {
               constraints: const BoxConstraints(maxWidth: 840),
               child: LayoutBuilder(builder: (context, size) {
                 if (size.maxHeight < 440) {
-                  return ListView.builder(
-                      controller: resultsController,
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 56),
-                      itemCount: header.length + children.length + resultCount,
-                      itemBuilder: (context, i) => i < header.length
-                          ? header[i]
-                          : i < header.length + children.length
-                              ? children[i - header.length]
-                              : resultBuilder!(context,
-                                  i - header.length - children.length));
+                  return Column(children: [
+                    Expanded(
+                        child: ListView.builder(
+                            controller: resultsController,
+                            padding: const EdgeInsets.fromLTRB(20, 16, 20, 56),
+                            itemCount:
+                                header.length + children.length + resultCount,
+                            itemBuilder: (context, i) => i < header.length
+                                ? header[i]
+                                : i < header.length + children.length
+                                    ? children[i - header.length]
+                                    : resultBuilder!(context,
+                                        i - header.length - children.length))),
+                    if (footer != null) footer!
+                  ]);
                 }
                 return Column(children: [
                   ConstrainedBox(
@@ -112,6 +119,7 @@ class SearchPageBody extends StatelessWidget {
                           itemBuilder: (context, i) => i < children.length
                               ? children[i]
                               : resultBuilder!(context, i - children.length))),
+                  if (footer != null) footer!,
                 ]);
               }))));
 }

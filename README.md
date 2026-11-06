@@ -124,3 +124,7 @@ Búsqueda dentro del texto de cada norma, apertura del fragmento encontrado y re
 ## Archivo europeo supervisado
 
 `./scripts/start_eu_download.sh` mantiene las descargas europeas con checkpoints, recuperación de fallos temporales y vigilancia posterior del catálogo. [Alcance, operación y evidencia](docs/DESCARGA_EUROPEA.md). La descarga sigue incompleta y depende de que el entorno permanezca encendido.
+
+## Navegación y ejercicios 0.4.0
+
+Materias con contenido, filtro por las 17 comunidades del catálogo, paginación con salto de página y ejercicios breves con varios huecos interactivos. La renovación conserva las ediciones e historial anteriores. [Cambios y validación](docs/MEJORAS_0_4_0.md).

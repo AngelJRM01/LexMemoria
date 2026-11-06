@@ -6,6 +6,8 @@ import 'package:uuid/uuid.dart';
 import 'models.dart';
 import 'store.dart';
 import 'widgets.dart';
+import 'catalogue.dart';
+import 'browsing_widgets.dart';
 import 'exercises.dart';
 
 class StudyPage extends StatefulWidget {
@@ -107,12 +109,19 @@ class _StudyPageState extends State<StudyPage> {
                 label: const Text('Mazos preparados'))),
         PopupMenuButton<String>(
             tooltip: 'Más opciones',
-            onSelected: (v) =>
-                v == 'csv' ? importCsv() : push(context, CardEditor(store: s)),
-            itemBuilder: (_) => const [
-                  PopupMenuItem(
+            onSelected: (v) => v == 'csv'
+                ? importCsv()
+                : v == 'archive'
+                    ? push(context, ArchivedExercisesPage(store: s))
+                    : push(context, CardEditor(store: s)),
+            itemBuilder: (_) => [
+                  const PopupMenuItem(
                       value: 'new', child: Text('Crear tarjeta propia')),
-                  PopupMenuItem(value: 'csv', child: Text('Importar CSV'))
+                  const PopupMenuItem(
+                      value: 'csv', child: Text('Importar CSV')),
+                  if (s.list('supersededPreparedCards').isNotEmpty)
+                    const PopupMenuItem(
+                        value: 'archive', child: Text('Ejercicios anteriores'))
                 ])
       ]),
       const SizedBox(height: 20),
@@ -531,7 +540,8 @@ class _ReviewPageState extends State<ReviewPage> {
     }
     final c = widget.queue[index];
     final question = c.type == 'cloze'
-        ? c.front.replaceAllMapped(RegExp(r'\{\{c\d+::(.+?)\}\}'), (_) => '[…]')
+        ? c.front.replaceAllMapped(
+            RegExp(r'\{\{c(\d+)::(.+?)\}\}'), (m) => '[${m.group(1)}]')
         : c.front;
     return Scaffold(
         appBar: AppBar(title: const Text('Repaso activo'), actions: [
@@ -677,6 +687,28 @@ class CardListPage extends StatefulWidget {
 
 class _CardListPageState extends State<CardListPage> {
   String query = '';
+  int page = 0, pageSize = 20;
+  final cardScroll = ScrollController();
+  void resetPage() {
+    page = 0;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && cardScroll.hasClients) cardScroll.jumpTo(0);
+    });
+  }
+
+  void changePage(int value) {
+    setState(() => page = value);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && cardScroll.hasClients) cardScroll.jumpTo(0);
+    });
+  }
+
+  @override
+  void dispose() {
+    cardScroll.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
       animation: widget.store,
@@ -687,67 +719,85 @@ class _CardListPageState extends State<CardListPage> {
                 c.deck == widget.deck &&
                 normalize('${c.front} ${c.back}').contains(normalize(query)))
             .toList();
+        final slice = ResultPage(cards, page, pageSize);
         return Scaffold(
             appBar: AppBar(title: Text(widget.deck)),
-            body: SearchPageBody(header: [
-              TextField(
-                  decoration: const InputDecoration(
-                      hintText: 'Buscar entre mis tarjetas',
-                      prefixIcon: Icon(Icons.search)),
-                  onChanged: (value) => setState(() => query = value)),
-            ], children: [
-              if (cards.isEmpty)
-                const EmptyState(
-                    title: 'Sin coincidencias',
-                    detail: 'Prueba otro término o vacía la búsqueda.'),
-              ...cards.map((c) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Paper(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      child: ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(c.front,
-                            maxLines: 3, overflow: TextOverflow.ellipsis),
-                        subtitle: c.blocked
-                            ? const Text('Pendiente de revisión')
-                            : store.has('favoriteCards', c.id)
-                                ? const Text('Favorita')
-                                : null,
-                        onTap: () => push(
-                            context, CardEditor(store: store, existing: c)),
-                        trailing: PopupMenuButton<String>(
-                            tooltip: 'Opciones de tarjeta',
-                            onSelected: (value) {
-                              if (value == 'edit') {
-                                push(context,
-                                    CardEditor(store: store, existing: c));
-                              }
-                              if (value == 'favorite') {
-                                perform(context,
-                                    () => store.toggle('favoriteCards', c.id));
-                              }
-                              if (value == 'history') {
-                                push(context,
-                                    CardHistoryPage(store: store, card: c));
-                              }
-                            },
-                            itemBuilder: (_) => [
-                                  const PopupMenuItem(
-                                      value: 'edit',
-                                      child: Text('Editar tarjeta')),
-                                  PopupMenuItem(
-                                      value: 'favorite',
-                                      child: Text(
-                                          store.has('favoriteCards', c.id)
-                                              ? 'Quitar de favoritas'
-                                              : 'Marcar favorita')),
-                                  const PopupMenuItem(
-                                      value: 'history',
-                                      child: Text('Ver historial')),
-                                ]),
-                      )))),
-            ]));
+            body: SearchPageBody(
+                resultsController: cardScroll,
+                footer: PageControls(
+                    total: cards.length,
+                    page: slice.page,
+                    size: pageSize,
+                    onPage: changePage,
+                    onSize: (v) => setState(() {
+                          pageSize = v;
+                          resetPage();
+                        })),
+                header: [
+                  TextField(
+                      decoration: const InputDecoration(
+                          hintText: 'Buscar entre mis tarjetas',
+                          prefixIcon: Icon(Icons.search)),
+                      onChanged: (value) => setState(() {
+                            query = value;
+                            resetPage();
+                          })),
+                ],
+                children: [
+                  if (cards.isEmpty)
+                    const EmptyState(
+                        title: 'Sin coincidencias',
+                        detail: 'Prueba otro término o vacía la búsqueda.'),
+                  ...slice.items.map((c) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Paper(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(c.front,
+                                maxLines: 3, overflow: TextOverflow.ellipsis),
+                            subtitle: c.blocked
+                                ? const Text('Pendiente de revisión')
+                                : store.has('favoriteCards', c.id)
+                                    ? const Text('Favorita')
+                                    : null,
+                            onTap: () => push(
+                                context, CardEditor(store: store, existing: c)),
+                            trailing: PopupMenuButton<String>(
+                                tooltip: 'Opciones de tarjeta',
+                                onSelected: (value) {
+                                  if (value == 'edit') {
+                                    push(context,
+                                        CardEditor(store: store, existing: c));
+                                  }
+                                  if (value == 'favorite') {
+                                    perform(
+                                        context,
+                                        () => store.toggle(
+                                            'favoriteCards', c.id));
+                                  }
+                                  if (value == 'history') {
+                                    push(context,
+                                        CardHistoryPage(store: store, card: c));
+                                  }
+                                },
+                                itemBuilder: (_) => [
+                                      const PopupMenuItem(
+                                          value: 'edit',
+                                          child: Text('Editar tarjeta')),
+                                      PopupMenuItem(
+                                          value: 'favorite',
+                                          child: Text(
+                                              store.has('favoriteCards', c.id)
+                                                  ? 'Quitar de favoritas'
+                                                  : 'Marcar favorita')),
+                                      const PopupMenuItem(
+                                          value: 'history',
+                                          child: Text('Ver historial')),
+                                    ]),
+                          )))),
+                ]));
       });
 }
 
@@ -799,6 +849,34 @@ class _PreparedDecksPageState extends State<PreparedDecksPage> {
   late String query;
   late final TextEditingController search;
   String? busy;
+  CatalogueFilters filters = const CatalogueFilters();
+  int page = 0, pageSize = 20;
+  final pagingController = ScrollController();
+  void resetPage() {
+    page = 0;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && pagingController.hasClients) pagingController.jumpTo(0);
+    });
+  }
+
+  void pageChanged(int value) {
+    setState(() => page = value);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && pagingController.hasClients) pagingController.jumpTo(0);
+    });
+  }
+
+  Future<void> chooseFilters() async {
+    final chosen = await showCatalogueFilters(
+        context, widget.store.preparedDecks, filters);
+    if (chosen != null && mounted) {
+      setState(() {
+        filters = chosen;
+        resetPage();
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -809,64 +887,19 @@ class _PreparedDecksPageState extends State<PreparedDecksPage> {
   @override
   void dispose() {
     search.dispose();
+    pagingController.dispose();
     super.dispose();
   }
 
   Future<void> prepare(Json deck) async {
-    var format = 'qa';
-    final name = TextEditingController();
-    final chosen = await showModalBottomSheet<bool>(
+    final chosen = await showModalBottomSheet<Json>(
         context: context,
         showDragHandle: true,
         isScrollControlled: true,
-        builder: (sheet) => SafeArea(
-            child: SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(
-                    24, 0, 24, MediaQuery.viewInsetsOf(sheet).bottom + 28),
-                child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text('Preparar mi mazo',
-                          style: Theme.of(sheet).textTheme.titleLarge),
-                      const SizedBox(height: 20),
-                      DropdownButtonFormField<String>(
-                          initialValue: format,
-                          isExpanded: true,
-                          decoration: const InputDecoration(
-                              labelText: 'Cómo quiero practicar'),
-                          items: const [
-                            DropdownMenuItem(
-                                value: 'qa', child: Text('Recuerdo literal')),
-                            DropdownMenuItem(
-                                value: 'cloze',
-                                child: Text('Completar huecos')),
-                            DropdownMenuItem(
-                                value: 'test',
-                                child: Text('Test de recuerdo literal')),
-                            DropdownMenuItem(
-                                value: 'reference',
-                                child: Text('Identificar artículo')),
-                          ],
-                          onChanged: (v) => format = v!),
-                      const SizedBox(height: 16),
-                      TextField(
-                          controller: name,
-                          maxLength: 160,
-                          decoration: const InputDecoration(
-                              labelText: 'Nombre del mazo (opcional)',
-                              hintText: 'Mi tema de Administrativo')),
-                      const SizedBox(height: 12),
-                      const Text(
-                          'Usa el mismo nombre para reunir tarjetas de varias normas en un tema propio.'),
-                      const SizedBox(height: 20),
-                      FilledButton(
-                          onPressed: () => Navigator.pop(sheet, true),
-                          child: const Text('Añadir tarjetas preparadas')),
-                    ]))));
-    final group = name.text.trim();
-    name.dispose();
-    if (chosen != true || !mounted) return;
+        builder: (_) => const _PreparedOptionsSheet());
+    if (chosen == null || !mounted) return;
+    final format = chosen['format'] as String;
+    final group = chosen['group'] as String;
     setState(() => busy = deck['id']);
     await perform(context, () async {
       final count = await widget.store
@@ -885,28 +918,66 @@ class _PreparedDecksPageState extends State<PreparedDecksPage> {
   @override
   Widget build(BuildContext context) {
     final rows = widget.store.preparedDecks
-        .where((d) => normalize('${d['title']} ${d['subject']} ${d['id']}')
-            .contains(normalize(query)))
+        .where((d) =>
+            filters.matches(d) &&
+            normalize(
+                    '${d['title']} ${d['subject']} ${d['id']} ${d['authority'] ?? ''}')
+                .contains(normalize(query)))
         .toList();
+    final slice = ResultPage(rows, page, pageSize);
+    final shown = slice.items;
     return Scaffold(
         appBar: AppBar(title: const Text('Mazos preparados')),
         body: SearchPageBody(
+            resultsController: pagingController,
+            footer: PageControls(
+                total: rows.length,
+                page: slice.page,
+                size: pageSize,
+                onPage: pageChanged,
+                onSize: (v) {
+                  setState(() {
+                    pageSize = v;
+                    resetPage();
+                  });
+                  pageChanged(0);
+                }),
             header: [
               const Text('Elige una norma y cómo quieres practicar.'),
               const SizedBox(height: 12),
               TextField(
                   controller: search,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                       hintText: 'Buscar norma, referencia o materia',
-                      prefixIcon: Icon(Icons.search)),
-                  onChanged: (v) => setState(() => query = v)),
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: IconButton(
+                          tooltip: 'Filtros de mazos',
+                          onPressed: chooseFilters,
+                          icon: const Icon(Icons.tune))),
+                  onChanged: (v) => setState(() {
+                        query = v;
+                        resetPage();
+                      })),
               const SizedBox(height: 8),
+              if (filters.subject != 'Todas' ||
+                  filters.scope != 'Todos' ||
+                  filters.community != 'Todas')
+                InputChip(
+                    label: Text([
+                      filters.subject,
+                      filters.scope,
+                      filters.community
+                    ].where((s) => s != 'Todas' && s != 'Todos').join(' · ')),
+                    onDeleted: () => setState(() {
+                          filters = const CatalogueFilters();
+                          resetPage();
+                        })),
               Text('${rows.length} normas con material preparado',
                   style: Theme.of(context).textTheme.bodySmall),
             ],
-            resultCount: rows.length,
+            resultCount: shown.length,
             resultBuilder: (context, i) {
-              final deck = rows[i];
+              final deck = shown[i];
               return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Paper(
@@ -938,4 +1009,119 @@ class _PreparedDecksPageState extends State<PreparedDecksPage> {
                     detail: 'Prueba con otra norma o referencia.'),
             ]));
   }
+}
+
+class ArchivedExercisesPage extends StatefulWidget {
+  final AppStore store;
+  const ArchivedExercisesPage({super.key, required this.store});
+  @override
+  State<ArchivedExercisesPage> createState() => _ArchivedExercisesPageState();
+}
+
+class _ArchivedExercisesPageState extends State<ArchivedExercisesPage> {
+  int page = 0, size = 20;
+  @override
+  Widget build(BuildContext context) {
+    final rows = widget.store.list('supersededPreparedCards');
+    final slice = ResultPage(rows, page, size);
+    final shown = slice.items;
+    return Scaffold(
+        appBar: AppBar(title: const Text('Ejercicios anteriores')),
+        body: SearchPageBody(
+            header: const [
+              Text(
+                  'Las versiones renovadas conservan aquí sus preguntas y su historial. No entran en los repasos actuales.')
+            ],
+            footer: PageControls(
+                total: rows.length,
+                page: slice.page,
+                size: size,
+                onPage: (v) => setState(() => page = v),
+                onSize: (v) => setState(() {
+                      size = v;
+                      page = 0;
+                    })),
+            resultCount: shown.length,
+            resultBuilder: (context, i) {
+              final card = StudyCard.fromJson(shown[i]);
+              final reviews = widget.store
+                  .list('reviews')
+                  .where((r) => r['cardId'] == card.id)
+                  .length;
+              return ListTile(
+                  title: Text(card.front,
+                      maxLines: 2, overflow: TextOverflow.ellipsis),
+                  subtitle: Text('${card.deck} · $reviews repasos conservados'),
+                  onTap: () => push(context,
+                      CardHistoryPage(store: widget.store, card: card)));
+            }));
+  }
+}
+
+class _PreparedOptionsSheet extends StatefulWidget {
+  const _PreparedOptionsSheet();
+  @override
+  State<_PreparedOptionsSheet> createState() => _PreparedOptionsSheetState();
+}
+
+class _PreparedOptionsSheetState extends State<_PreparedOptionsSheet> {
+  String format = 'qa';
+  final name = TextEditingController();
+  @override
+  void dispose() {
+    name.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SafeArea(
+      child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+              24, 0, 24, MediaQuery.viewInsetsOf(context).bottom + 28),
+          child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Preparar mi mazo',
+                    style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 20),
+                DropdownButtonFormField<String>(
+                    initialValue: format,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                        labelText: 'Cómo quiero practicar'),
+                    items: const [
+                      DropdownMenuItem(
+                          value: 'qa', child: Text('Recuerdo literal')),
+                      DropdownMenuItem(
+                          value: 'cloze', child: Text('Completar huecos')),
+                      DropdownMenuItem(
+                          value: 'test',
+                          child: Text('Test de recuerdo literal')),
+                      DropdownMenuItem(
+                          value: 'reference',
+                          child: Text('Identificar artículo'))
+                    ],
+                    onChanged: (v) => format = v!),
+                const SizedBox(height: 16),
+                TextField(
+                    controller: name,
+                    maxLength: 160,
+                    decoration: const InputDecoration(
+                        labelText: 'Nombre del mazo (opcional)',
+                        hintText: 'Mi tema de Administrativo')),
+                const SizedBox(height: 12),
+                const Text(
+                    'Usa el mismo nombre para reunir tarjetas de varias normas en un tema propio.'),
+                const SizedBox(height: 12),
+                const Text(
+                    'Los huecos y tests usan fragmentos breves. Al renovar un formato, los ejercicios automáticos anteriores se archivan; tus ediciones e historial se conservan.'),
+                const SizedBox(height: 20),
+                FilledButton(
+                    onPressed: () => Navigator.pop(context, <String, dynamic>{
+                          'format': format,
+                          'group': name.text.trim()
+                        }),
+                    child: const Text('Añadir tarjetas preparadas')),
+              ])));
 }

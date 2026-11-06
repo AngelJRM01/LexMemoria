@@ -8,6 +8,8 @@ import 'widgets.dart';
 import 'study.dart';
 import 'remote.dart';
 import 'reading.dart';
+import 'catalogue.dart';
+import 'browsing_widgets.dart';
 
 class LibraryPage extends StatefulWidget {
   final AppStore store;
@@ -17,74 +19,70 @@ class LibraryPage extends StatefulWidget {
 }
 
 class _LibraryPageState extends State<LibraryPage> {
-  String query = '', subject = 'Todas', scope = 'Todos';
+  String query = '', subject = 'Todas', scope = 'Todos', community = 'Todas';
+  int page = 0, pageSize = 20;
+  final pagingController = ScrollController();
+  void resetPage() {
+    page = 0;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && pagingController.hasClients) pagingController.jumpTo(0);
+    });
+  }
+
+  void pageChanged(int value) {
+    setState(() => page = value);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && pagingController.hasClients) pagingController.jumpTo(0);
+    });
+  }
+
+  @override
+  void dispose() {
+    pagingController.dispose();
+    super.dispose();
+  }
+
   bool saved = false;
   Future<void> filters() async {
-    var selectedSubject = subject;
-    var selectedScope = scope;
-    await showModalBottomSheet(
-        context: context,
-        showDragHandle: true,
-        isScrollControlled: true,
-        builder: (sheet) => SafeArea(
-            child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
-                child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text('Filtrar biblioteca',
-                          style: Theme.of(sheet).textTheme.titleLarge),
-                      const SizedBox(height: 20),
-                      DropdownButtonFormField<String>(
-                          initialValue: selectedSubject,
-                          isExpanded: true,
-                          decoration:
-                              const InputDecoration(labelText: 'Materia'),
-                          items: ['Todas', ...subjects, 'Normativa']
-                              .map((v) =>
-                                  DropdownMenuItem(value: v, child: Text(v)))
-                              .toList(),
-                          onChanged: (v) => selectedSubject = v!),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                          initialValue: selectedScope,
-                          isExpanded: true,
-                          decoration:
-                              const InputDecoration(labelText: 'Ámbito'),
-                          items: ['Todos', 'Estatal', 'Autonómico']
-                              .map((v) =>
-                                  DropdownMenuItem(value: v, child: Text(v)))
-                              .toList(),
-                          onChanged: (v) => selectedScope = v!),
-                      const SizedBox(height: 24),
-                      FilledButton(
-                          onPressed: () {
-                            setState(() {
-                              subject = selectedSubject;
-                              scope = selectedScope;
-                            });
-                            Navigator.pop(sheet);
-                          },
-                          child: const Text('Aplicar filtros')),
-                    ]))));
+    final result = await showCatalogueFilters(context, widget.store.catalogue,
+        CatalogueFilters(subject: subject, scope: scope, community: community));
+    if (result != null && mounted) {
+      setState(() {
+        subject = result.subject;
+        scope = result.scope;
+        community = result.community;
+        resetPage();
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final rows = widget.store.catalogue
         .where((n) =>
-            (subject == 'Todas' || n['subject'] == subject) &&
-            (scope == 'Todos' ||
-                (scope == 'Estatal'
-                    ? normalize(n['jurisdiction'] ?? '').startsWith('esta')
-                    : normalize(n['jurisdiction'] ?? '')
-                        .contains('autonom'))) &&
+            CatalogueFilters(
+                    subject: subject, scope: scope, community: community)
+                .matches(n) &&
             (!saved || widget.store.has('bookmarks', n['id'])) &&
             normalize('${n['title']} ${n['id']} ${n['authority'] ?? ''}')
                 .contains(normalize(query)))
         .toList();
+    final slice = ResultPage(rows, page, pageSize);
+    final shown = slice.items;
     return SearchPageBody(
+        resultsController: pagingController,
+        footer: PageControls(
+            total: rows.length,
+            page: slice.page,
+            size: pageSize,
+            onPage: pageChanged,
+            onSize: (v) {
+              setState(() {
+                pageSize = v;
+                resetPage();
+              });
+              pageChanged(0);
+            }),
         header: [
           Text('Tu biblioteca jurídica',
               style: Theme.of(context).textTheme.headlineMedium),
@@ -97,7 +95,10 @@ class _LibraryPageState extends State<LibraryPage> {
                       tooltip: 'Filtros de biblioteca',
                       onPressed: filters,
                       icon: const Icon(Icons.tune))),
-              onChanged: (v) => setState(() => query = v)),
+              onChanged: (v) => setState(() {
+                    query = v;
+                    resetPage();
+                  })),
           const SizedBox(height: 10),
           Wrap(
               spacing: 8,
@@ -107,15 +108,31 @@ class _LibraryPageState extends State<LibraryPage> {
                 FilterChip(
                     label: const Text('Guardadas'),
                     selected: saved,
-                    onSelected: (v) => setState(() => saved = v)),
+                    onSelected: (v) => setState(() {
+                          saved = v;
+                          resetPage();
+                        })),
                 if (subject != 'Todas')
                   InputChip(
                       label: Text(subject),
-                      onDeleted: () => setState(() => subject = 'Todas')),
+                      onDeleted: () => setState(() {
+                            subject = 'Todas';
+                            resetPage();
+                          })),
                 if (scope != 'Todos')
                   InputChip(
                       label: Text(scope),
-                      onDeleted: () => setState(() => scope = 'Todos')),
+                      onDeleted: () => setState(() {
+                            scope = 'Todos';
+                            resetPage();
+                          })),
+                if (community != 'Todas')
+                  InputChip(
+                      label: Text(community),
+                      onDeleted: () => setState(() {
+                            community = 'Todas';
+                            resetPage();
+                          })),
                 if (widget.store.hasRemoteServer)
                   IconButton(
                       tooltip: 'Sincronizar biblioteca',
@@ -126,9 +143,9 @@ class _LibraryPageState extends State<LibraryPage> {
               ]),
           if (widget.store.syncing) const LinearProgressIndicator(),
         ],
-        resultCount: rows.length,
+        resultCount: shown.length,
         resultBuilder: (context, i) {
-          final n = rows[i];
+          final n = shown[i];
           return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Paper(
@@ -180,13 +197,38 @@ class NormPage extends StatefulWidget {
 
 class _NormPageState extends State<NormPage> {
   String query = '';
+  int indexPage = 0, indexSize = 50;
+  final indexScroll = ScrollController();
+  void resetIndex() {
+    indexPage = 0;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && indexScroll.hasClients) indexScroll.jumpTo(0);
+    });
+  }
+
+  void indexPageChanged(int value) {
+    setState(() => indexPage = value);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && indexScroll.hasClients) indexScroll.jumpTo(0);
+    });
+  }
+
+  @override
+  void dispose() {
+    indexScroll.dispose();
+    super.dispose();
+  }
+
   bool downloading = false;
   bool fullText = false, indexing = false;
   Map<String, String>? textIndex;
   String? indexedVersion;
 
   Future<void> searchText(Json norm, List<Json> units) async {
-    setState(() => fullText = true);
+    setState(() {
+      fullText = true;
+      resetIndex();
+    });
     if (indexedVersion == norm['latestVersion'] && textIndex != null) return;
     setState(() => indexing = true);
     try {
@@ -207,7 +249,10 @@ class _NormPageState extends State<NormPage> {
       }
     } catch (_) {
       if (mounted) {
-        setState(() => fullText = false);
+        setState(() {
+          fullText = false;
+          resetIndex();
+        });
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text(
                 'No se pudo preparar la búsqueda. Puedes seguir usando el índice.')));
@@ -265,6 +310,8 @@ class _NormPageState extends State<NormPage> {
                     : normalize('${u['title']}'))
                 .contains(needle))
         .toList();
+    final slice = ResultPage(units, indexPage, indexSize);
+    final shown = slice.items;
     final last = widget.store.data['lastReadUnits'];
     final lastId = last is Map ? last[widget.id] : null;
     final lastUnit = all.where((u) => u['id'] == lastId).firstOrNull;
@@ -294,6 +341,21 @@ class _NormPageState extends State<NormPage> {
                   : Icons.bookmark_outline)),
         ]),
         body: SearchPageBody(
+            resultsController: indexScroll,
+            footer: all.isEmpty
+                ? null
+                : PageControls(
+                    total: units.length,
+                    page: slice.page,
+                    size: indexSize,
+                    onPage: indexPageChanged,
+                    onSize: (v) {
+                      setState(() {
+                        indexSize = v;
+                        resetIndex();
+                      });
+                      indexPageChanged(0);
+                    }),
             header: [
               Text(n['short'] ?? n['title'],
                   maxLines: 3,
@@ -320,13 +382,19 @@ class _NormPageState extends State<NormPage> {
                             ? 'Buscar en el texto de esta norma'
                             : 'Buscar artículo en el índice',
                         prefixIcon: Icon(Icons.search)),
-                    onChanged: (v) => setState(() => query = v)),
+                    onChanged: (v) => setState(() {
+                          query = v;
+                          resetIndex();
+                        })),
                 const SizedBox(height: 8),
                 Wrap(spacing: 8, children: [
                   ChoiceChip(
                       label: const Text('Índice'),
                       selected: !fullText,
-                      onSelected: (_) => setState(() => fullText = false)),
+                      onSelected: (_) => setState(() {
+                            fullText = false;
+                            resetIndex();
+                          })),
                   ChoiceChip(
                       label: const Text('Texto'),
                       selected: fullText,
@@ -335,10 +403,10 @@ class _NormPageState extends State<NormPage> {
                 if (indexing) const LinearProgressIndicator(),
               ],
             ],
-            resultCount: units.length + 1,
+            resultCount: shown.length + 1,
             resultBuilder: (context, i) {
-              if (i < units.length) {
-                final u = units[i];
+              if (i < shown.length) {
+                final u = shown[i];
                 return ListTile(
                     contentPadding: const EdgeInsets.symmetric(vertical: 6),
                     title: Text(u['title']),

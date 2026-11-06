@@ -106,7 +106,7 @@ void main() {
     expect(find.text('Código Civil'), findsNothing);
     await tester.tap(find.byTooltip('Filtros de biblioteca'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(DropdownButtonFormField<String>).last);
+    await tester.tap(find.byType(DropdownButtonFormField<String>).at(1));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Estatal').last);
     await tester.pumpAndSettle();

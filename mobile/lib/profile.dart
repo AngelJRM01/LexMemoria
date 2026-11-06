@@ -221,10 +221,13 @@ class SettingsPage extends StatelessWidget {
                             : 'Ambos'
                   })),
           DropdownButtonFormField<String>(
-              initialValue: store.profile['subject'] ?? subjects.first,
+              initialValue:
+                  store.availableSubjects.contains(store.profile['subject'])
+                      ? store.profile['subject']
+                      : store.availableSubjects.first,
               isExpanded: true,
               decoration: const InputDecoration(labelText: 'Materia principal'),
-              items: subjects
+              items: store.availableSubjects
                   .map((v) => DropdownMenuItem(value: v, child: Text(v)))
                   .toList(),
               onChanged: (value) => store.setProfile({'subject': value})),
@@ -357,7 +360,7 @@ class SettingsPage extends StatelessWidget {
             ])),
         const SizedBox(height: 24),
         const Text(
-            'LexMemoria 0.3.1 · Versión de prueba\nProducto educativo independiente de las administraciones públicas.',
+            'LexMemoria 0.4.0 · Versión de prueba\nProducto educativo independiente de las administraciones públicas.',
             style: TextStyle(fontSize: 12)),
       ]));
 }

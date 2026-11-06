@@ -57,9 +57,11 @@ void main() {
           expect((card['options'] as List).toSet().length, 4);
         }
         if (format == 'cloze') {
-          expect(card['front'], contains('{{c1::${card['back']}}}'));
+          expect(
+              RegExp(r'\{\{c\d+::(.+?)\}\}').allMatches(card['front']).length,
+              greaterThanOrEqualTo(2));
         }
-        if (format != 'reference') {
+        if (format != 'reference' && format != 'cloze') {
           expect(unit['versions'].last['text'], contains(card['back']));
         }
       }
@@ -100,13 +102,14 @@ void main() {
       'format': 'cloze'
     });
     expect(cards, hasLength(1));
-    expect([
-      'Öffentlïche',
-      'Körperschaften',
-      'ermöglichen',
-      'überörtliche',
-      'Gewährleistungen'
-    ], contains(cards.single['back']));
+    final answers = RegExp(r'\{\{c\d+::(.+?)\}\}')
+        .allMatches(cards.single['front'])
+        .map((m) => m.group(1))
+        .toList();
+    expect(answers.length, greaterThanOrEqualTo(2));
+    for (final answer in answers) {
+      expect(german.first['versions'].last['text'], contains(answer));
+    }
   });
   test(
       'public packs verify, persist separately and reopen offline without bloating user backup',

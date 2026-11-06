@@ -17,6 +17,7 @@ class ExerciseInput extends StatefulWidget {
 
 class _ExerciseInputState extends State<ExerciseInput> {
   int? selected;
+  final Map<int, String> blanks = {};
   late List<int> order;
   @override
   void initState() {
@@ -37,6 +38,40 @@ class _ExerciseInputState extends State<ExerciseInput> {
   @override
   Widget build(BuildContext context) {
     final c = widget.card;
+    if (c.type == 'cloze') {
+      final holes =
+          RegExp(r'\{\{c(\d+)::(.+?)\}\}').allMatches(c.front).toList();
+      final unique = {
+        for (final h in holes) int.parse(h.group(1)!): h.group(2)!
+      };
+      return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        for (final h in unique.entries)
+          Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: TextFormField(
+                  key: ValueKey('blank-${h.key}'),
+                  enabled: !widget.revealed,
+                  decoration: InputDecoration(
+                      labelText: 'Hueco ${h.key}',
+                      helperText: widget.revealed
+                          ? ((blanks[h.key] ?? '')
+                                      .trim()
+                                      .toLowerCase()
+                                      .replaceAll(RegExp(r'\s+'), ' ') ==
+                                  h.value
+                                      .trim()
+                                      .toLowerCase()
+                                      .replaceAll(RegExp(r'\s+'), ' ')
+                              ? 'Correcto'
+                              : 'Respuesta: ${h.value}')
+                          : null),
+                  onChanged: (v) {
+                    blanks[h.key] = v;
+                    widget.onChanged(
+                        {for (final e in blanks.entries) '${e.key}': e.value});
+                  })),
+      ]);
+    }
     if (c.type == 'order') {
       final correct = order.asMap().entries.every((e) => e.key == e.value);
       return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

@@ -12,6 +12,7 @@ import 'persistence.dart';
 import 'startup.dart';
 import 'prepared.dart';
 import 'pack_cache.dart';
+import 'catalogue.dart';
 
 class AppStore extends ChangeNotifier {
   final SharedPreferences prefs;
@@ -25,6 +26,7 @@ class AppStore extends ChangeNotifier {
   List<Json> bundledNorms = [];
   final Map<String, List<dynamic>> bundledPacks = {};
   List<Json> preparedDecks = [];
+  List<String> get availableSubjects => catalogueSubjects(catalogue);
   String? error;
   bool syncing = false;
   Future<void> _write = Future.value();
@@ -142,13 +144,16 @@ class AppStore extends ChangeNotifier {
       final norm = catalogue.firstWhere((n) => n['id'] == deck['id']);
       await downloadNorm(norm);
       final loaded = catalogue.firstWhere((n) => n['id'] == deck['id']);
-      final prepared = await compute(buildLiteralCards, <String, dynamic>{
+      final prepared = await compute(
+          buildPreparedInstallation, <String, dynamic>{
         'norm': loaded,
         'units': loaded['units'],
         'format': format,
         'deck': group
       });
-      return addPreparedCards(prepared);
+      return addPreparedCards(
+          (prepared['cards'] as List).map((v) => Json.from(v)).toList(),
+          legacyIds: Set<String>.from(prepared['legacyIds']));
     }
     final asset = await rootBundle.load(deck['asset']);
     final bytes =
@@ -168,14 +173,44 @@ class AppStore extends ChangeNotifier {
     return count;
   }
 
-  Future<int> addPreparedCards(List<Json> prepared) async {
+  Future<int> addPreparedCards(List<Json> prepared,
+      {Set<String> legacyIds = const {}}) async {
     if (prepared.isEmpty) {
       throw StateError(
           'No hay fragmentos adecuados para este formato. Prueba Recuerdo literal.');
     }
-    final existing = cards.map((c) => c.id).toSet();
+    final previous = cards;
+    final retired = previous
+        .where((c) =>
+            legacyIds.contains(c.id) &&
+            c.revision == 1 &&
+            !(data['remoteCardIds'] as Map? ?? {}).containsKey(c.id) &&
+            c.editorialState == 'source_literal')
+        .toList();
+    final retiredIds = retired.map((c) => c.id).toSet();
+    if (retired.isNotEmpty) {
+      final archive = {
+        for (final c in list('supersededPreparedCards')) c['id']: c
+      };
+      for (final c in retired) {
+        archive[c.id] = c.toJson();
+      }
+      data['supersededPreparedCards'] = archive.values.toList();
+      final session = data['session'];
+      if (session is Map &&
+          session['ids'] is List &&
+          (session['ids'] as List).any(retiredIds.contains)) {
+        data['session'] = null;
+      }
+    }
+    final existing = previous.map((c) => c.id).toSet();
     final added = prepared.where((c) => !existing.contains(c['id'])).toList();
-    data['cards'] = [...cards.map((c) => c.toJson()), ...added];
+    data['cards'] = [
+      ...previous
+          .where((c) => !retiredIds.contains(c.id))
+          .map((c) => c.toJson()),
+      ...added
+    ];
     await save();
     return added.length;
   }

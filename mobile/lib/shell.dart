@@ -64,7 +64,7 @@ class _WelcomePageState extends State<WelcomePage> {
               initialValue: subject,
               isExpanded: true,
               decoration: const InputDecoration(labelText: 'Primera materia'),
-              items: subjects
+              items: widget.store.availableSubjects
                   .map((v) => DropdownMenuItem(value: v, child: Text(v)))
                   .toList(),
               onChanged: (v) => subject = v!),

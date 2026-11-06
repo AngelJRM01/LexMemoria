@@ -62,6 +62,25 @@ void main(List<String> args) {
               throw StateError('Ambiguous reference answer');
             }
           }
+        } else if (format == 'cloze') {
+          final holes = RegExp(r'\{\{c(\d+)::(.+?)\}\}')
+              .allMatches(card['front'])
+              .toList();
+          if (holes.length < 2) {
+            throw StateError('Insufficient learning targets');
+          }
+          final expected = <String>[];
+          for (final hole in holes) {
+            final answer = hole.group(2)!;
+            if (!source[card['unitId']]!
+                .contains(answer.replaceAll(RegExp(r'\s+'), ' '))) {
+              throw StateError('Cloze answer not in source');
+            }
+            expected.add('${hole.group(1)}. $answer');
+          }
+          if (card['back'] != expected.join('\n')) {
+            throw StateError('Cloze answer key mismatch');
+          }
         } else {
           final answer =
               (card['back'] as String).replaceAll(RegExp(r'\s+'), ' ');

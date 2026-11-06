@@ -22,6 +22,20 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues(
       {'lexmemoria.v1': '{"profile":{"mode":"Universidad"}}'}));
+  test(
+      'multi-megabyte snapshots retain Unicode at native cursor-safe chunk boundaries',
+      () {
+    final text =
+        '${List.filled(32767, 'a').join()}𝑥${List.filled(3 * 1024 * 1024, 'ñ').join()}';
+    expect(snapshotChunks('').toList(), ['']);
+    final chunks = snapshotChunks(text).toList();
+    expect(chunks.length, greaterThan(90));
+    expect(chunks.join(), text);
+    for (final chunk in chunks) {
+      expect(chunk.length, lessThanOrEqualTo(32768));
+      expect(chunk.runes.contains(0xfffd), isFalse);
+    }
+  });
   test('legacy data is removed only after verified destination write',
       () async {
     final storage = MemoryPersistence();
