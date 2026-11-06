@@ -136,3 +136,9 @@ Materias con contenido, filtro por las 17 comunidades del catálogo, paginación
 ## Google Android · 0.5.0
 
 Acceso Google mediante Firebase y vinculación a una cuenta invitada conservando su identidad. Configuración de proyecto/paquete/firma validada y APK release preparado con la API del titular. [Implementación, build y aceptación pendiente](docs/GOOGLE_ANDROID.md). El acceso con Google real requiere la prueba en dispositivo; Apple y Google en iOS/web siguen pendientes.
+
+## Descargar APK configurado con Google
+
+[Descargar LexMemoria 0.5.0 Google · APK de pruebas](https://raw.githubusercontent.com/AngelJRM01/LexMemoria/751f44440c2f0e993c6f723bf73c3bb0ddeb21db/LexMemoria-0.5.0-google-prueba.apk). Descarga HTTP y SHA-256 verificados frente al APK configurado. [Datos de la descarga](docs/validation/google-apk-download-0.5.0.json).
+
+La rama `android-google-preview-0.5.0` distribuye el APK ya compilado con la firma y configuración registradas; los artefactos genéricos de Actions no incorporan por sí solos esa configuración. Ambos pueden mostrar 0.5.0: para esta prueba debe usarse el enlace anterior. Guardar una copia antes de actualizar y conservar la app instalada si Android rechaza una firma distinta.

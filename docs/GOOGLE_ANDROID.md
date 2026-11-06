@@ -61,3 +61,7 @@ Se corrige la etiqueta antigua 0.1.0 de /health: devuelve la versión de la API,
 Las sesiones propias del backend conservan su caducidad y revocación por cierre/borrado. Deshabilitar un usuario en Firebase no invalida automáticamente todas las sesiones propias de LexMemoria: la revocación federada y el borrado coordinado con el proveedor siguen pendientes para producción.
 
 [Resultados, tipos de pruebas y límites](validation/google-0.5.0.json). Las compilaciones Android configurada y web release son correctas; iOS no se ha compilado localmente.
+
+## Descarga accesible desde el móvil
+
+[APK configurado con Google](https://raw.githubusercontent.com/AngelJRM01/LexMemoria/751f44440c2f0e993c6f723bf73c3bb0ddeb21db/LexMemoria-0.5.0-google-prueba.apk). Alojado en la rama de distribución `android-google-preview-0.5.0`, con commit inmutable en el enlace. Descarga completa verificada por HTTP (87.102.881 bytes) y SHA-256 idéntico al informe del APK. No es el artefacto genérico de Actions. Código fuente y configuración pública del SDK documentados en el README de esa rama; no hay keystore ni claves privadas de servidor en el paquete.

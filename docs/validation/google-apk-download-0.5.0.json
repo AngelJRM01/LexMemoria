@@ -1,0 +1,13 @@
+{
+  "branch": "android-google-preview-0.5.0",
+  "commit": "751f44440c2f0e993c6f723bf73c3bb0ddeb21db",
+  "file": "LexMemoria-0.5.0-google-prueba.apk",
+  "sha256": "3a451bd920b816410cd3518cb246ec936ace6641e2aa194833ec37feffc559a9",
+  "downloadUrl": "https://raw.githubusercontent.com/AngelJRM01/LexMemoria/751f44440c2f0e993c6f723bf73c3bb0ddeb21db/LexMemoria-0.5.0-google-prueba.apk",
+  "httpStatus": 200,
+  "downloadedBytes": 87102881,
+  "downloadedSha256": "3a451bd920b816410cd3518cb246ec936ace6641e2aa194833ec37feffc559a9",
+  "matchesVerifiedApk": true,
+  "elapsedSeconds": 3.08,
+  "observedAt": "2026-11-06T12:11:49.804844+00:00"
+}
