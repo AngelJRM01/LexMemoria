@@ -48,19 +48,35 @@ class EuropeanArchive(Archive):
             CREATE INDEX IF NOT EXISTS eu_due_work ON eu_works(attempts,work)
               WHERE status IN ('pending','retry');
             ''')
-        self.rate = RateLimiter(.6)
+        self.rate = RateLimiter(self.setting('eu_request_interval',.6))
         self.client = httpx.Client(timeout=httpx.Timeout(180, connect=20), follow_redirects=False,
                                   headers={'User-Agent':'LexMemoria/0.2 legal-source-archive (resumable)'})
         self.stop = threading.Event()
         self.rate.defer(max(0,self.setting('eu_source_resume_after',0)-time.time()))
 
-    def defer_source(self, seconds):
+    def defer_source(self, seconds, throttled=False):
         with self.db() as db:
             db.execute('BEGIN IMMEDIATE')
             row=db.execute("SELECT value FROM settings WHERE key='eu_source_resume_after'").fetchone()
             until=max(json.loads(row[0]) if row else 0,time.time()+seconds)
             db.execute('INSERT OR REPLACE INTO settings VALUES (?,?)',('eu_source_resume_after',json.dumps(until)))
+            if throttled:
+                row=db.execute("SELECT value FROM settings WHERE key='eu_request_interval'").fetchone()
+                current=json.loads(row[0]) if row else self.rate.interval
+                interval=max(current,min(5,max(1,current*1.5)))
+                db.execute('INSERT OR REPLACE INTO settings VALUES (?,?)',('eu_request_interval',json.dumps(interval)))
         self.rate.defer(seconds)
+
+    def acquire_source(self):
+        while True:
+            interval=self.setting('eu_request_interval',self.rate.interval)
+            with self.rate.lock:
+                self.rate.interval=max(self.rate.interval,interval)
+            self.rate.defer(max(0,self.setting('eu_source_resume_after',0)-time.time()))
+            self.rate.acquire(self.stop)
+            # Another process may have received a longer Retry-After while
+            # this request was waiting. Honour the shared persisted deadline.
+            if time.time()>=self.setting('eu_source_resume_after',0):return
 
     def fetch(self, url, params=None):
         for _ in range(6):
@@ -68,13 +84,14 @@ class EuropeanArchive(Archive):
             if parsed.hostname not in ('publications.europa.eu','op.europa.eu'):
                 raise DownloadError('redirect_domain_not_allowed')
             url = urlunsplit(('https',parsed.netloc,parsed.path,parsed.query,''))
-            self.rate.acquire()
+            self.acquire_source()
             try:
                 with self.client.stream('GET',url,params=params) as response:
                     if response.is_redirect:
                         url = urljoin(str(response.url),response.headers['location']);params=None;continue
                     chunks=[];size=0
                     for chunk in response.iter_bytes():
+                        if self.stop.is_set():raise DownloadError('worker_stopping',retryable=True)
                         size+=len(chunk)
                         if size>128*1024*1024:raise DownloadError('response_size_limit')
                         chunks.append(chunk)
@@ -84,7 +101,7 @@ class EuropeanArchive(Archive):
                         retry=response.status_code in (202,408,429) or response.status_code>=500
                         delay=response.headers.get('Retry-After','60')
                         pause=min(3600,int(delay)) if delay.isdigit() else 60
-                        if retry:self.defer_source(pause)
+                        if retry:self.defer_source(pause,throttled=response.status_code==429)
                         raise DownloadError('http_'+str(response.status_code),retryable=retry,retry_after=pause)
                     return raw,response.headers.get('content-type','')
             except httpx.HTTPError as exc:
@@ -114,19 +131,20 @@ class EuropeanArchive(Archive):
             if parsed.hostname not in ('publications.europa.eu','op.europa.eu'):
                 raise DownloadError('redirect_domain_not_allowed')
             url=urlunsplit(('https',parsed.netloc,parsed.path,parsed.query,''))
-            self.rate.acquire()
+            self.acquire_source()
             try:
                 with self.client.stream('GET',url) as response:
                     if response.is_redirect:
                         url=urljoin(url,response.headers['location']);continue
                     if response.status_code!=200:
                         retry=response.status_code in (202,408,429) or response.status_code>=500
-                        if retry:self.defer_source(60)
+                        if retry:self.defer_source(60,throttled=response.status_code==429)
                         raise DownloadError('http_'+str(response.status_code),retryable=retry,retry_after=60)
                     type_=response.headers.get('content-type','')
                     with tempfile.TemporaryFile(dir=self.root) as source:
                         digest=hashlib.sha256();size=0;prefix=b''
                         for chunk in response.iter_bytes(chunk_size=1024*1024):
+                            if self.stop.is_set():raise DownloadError('worker_stopping',retryable=True)
                             if shutil.disk_usage(self.root).free<2*1024**3:
                                 self.set('eu_blocker','insufficient_disk');self.stop.set()
                                 raise DownloadError('insufficient_disk')
@@ -189,12 +207,15 @@ class EuropeanArchive(Archive):
         cursor=self.setting('eu_cursor','')
         while not self.stop.is_set():
             after=' FILTER(STR(?w)>'+json.dumps(cursor)+') ' if cursor else ''
-            query='SELECT DISTINCT ?w ?celex WHERE {'+SCOPE+after+'} ORDER BY ?w ?celex LIMIT 200'
+            query='SELECT DISTINCT ?w ?celex WHERE {'+SCOPE+after+'} ORDER BY ?w ?celex LIMIT 1000'
             rows,digest=self.query(query)
             works={row['w']['value']:row['celex']['value'] for row in rows}
             with self.db() as db:
-                known={r[0] for r in db.execute('SELECT work FROM eu_works WHERE work IN ('+
-                    ','.join('?' for _ in works)+") AND status NOT IN ('metadata_only','unsupported_format')",list(works))} if works else set()
+                known=set();identifiers=list(works)
+                for start in range(0,len(identifiers),500):
+                    batch=identifiers[start:start+500]
+                    known.update(r[0] for r in db.execute('SELECT work FROM eu_works WHERE work IN ('+
+                        ','.join('?' for _ in batch)+") AND status NOT IN ('metadata_only','unsupported_format')",batch))
             # A reconciliation pass enumerates every ID but only retrieves
             # manifestations for new or previously unavailable works. Existing
             # archived files stay intact, even if a translation appears later.
@@ -245,11 +266,19 @@ class EuropeanArchive(Archive):
             query="SELECT * FROM "+table+" WHERE status IN ('pending','retry') AND next_attempt<=?"
             values=[time.time()]
             if work is not None:query+=' AND work=?';values.append(work)
-            row=db.execute(query+' ORDER BY attempts,work LIMIT 1',values).fetchone()
+            row=None
+            if work is None:
+                previous=db.execute("SELECT value FROM settings WHERE key='eu_last_priority_retry'").fetchone()
+                if previous is None or time.time()>=json.loads(previous[0])+300:
+                    row=db.execute("SELECT * FROM eu_works WHERE status='retry' AND next_attempt<=? ORDER BY attempts,work LIMIT 1",(time.time(),)).fetchone()
+                    if row is not None:
+                        db.execute('INSERT OR REPLACE INTO settings VALUES (?,?)',('eu_last_priority_retry',json.dumps(time.time())))
+            if row is None:row=db.execute(query+' ORDER BY attempts,work LIMIT 1',values).fetchone()
             if row is None:return False
             db.execute("UPDATE eu_works SET status='running',attempts=attempts+1 WHERE work=?",(row['work'],))
         try:
             for item in json.loads(row['items']):
+                if self.stop.is_set():raise DownloadError('worker_stopping',retryable=True)
                 url=item['url']
                 with self.db() as db:
                     if db.execute('SELECT 1 FROM eu_documents WHERE url=?',(url,)).fetchone():continue
@@ -267,6 +296,11 @@ class EuropeanArchive(Archive):
             with self.db() as db:
                 db.execute("UPDATE eu_works SET status='complete',error=NULL,finished_at=? WHERE work=?",(utc(),row['work']))
         except DownloadError as exc:
+            if exc.code=='worker_stopping':
+                with self.db() as db:
+                    db.execute("UPDATE eu_works SET status='pending',attempts=?,error=NULL WHERE work=?",
+                        (row['attempts'],row['work']))
+                return True
             retry=exc.retryable and row['attempts']<7
             digest=self.store(exc.payload) if exc.payload else None
             with self.db() as db:
@@ -391,16 +425,18 @@ class EuropeanArchive(Archive):
         (self.root/'verification.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
         return result
 
-    def run(self):
+    def run(self, download_workers=4):
+        if not 1<=download_workers<=8:raise ValueError('Download workers must be between 1 and 8')
         import signal
         for signum in (signal.SIGINT,signal.SIGTERM):
             signal.signal(signum,lambda *_:self.stop.set())
         with (self.root/'eu-worker.lock').open('a') as lock:
             fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
             if self.setting('eu_blocker'):raise RuntimeError('Resolve the recorded EU blocker before resuming')
-            self.set('eu_started',{'pid':__import__('os').getpid(),'at':utc()})
+            self.set('eu_started',{'pid':__import__('os').getpid(),'at':utc(),
+                'download_workers':download_workers,'request_interval':self.rate.interval})
             with self.db() as db:db.execute("UPDATE eu_works SET status='pending' WHERE status='running'")
-            with ThreadPoolExecutor(max_workers=3) as pool:
+            with ThreadPoolExecutor(max_workers=download_workers+1) as pool:
                 discovery=pool.submit(self.discovery)
                 def worker():
                     while not self.stop.is_set():
@@ -417,7 +453,7 @@ class EuropeanArchive(Archive):
                     try:worker()
                     except Exception as exc:
                         self.set('eu_blocker','worker_'+type(exc).__name__);self.stop.set();raise
-                workers=[pool.submit(supervised_worker) for _ in range(2)]
+                workers=[pool.submit(supervised_worker) for _ in range(download_workers)]
                 try:discovery.result()
                 except Exception as exc:
                     if not self.stop.is_set():self.set('eu_blocker','discovery_'+type(exc).__name__+':'+str(exc))
@@ -462,9 +498,12 @@ def valid_document(raw, content_type, format_):
 if __name__=='__main__':
     import argparse
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('command',choices=('run','status','verify','requeue-supported','reconcile-inventory','refresh-inventory'));p.add_argument('--root',default=ROOT)
-    args=p.parse_args();archive=EuropeanArchive(args.root)
+    p.add_argument('--workers',type=int,default=4)
+    args=p.parse_args()
+    if not 1<=args.workers<=8:p.error('--workers must be between 1 and 8')
+    archive=EuropeanArchive(args.root)
     if args.command=='run':
-        archive.run()
+        archive.run(args.workers)
         if not archive.status()['all_available_records_archived']:raise SystemExit(2)
     elif args.command=='verify':
         result=archive.verify();print(json.dumps(result,ensure_ascii=False))

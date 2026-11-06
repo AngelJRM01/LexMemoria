@@ -48,3 +48,19 @@ La reconciliación conserva el recuento inicial y archiva la nueva respuesta ofi
 - El primer recuento oficial fue 184.706, el inventario inicial terminó con 184.708 y una consulta posterior devolvió 184.726. La actualización estaba en curso al registrar esta evidencia. [Reconciliación](validation/eu-reconciliation-2026-11-06.json).
 
 La descarga continúa incompleta. Estos controles no constituyen revisión jurídica ni activan aún la integración del corpus europeo en el cliente móvil.
+
+
+## Ajuste de rendimiento y reintentos
+
+El trabajador utiliza cuatro descargas concurrentes por defecto, manteniendo el limitador compartido de 0,6 segundos entre comienzos de peticiones. La concurrencia se puede limitar con `python -m app.eu_bulk run --workers N` (entre 1 y 8). Las páginas de identificadores contienen hasta 1.000 registros; la consulta de manifestaciones sigue dividiéndose en grupos de 50 y páginas de 1.000 filas. Las consultas SQLite de identificadores se dividen en grupos de 500 parámetros.
+
+Cuando hay registros nuevos pendientes, se da una oportunidad cada cinco minutos a un reintento vencido. Esto evita que un error temporal espere hasta el final de todo el inventario, sin convertir los errores en un bucle que monopolice la cola. Se respetan las fechas de reintento y se conservan los contadores e incidencias.
+
+94 pruebas backend pasan tras este ajuste. Una prueba con barrera verifica que se ejecutan cuatro trabajos simultáneos sin cambiar el intervalo del limitador; otra comprueba la alternancia entre registros nuevos y reintentos. Se recuperaron y verificaron 473 archivos (469 objetos únicos) correspondientes a los registros CELEX `31987R0335`, `02013D0255-20170321` y `02002R1774-20050101`, reutilizando los adjuntos ya guardados. Los demás reintentos siguen en la cola supervisada y no se presentan como completos.
+
+
+La espera del limitador no retiene su mutex y puede interrumpirse para guardar un checkpoint. Una interrupción controlada devuelve el trabajo a pendiente sin gastar un reintento ni descartar adjuntos. Cada petición comprueba el plazo compartido de espera de la fuente, incluso cuando otra instancia lo ha ampliado. Un HTTP 429 incrementa de forma persistente el intervalo entre peticiones para reducir presión; nunca reduce un intervalo más conservador configurado por el operador. Durante una pausa de la fuente, el estado del supervisor es `waiting_source` o `retry_scheduled`, con la fecha de reanudación, en vez de aparentar actividad de red.
+
+[Comprobación de los tres registros recuperados](validation/eu-recovered-2026-11-06.json). El intervalo operativo se ajustó conservadoramente a un segundo por petición tras observar la pausa de la fuente; cuatro transferencias simultáneas no significan cuatro peticiones por segundo.
+
+[Verificación posterior de los 55.171 archivos guardados](validation/eu-integrity-update-2026-11-06.json): integridad correcta y descarga global todavía incompleta.

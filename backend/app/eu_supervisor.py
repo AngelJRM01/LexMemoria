@@ -80,7 +80,9 @@ class Supervisor:
         status=a.status()
         if active:
             a.set('eu_worker_start_failures',0)
-            return self.publish('running',worker_active=True,worker=a.setting('eu_started'),
+            resume=a.setting('eu_source_resume_after',0)
+            return self.publish('waiting_source' if resume>now else 'running',
+                worker_active=True,worker=a.setting('eu_started'),resume_after=resume if resume>now else None,
                 identified=status['identified'],documents=status['documents'],states=status['states'])
         if self.child is not None:
             return self.publish('starting_worker',worker_pid=self.child.pid,worker_active=False)

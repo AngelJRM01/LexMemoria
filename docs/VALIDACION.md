@@ -82,3 +82,7 @@ El cotejo completo de las 12.451 normas y 695.207 versiones de bloques pasa: [in
 ## Archivo europeo supervisado · 6 de noviembre de 2026
 
 89 pruebas backend pasan. Se verificaron 47.532 objetos y 49.369 archivos del archivo real sin errores de integridad; el informe indica expresamente `download_complete: false`. Se probó recuperación desde checkpoints y adopción del trabajador vivo. [Evidencia, operación y límites](DESCARGA_EUROPEA.md). No hay cambios en el cliente móvil en esta intervención.
+
+El ajuste posterior del trabajador europeo pasa 94 pruebas backend: cuatro trabajos concurrentes con el limitador conservado, páginas de inventario mayores y prioridad periódica de reintentos. Se recuperaron tres registros reales que habían quedado con errores temporales; el archivo general sigue incompleto.
+
+Se añaden comprobaciones de cancelación durante backoff, mutex libre durante la espera, persistencia del plazo compartido y reducción de presión tras HTTP 429. Los tres registros recuperados reúnen 473 archivos, con 469 objetos únicos verificados.

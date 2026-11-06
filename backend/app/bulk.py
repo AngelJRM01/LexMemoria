@@ -52,12 +52,20 @@ class RateLimiter:
         self.next_at = 0.0
         self.lock = threading.Lock()
 
-    def acquire(self):
-        with self.lock:
-            delay = self.next_at - time.monotonic()
-            if delay > 0:
-                time.sleep(delay)
-            self.next_at = time.monotonic() + self.interval
+    def acquire(self, stop=None):
+        while True:
+            if stop is not None and stop.is_set():
+                raise DownloadError('worker_stopping',retryable=True)
+            with self.lock:
+                delay = self.next_at - time.monotonic()
+                if delay <= 0:
+                    self.next_at = time.monotonic() + self.interval
+                    return
+            # Do not hold the mutex while waiting: another response may extend
+            # Retry-After, or the worker may need a checkpointed shutdown.
+            if stop is None:time.sleep(min(delay,1))
+            elif stop.wait(min(delay,1)):
+                raise DownloadError('worker_stopping',retryable=True)
 
     def defer(self, seconds):
         with self.lock:

@@ -1,12 +1,14 @@
 import fcntl
 import json
 import time
+import signal
+import threading
 from unittest.mock import Mock
 
 import httpx
 import pytest
 
-from app.bulk import DownloadError, utc
+from app.bulk import DownloadError, RateLimiter, utc
 from app.eu_bulk import EuropeanArchive, transient_error
 from app.eu_supervisor import Supervisor, recoverable_blocker, worker_active
 
@@ -28,6 +30,7 @@ def test_retry_after_survives_a_worker_restart(tmp_path):
     assert a.setting('eu_source_resume_after')>=time.time()+115
     reopened=EuropeanArchive(tmp_path)
     assert reopened.rate.next_at>=time.monotonic()+115
+    assert reopened.rate.interval>=1
 
 
 def test_inventory_drift_retains_original_count_and_requires_actual_reconciliation(tmp_path):
@@ -232,3 +235,77 @@ def test_verified_archive_stays_under_watch_and_rescans_when_due(tmp_path,monkey
     monkeypatch.setattr('app.eu_supervisor.subprocess.Popen',Mock(return_value=child))
     assert s.tick()['state']=='starting_worker'
     assert a.setting('eu_discovery_complete') is False
+
+
+def test_worker_pool_runs_four_jobs_and_preserves_the_request_limiter(tmp_path,monkeypatch):
+    a=EuropeanArchive(tmp_path)
+    monkeypatch.setattr(signal,'signal',lambda *_:None)
+    a.discovery=lambda:None
+    barrier=threading.Barrier(4,timeout=5)
+    lock=threading.Lock()
+    jobs=list(range(4));active=0;peak=0;finished=[]
+    def download():
+        nonlocal active,peak
+        with lock:
+            if not jobs:return False
+            job=jobs.pop();active+=1;peak=max(peak,active)
+        barrier.wait()
+        with lock:active-=1;finished.append(job)
+        return True
+    a.download_one=download
+    a.run(download_workers=4)
+    assert peak==4 and sorted(finished)==list(range(4))
+    assert a.rate.interval==.6
+    assert a.setting('eu_started')['download_workers']==4
+    with pytest.raises(ValueError):a.run(download_workers=9)
+
+
+def test_due_retries_get_periodic_priority_without_starving_new_records(tmp_path):
+    a=EuropeanArchive(tmp_path)
+    with a.db() as db:
+        for name,state,attempts in [('a','pending',0),('b','pending',0),('y','retry',1),('z','retry',1)]:
+            db.execute('INSERT INTO eu_works(work,celex,items,status,attempts) VALUES (?,?,?,?,?)',
+                (name,name,json.dumps([{'type':'pdf','url':'https://publications.europa.eu/'+name}]),state,attempts))
+    calls=[]
+    def fetch(url):
+        calls.append(url.rsplit('/',1)[-1]);return b'%PDF-1.7\n','application/pdf'
+    a.fetch=fetch
+    assert a.download_one() and a.download_one()
+    assert calls==['y','a']
+    a.set('eu_last_priority_retry',0)
+    assert a.download_one() and calls==['y','a','z']
+    assert a.download_one() and calls==['y','a','z','b']
+
+
+def test_rate_wait_releases_mutex_and_can_be_cancelled():
+    rate=RateLimiter(.6);rate.defer(3600)
+    class Stop:
+        def is_set(self):return False
+        def wait(self,seconds):
+            assert rate.lock.acquire(blocking=False)
+            rate.lock.release()
+            assert 0<seconds<=1
+            return True
+    with pytest.raises(DownloadError,match='worker_stopping'):rate.acquire(Stop())
+
+
+def test_stopped_worker_retains_partial_files_without_spending_a_retry(tmp_path):
+    a=EuropeanArchive(tmp_path)
+    with a.db() as db:db.execute('INSERT INTO eu_works(work,celex,items) VALUES (?,?,?)',
+        ('work','celex',json.dumps([{'type':'pdf','url':'https://publications.europa.eu/file'}])))
+    fetch=Mock();a.fetch=fetch;a.stop.set()
+    assert a.download_one()
+    fetch.assert_not_called()
+    with a.db() as db:
+        row=db.execute('SELECT * FROM eu_works').fetchone()
+        assert row['status']=='pending' and row['attempts']==0
+
+
+def test_shared_source_pause_prevents_http_until_cancelled(tmp_path):
+    a=EuropeanArchive(tmp_path)
+    a.set('eu_source_resume_after',time.time()+3600)
+    a.stop.set()
+    client=Mock();a.client=client
+    with pytest.raises(DownloadError,match='worker_stopping'):
+        a.fetch('https://publications.europa.eu/file')
+    client.stream.assert_not_called()
