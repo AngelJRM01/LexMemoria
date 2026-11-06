@@ -2,7 +2,7 @@
 
 El titular ha comunicado el proyecto Firebase público `lexmemoria-aa86a` y acceso de Render al repositorio. [Pasos concretos y selección de recursos](PRODUCCION_TITULAR.md). Los servicios aún no se han creado desde este entorno.
 
-Render es la opción inicial recomendada para FastAPI y PostgreSQL administrado. Firebase Auth puede gestionar Google y Apple; FCM/APNs debe conectarse a las cuentas del titular para push. No se ha contratado ni desplegado ningún servicio.
+Render es la opción inicial recomendada para FastAPI y PostgreSQL administrado. Firebase Auth puede gestionar Google y Apple; FCM/APNs debe conectarse a las cuentas del titular para push. El titular ha creado una API y PostgreSQL de pruebas en Render con planes gratuitos y ha comunicado una respuesta /health correcta. No se ha validado producción ni contratado infraestructura comercial.
 
 `render.yaml` es una propuesta revisable con API y cron. Los planes indicados tienen coste: comprobar precios, región y condiciones antes de crearlos. Añadir PostgreSQL administrado y configurar la misma `DATABASE_URL` en ambos procesos; no usar SQLite efímero en Render. El backend acepta URLs `postgres://`, `postgresql://` y `postgresql+psycopg://`. El proceso horario consulta el día anterior en Madrid y deduplica ambos inventarios; no requiere cambiar el cron durante el horario de verano. Huecos históricos requieren `backfill` para sumarios y `consolidations AAAA-MM-DD` para el catálogo. Domingos sin sumario pueden requerir revisión del resultado BOE; no se interpreta automáticamente un 404 como cobertura completa.
 

@@ -1,0 +1,44 @@
+{
+  "appVersion": "0.5.0+8",
+  "recordedAt": "2026-11-06T11:30:41.489656+00:00",
+  "baselineCommit": "fed3e5f",
+  "firebaseProject": "lexmemoria-aa86a",
+  "apiUrl": "https://lexmemoria-api.onrender.com",
+  "flutter": {
+    "passed": 89,
+    "type": "unit/widget with provider/HTTP mocks",
+    "evidence": "google-0.5.0/flutter-tests.txt"
+  },
+  "backend": {
+    "passed": 144,
+    "type": "unit/local HTTP and SQLite; signed RSA fixtures, not real Google login",
+    "evidence": "google-0.5.0/backend-tests.txt"
+  },
+  "analyze": {
+    "issues": 0,
+    "evidence": "google-0.5.0/flutter-analyze.txt"
+  },
+  "android": {
+    "releaseBuilt": true,
+    "evidence": "android-google-0.5.0.json"
+  },
+  "web": {
+    "releaseBuilt": true,
+    "googleSignInEnabled": false,
+    "evidence": "google-0.5.0/web-build.txt"
+  },
+  "googleAndroidConfigurationReceivedAndValidated": true,
+  "configurationFileTrackedInGit": false,
+  "googleRealAccountTested": false,
+  "oppoPhysicalUpdateTested": false,
+  "iosBuildTestedLocally": false,
+  "renderHealthOwnerReported": true,
+  "renderAccessFromCloudEnvironment": "Blocked by outbound network policy; no direct service result claimed",
+  "limitations": [
+    "Real Google login requires owner/device acceptance.",
+    "Generic GitHub builds require owner Firebase config, build flags and matching stable certificate to enable Google.",
+    "Federated revocation and provider-coordinated deletion remain pending.",
+    "Legal source versions must be present in backend before cited-card upload; no claim of full corpus sync acceptance."
+  ],
+  "releasePluginRegistrationFix": "Flutter --no-pub skips native release regeneration after tests. Helper now permits supported regeneration; final release excludes integration_test."
+}

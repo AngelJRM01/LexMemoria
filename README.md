@@ -13,7 +13,7 @@ Aplicación Flutter para estudiar Derecho español en Universidad y Oposiciones,
 - Repaso con cuatro grados, programación SM-2 adaptada `sm2-1`, eventos persistentes, bloqueo por revisión normativa, sesión guardada, borradores y deshacer local.
 - Plan de estudio con cola que respeta descansos y vacaciones, previsión semanal, fecha de examen y asignaturas personales. Simulacro cronometrado con banco congelado, respuestas guardadas, penalización y corrección al finalizar. El contenido no se presenta como examen oficial.
 - Historial, progreso por mazo, exportación/restauración JSON, consentimientos separados y borrado local confirmado.
-- Identidad remota opcional con tokens en almacenamiento seguro, subida de tarjetas/revisiones con identificadores estables y conflictos explícitos, exportación/borrado remoto. Recuperación con código de un solo uso y descarga de tarjetas, estados e historial; los conflictos se conservan. OAuth/email y resolución avanzada de conflictos siguen pendientes.
+- Identidad remota opcional con tokens en almacenamiento seguro, subida de tarjetas/revisiones con identificadores estables y conflictos explícitos, exportación/borrado remoto. Recuperación con código de un solo uso y descarga de tarjetas, estados e historial; los conflictos se conservan. El acceso Google Android dispone de APK configurado y requiere aceptación real en dispositivo; email, Apple y resolución avanzada de conflictos siguen pendientes.
 - Backend con SQLite para desarrollo o PostgreSQL mediante `DATABASE_URL`, API OpenAPI, sesiones de 15 minutos, refresh rotatorio, revocación, control de propietario, ETag y claves de idempotencia.
 - Conector BOE XML con timeout/reintentos, SHA-256, XML original, versiones inmutables, publicación transaccional, cuarentena y bloqueo conservador de tarjetas afectadas. Cola persistente de importación con lotes, backoff, leases y reanudación; vigilancia diaria y backfill por fecha civil de Madrid, con eventos de publicación deduplicados.
 - API editorial con separación de autor y revisores, doble aprobación y acceso deshabilitado por defecto hasta configurar MFA. **No equivale a un backoffice de producción ni a una pasarela MFA implementada.**
@@ -47,7 +47,7 @@ python3 -m venv /workspace/lexmemoria-venv
 
 Se escucha solo en loopback. Para un móvil real despliega detrás de HTTPS; configura esa URL en Perfil. La consulta de metadatos permite loopback de desarrollo, pero la subida de datos privados exige HTTPS. No desactives TLS.
 
-Comprobación interna: `curl --fail http://127.0.0.1:8000/health`. Documentación OpenAPI en la ruta `/docs` del servidor. No hay despliegue público ni enlaces de preview en este entorno.
+Comprobación interna: `curl --fail http://127.0.0.1:8000/health`. Documentación OpenAPI en la ruta `/docs` del servidor. El titular ha desplegado una API de pruebas en Render y comunicado /health correcto; [estado y pasos](docs/PRODUCCION_TITULAR.md). Esto no acredita producción ni pruebas reales de Google/sincronización.
 
 PostgreSQL: configura `DATABASE_URL=postgresql+psycopg://…` mediante variables seguras, sin incluir credenciales en el repositorio. El modelo actual usa agregados JSON y tablas separadas para cuentas, tokens, idempotencia y auditoría; la normalización y migraciones del esquema completo de V2 siguen pendientes.
 
@@ -132,3 +132,7 @@ Materias con contenido, filtro por las 17 comunidades del catálogo, paginación
 ## Auditoría y desarrollo V3 · 0.4.1
 
 [Matriz de 100 requisitos y reglas](docs/v3/MATRIZ_REQUISITOS.md) y [orden de implementación, evidencia y aceptación por fase](docs/v3/PLAN_Y_EVIDENCIAS.md). Primer incremento: restauración recuperable y escrituras de estudio confirmadas antes de publicar el estado, sesiones vinculadas a cuenta/servidor, compatibilidad de respuestas de varios huecos y extracción incremental de HTML europeo en un archivo derivado separado. Las fases siguen abiertas; las integraciones externas y la aceptación nativa no se consideran aprobadas por pruebas locales.
+
+## Google Android · 0.5.0
+
+Acceso Google mediante Firebase y vinculación a una cuenta invitada conservando su identidad. Configuración de proyecto/paquete/firma validada y APK release preparado con la API del titular. [Implementación, build y aceptación pendiente](docs/GOOGLE_ANDROID.md). El acceso con Google real requiere la prueba en dispositivo; Apple y Google en iOS/web siguen pendientes.

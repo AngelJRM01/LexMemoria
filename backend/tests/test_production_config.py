@@ -30,3 +30,19 @@ def test_postgres_configuration_uses_expected_driver_without_contacting_provider
     db.connect(f'{scheme}://user:password@server/database')
     assert received['url'].startswith('postgresql+psycopg://')
     assert received['options']['pool_pre_ping'] is True
+
+
+def test_health_identifies_actual_database_and_public_project_without_exposing_connection(monkeypatch,tmp_path):
+    from fastapi.testclient import TestClient
+    from app.main import create_app
+    monkeypatch.setenv('LEXMEMORIA_ENV','development')
+    monkeypatch.setenv('FIREBASE_PROJECT_ID','lexmemoria-aa86a')
+    app=create_app('sqlite:///'+str(tmp_path/'private-location.db'))
+    with TestClient(app) as client:
+        response=client.get('/health')
+        assert response.status_code==200
+        body=response.json()
+        assert body['database']=='sqlite'  # Never present a dev DB as PostgreSQL.
+        assert body['version']==app.version and body['version']!='0.1.0'
+        assert body['firebaseProject']=='lexmemoria-aa86a'
+        assert 'private-location' not in response.text and 'sqlite:///' not in response.text

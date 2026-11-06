@@ -9,6 +9,7 @@ import 'widgets.dart';
 import 'planning.dart';
 import 'remote.dart';
 import 'workspace.dart';
+import 'google_identity.dart';
 
 ShareParams backupParameters(String json) => ShareParams(
       files: [XFile.fromData(utf8.encode(json), mimeType: 'application/json')],
@@ -71,7 +72,8 @@ class ProfilePage extends StatelessWidget {
 
 class AccountPage extends StatefulWidget {
   final AppStore store;
-  const AccountPage({super.key, required this.store});
+  final GoogleIdentity? googleIdentity;
+  const AccountPage({super.key, required this.store, this.googleIdentity});
   @override
   State<AccountPage> createState() => _AccountPageState();
 }
@@ -79,6 +81,30 @@ class AccountPage extends StatefulWidget {
 class _AccountPageState extends State<AccountPage> {
   bool busy = false;
   String? code;
+  late final GoogleIdentity google =
+      widget.googleIdentity ?? NativeGoogleIdentity();
+  Future<void> connectGoogle() async {
+    final remote = RemoteSync(widget.store);
+    var confirmed = false;
+    if (widget.store.data['remoteUserId'] == null &&
+        remote.needsAccountConfirmation) {
+      confirmed = await confirm(context, 'Conectar estos datos con Google',
+          'Al guardar en la cuenta elegida podrás unir las tarjetas y el progreso de este espacio. Guarda una copia si quieres mantenerlos separados.');
+      if (!confirmed || !mounted) return;
+    }
+    setState(() => busy = true);
+    await perform(context, () async {
+      final connected = await connectGoogleIdentity(
+          widget.store, google, remote,
+          confirmAccountChange: confirmed);
+      if (connected && mounted) {
+        toast(context,
+            'Cuenta conectada. Puedes guardar o recuperar tu progreso.');
+      }
+    });
+    if (mounted) setState(() => busy = false);
+  }
+
   Future<void> protect() async {
     setState(() => busy = true);
     await perform(context, () async {
@@ -121,6 +147,17 @@ class _AccountPageState extends State<AccountPage> {
               : 'Las cuentas en la nube todavía no están disponibles en esta instalación. Puedes conservar todo tu progreso con una copia de tus datos.'),
           const SizedBox(height: 24),
           if (configured) ...[
+            if (google.available) ...[
+              OutlinedButton.icon(
+                  onPressed: busy ? null : connectGoogle,
+                  icon: const Icon(Icons.login),
+                  label: Text(s.data['remoteGoogleLinked'] == true
+                      ? 'Verificar cuenta de Google'
+                      : s.data['remoteUserId'] != null
+                          ? 'Vincular Google a mi cuenta'
+                          : 'Continuar con Google')),
+              const SizedBox(height: 12),
+            ],
             FilledButton.icon(
                 onPressed: busy ? null : protect,
                 icon: const Icon(Icons.cloud_upload_outlined),
@@ -384,7 +421,7 @@ class SettingsPage extends StatelessWidget {
             ])),
         const SizedBox(height: 24),
         const Text(
-            'LexMemoria 0.4.1 · Versión de prueba\nProducto educativo independiente de las administraciones públicas.',
+            'LexMemoria 0.5.0 · Versión de prueba\nProducto educativo independiente de las administraciones públicas.',
             style: TextStyle(fontSize: 12)),
       ]));
 }
@@ -459,7 +496,7 @@ class PrivacyPage extends StatelessWidget {
             'Se guardan perfiles, tarjetas, notas, respuestas de simulacros e historial hasta que los borres. En Android/iOS se utiliza SQLCipher con clave separada en Keychain/Keystore; en web se usan preferencias locales sin este cifrado adicional. Evita guardar datos especialmente sensibles. Exportar o compartir crea una copia JSON legible bajo tu control, incluida la copia anterior a la última restauración si existe.'),
         const Section('Conexiones'),
         const Text(
-            'Los textos del catálogo ampliado se descargan desde GitHub al solicitarlos, sin enviar tarjetas, notas ni progreso. Los paquetes públicos se guardan aparte y se pueden volver a descargar. Al sincronizar se consulta la API que configures. Al abrir una fuente sales al navegador y se aplica la privacidad del sitio de destino. La sincronización necesita un servidor configurado. La cuenta con código de recuperación permite trasladar tarjetas y progreso; el código debe guardarse fuera del móvil. Google y Apple requieren configurar sus proveedores antes de habilitarlos.'),
+            'Los textos del catálogo ampliado se descargan desde GitHub al solicitarlos, sin enviar tarjetas, notas ni progreso. Los paquetes públicos se guardan aparte y se pueden volver a descargar. Al sincronizar se consulta la API que configures. Al abrir una fuente sales al navegador y se aplica la privacidad del sitio de destino. La sincronización necesita un servidor configurado. La cuenta con código de recuperación permite trasladar tarjetas y progreso; el código debe guardarse fuera del móvil. El acceso con Google se muestra en Android cuando está configurado para esa versión. Apple todavía no está habilitado.'),
         const Section('Fuentes y contenido'),
         const Text(
             'Las referencias iniciales son un inventario de normas del BOE, no una declaración de cobertura, vigencia o revisión jurídica. Los textos consolidados son informativos. Las tarjetas personales no son contenido editorial verificado.'),

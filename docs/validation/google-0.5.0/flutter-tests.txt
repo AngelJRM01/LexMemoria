@@ -1,0 +1,91 @@
+00:00 +0: loading mobile/test/learning_test.dart
+00:00 +0: mobile/test/learning_test.dart: SM-2 intervals and lapse preserve versioned history inputs
+00:00 +1: mobile/test/learning_test.dart: score distinguishes unanswered, wrong and correct
+00:00 +2: mobile/test/learning_test.dart: reference inventory never claims downloaded or verified
+00:00 +3: mobile/test/learning_test.dart: search normalizes accents without changing source
+00:01 +4: mobile/test/network_store_test.dart: catalogue pages preserve downloaded rows and send cursor
+00:01 +5: mobile/test/network_store_test.dart: failed catalogue request preserves cache and clears loading
+00:01 +6: mobile/test/network_store_test.dart: legal feed deduplicates id and keeps editorial uncertainty
+00:01 +7: mobile/test/network_store_test.dart: API URLs reject credentials and nonlocal cleartext
+00:01 +8: mobile/test/persistence_test.dart: multi-megabyte snapshots retain Unicode at native cursor-safe chunk boundaries
+00:01 +9: mobile/test/persistence_test.dart: legacy data is removed only after verified destination write
+00:02 +10: mobile/test/persistence_test.dart: legacy data is removed only after verified destination write
+00:02 +11: mobile/test/persistence_test.dart: legacy data is removed only after verified destination write
+00:03 +12: mobile/test/product_v2_test.dart: true false accepts response then reveals feedback
+00:03 +13: mobile/test/product_v2_test.dart: true false accepts response then reveals feedback
+00:03 +14: mobile/test/product_v2_test.dart: ordering exposes accessible controls and records order
+00:03 +15: mobile/test/product_v2_test.dart: guest layout supports text scale 200 percent
+00:04 +16: mobile/test/product_v2_test.dart: guest layout supports text scale 200 percent
+00:04 +17: mobile/test/product_v2_test.dart: guest layout supports text scale 200 percent
+00:04 +18: mobile/test/remote_test.dart: pull restores cards, history and state without duplicate events
+00:04 +19: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:04 +20: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:04 +21: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:04 +22: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:04 +23: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:04 +24: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:04 +25: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:04 +26: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:04 +27: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:04 +28: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:04 +29: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:04 +30: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:04 +31: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:04 +32: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:04 +33: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:04 +34: mobile/test/product_v2_test.dart: bundled BOE texts verify hashes and reload without copying text into preferences
+00:05 +35: mobile/test/product_v2_test.dart: workspace three-way merge combines independent edits and retains conflicts
+00:11 +36: mobile/test/startup_test.dart: cipher initialization uses queries for row-returning PRAGMAs
+00:11 +37: mobile/test/startup_test.dart: invalid saved data is closed and preserved without reset
+00:11 +38: mobile/test/startup_test.dart: startup failure exposes a safe code and retry can recover
+00:13 +39: mobile/test/startup_test.dart: startup failure exposes a safe code and retry can recover
+00:13 +40: mobile/test/startup_test.dart: startup failure exposes a safe code and retry can recover
+00:14 +41: mobile/test/store_test.dart: changing track preserves progress and backup roundtrip
+00:14 +42: mobile/test/store_test.dart: changing track preserves progress and backup roundtrip
+00:14 +43: mobile/test/store_test.dart: new metadata quarantines stale offline pack and blocks linked card
+00:14 +44: mobile/test/store_test.dart: due queue obeys rest and vacation without deleting history
+00:14 +45: mobile/test/store_test.dart: due queue obeys rest and vacation without deleting history
+00:14 +46: mobile/test/store_test.dart: due queue obeys rest and vacation without deleting history
+00:14 +47: mobile/test/store_test.dart: due queue obeys rest and vacation without deleting history
+00:14 +48: mobile/test/store_test.dart: due queue obeys rest and vacation without deleting history
+00:15 +49: mobile/test/widget_test.dart: guest can open library without signing in
+00:16 +50: mobile/test/widget_test.dart: guest can open library without signing in
+00:17 +51: mobile/test/widget_test.dart: guest can open library without signing in
+00:18 +52: mobile/test/browsing_exercises_test.dart: library paginates, jumps to a page and resets on search
+00:19 +53: mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
+00:20 +54: mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
+00:20 +55: mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
+00:20 +56: mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
+00:20 +57: mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
+00:21 +58: mobile/test/browsing_exercises_test.dart: long articles produce brief multi-target clozes and source-based expression tests
+00:21 +59: mobile/test/browsing_exercises_test.dart: each numbered cloze accepts an answer and reveals individual feedback
+00:21 +60: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:21 +61: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:23 +62: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:24 +63: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:25 +64: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:25 +65: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:26 +66: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:26 +67: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:26 +68: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:26 +69: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:26 +70: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:26 +71: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:26 +72: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:28 +73: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:28 +74: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:28 +75: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:28 +76: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:30 +77: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:31 +78: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:31 +79: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:31 +80: mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:31 +81: mobile/test/browsing_exercises_test.dart: renewal archives unedited v1 questions while retaining edits, states and history
+00:33 +82: mobile/test/google_identity_test.dart: cancelled Google selection never contacts backend or changes local data
+00:33 +83: mobile/test/google_identity_test.dart: Firebase token is exchanged for a secure backend session without uploading study content
+00:33 +84: mobile/test/google_identity_test.dart: existing guest links Google and retains account, aliases and review state
+00:33 +85: mobile/test/google_identity_test.dart: link conflict never falls back to login or switches study accounts
+00:33 +86: mobile/test/google_identity_test.dart: changing server during Google selection cancels before any token is sent
+00:33 +87: mobile/test/google_identity_test.dart: changing account during login HTTP reply cannot overwrite the new account
+00:33 +88: mobile/test/google_identity_test.dart: Google button appears only with a configured API and provider
+00:34 +89: All tests passed!

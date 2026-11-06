@@ -164,7 +164,9 @@ Json decodeStudyBackup(String text) {
     for (final item in course['assessments'] as List? ?? []) {
       if (item is! Map || item['title'] is! String) invalid('courses');
       for (final key in ['weight', 'maximum']) {
-        if (item[key] is! num || !(item[key] as num).isFinite || item[key] <= 0) {
+        if (item[key] is! num ||
+            !(item[key] as num).isFinite ||
+            item[key] <= 0) {
           invalid('courses');
         }
       }
@@ -197,6 +199,7 @@ Json decodeStudyBackup(String text) {
     'auth',
     'remoteUserId',
     'remoteServer',
+    'remoteGoogleLinked',
     'remoteCardIds',
     'remoteCardRevisions',
     'workspaceBase'

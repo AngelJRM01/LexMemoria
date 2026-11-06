@@ -6,10 +6,10 @@ La aplicación es ejecutable en web y dispone de APK Android release de prueba, 
 
 ## Integraciones y operación pendientes
 
-- Proyecto Firebase real, configuración de aplicaciones/Google/Apple, interfaz federada nativa, vinculación y revocación probadas con el proveedor.
+- Proyecto Firebase `lexmemoria-aa86a` comunicado por el titular, proveedor Google y app Android de pruebas configurados; interfaz Google Android implementada y APK verificado, pendiente de aceptación real en dispositivo. Faltan Apple, Google en iOS/web, firma estable y revocación federada probada con el proveedor. [Estado Google Android](GOOGLE_ANDROID.md).
 - FCM/APNs, permisos del sistema, tokens de dispositivo, entrega push, quiet hours y enlaces profundos. La bandeja interna no acredita entrega push.
 - Google Play Billing/StoreKit: productos y precios aprobados, comprobación servidor con tiendas reales, webhooks autenticados, restauración, reembolsos, gracia y revocación. El endpoint de compras sigue rechazando compras sin verificar.
-- Render/hosting y PostgreSQL administrado contratados/configurados por el titular. El blueprint es revisable y no ha sido desplegado. Faltan dominio/TLS público, rate limiting compartido para múltiples réplicas, migraciones completas, backups PostgreSQL, observabilidad, alertas, presupuestos y RPO/RTO aprobados.
+- El titular ha creado API y PostgreSQL de pruebas en Render Free y comunicado /health correcto. Pendiente migrar a un plan con conservación/backups adecuados antes de la caducidad de la base gratuita, verificar PostgreSQL y sincronización reales y completar producción. El blueprint sigue siendo una propuesta; el alta fue manual. Faltan dominio propio si se decide usarlo, rate limiting compartido para múltiples réplicas, migraciones completas, backups PostgreSQL, observabilidad, alertas, presupuestos y RPO/RTO aprobados.
 - Firma de release, App Store Connect/Google Play Console, pruebas sandbox, AAB/symbols/dSYM y publicación. El APK entregado es release firmado para pruebas; falta una firma estable de distribución. iOS no está compilado en esta máquina Linux.
 
 ## Implementación de producto pendiente

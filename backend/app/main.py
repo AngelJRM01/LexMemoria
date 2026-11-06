@@ -26,7 +26,7 @@ def create_app(database_url=None):
     engine, factory = connect(database_url)
     with factory() as session:
         rebuild_index(session)
-    app = FastAPI(title='LexMemoria', version='0.4.1')
+    app = FastAPI(title='LexMemoria', version='0.5.0')
     origins = [v.strip() for v in os.getenv('CORS_ORIGINS', '').split(',') if v.strip()]
     if origins:
         app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=False,
@@ -159,7 +159,8 @@ def create_app(database_url=None):
     @app.get('/health')
     def health(s=Depends(db)):
         s.execute(select(1))
-        return {'status': 'ok', 'version': '0.1.0', 'coverage': 'not-certified'}
+        return {'status': 'ok', 'version': app.version, 'database': engine.dialect.name,
+                'firebaseProject': app.state.identity_verifier.project or None, 'coverage': 'not-certified'}
 
     @app.post('/v1/auth/guest', status_code=201)
     def guest(s=Depends(db)):

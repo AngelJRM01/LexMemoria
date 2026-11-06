@@ -2,7 +2,7 @@
 
 Proyecto Firebase comunicado: **lexmemoria-aa86a**. Es un identificador público, no una credencial ni una prueba de acceso a la consola. El titular confirma que Render tiene acceso a AngelJRM01/LexMemoria. No se ha creado ni contratado ningún servicio desde este entorno.
 
-## Paso actual: seleccionar PostgreSQL
+## Selección inicial de PostgreSQL (realizada por el titular)
 
 En Render abrir **New → PostgreSQL** y preparar:
 
@@ -41,6 +41,10 @@ Crear el proyecto no activa Google/Apple. Hay que habilitar Authentication, conf
 
 El acceso nativo federado todavía requiere implementación e integración del cliente y pruebas con este proyecto. No es necesario crear Firestore para el modelo actual, que guarda progreso en PostgreSQL. No entregar al chat contraseñas, claves privadas, service-account JSON ni archivos de firma. Los datos públicos que sí pueden comunicarse son ID de proyecto, URL pública de API, región, plan y precio.
 
-## Validación de esta preparación
+## Validación inicial de esta preparación (0.4.1)
 
 132 pruebas backend aprobadas, incluidas 12 comprobaciones de configuración productiva. Las pruebas de URLs/driver usan mocks y no representan una conexión PostgreSQL real. Blueprint parseado y revisado: ID público correcto, región común y DATABASE_URL sin valor en Git. No se han desplegado ni contratado servicios.
+
+## Avance posterior: Google Android
+
+El titular creó PostgreSQL Free y API Free en Frankfurt; el primer deploy agotó la espera de detección de puerto y el reintento funcionó según el titular, que comunicó status=ok. La base gratuita caduca el 6 de diciembre de 2026 según el panel. URL confirmada: https://lexmemoria-api.onrender.com. Proveedor Google y app Android de pruebas configurados; archivo recibido y APK 0.5.0 verificado. [Prueba física pendiente y detalles](GOOGLE_ANDROID.md). Tras desplegar el código nuevo, /health permite confirmar el dialecto real de base de datos y el ID público de Firebase; no basta una prueba SQLite local para acreditar PostgreSQL real.

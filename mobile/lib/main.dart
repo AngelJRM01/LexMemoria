@@ -39,7 +39,7 @@ class _AppBootstrapState extends State<AppBootstrap> {
             : kProfileMode
                 ? 'profile'
                 : 'debug';
-        final diagnostic = 'LexMemoria 0.4.1+7 · $mode · $code';
+        final diagnostic = 'LexMemoria 0.5.0+8 · $mode · $code';
         return MaterialApp(
             debugShowCheckedModeBanner: false,
             home: Scaffold(

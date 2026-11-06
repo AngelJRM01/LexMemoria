@@ -16,3 +16,7 @@ local.properties
 coverage/
 
 *.iml
+
+# Native Firebase configuration supplied by the owner for each app/signature.
+google-services.json
+GoogleService-Info.plist

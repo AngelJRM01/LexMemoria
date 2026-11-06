@@ -170,7 +170,7 @@ class RemoteSync {
     }
     final response = await (() async =>
             http.Response.fromStream(await store.client.send(outgoing)))()
-        .timeout(const Duration(seconds: 30));
+        .timeout(Duration(seconds: path.startsWith('/v1/auth/') ? 90 : 30));
     if (base != server ||
         (auth &&
             (store.data['remoteUserId'] != session!['userId'] ||
@@ -201,6 +201,8 @@ class RemoteSync {
   Future<void> saveSession(Json session,
       {bool confirmAccountChange = false}) async {
     final server = base;
+    final expectedUser = store.data['remoteUserId'];
+    final expectedOwner = store.data['localDataOwnerId'];
     for (final key in ['userId', 'accessToken', 'refreshToken']) {
       if (session[key] is! String || (session[key] as String).isEmpty) {
         throw StateError(
@@ -225,6 +227,12 @@ class RemoteSync {
           'accessToken': session['accessToken'],
           'refreshToken': session['refreshToken']
         }));
+    if (base != server ||
+        store.data['remoteUserId'] != expectedUser ||
+        store.data['localDataOwnerId'] != expectedOwner) {
+      throw StateError(
+          'La cuenta ha cambiado mientras se guardaba la sesión. Reintenta.');
+    }
     if (store.data['remoteUserId'] != session['userId'] ||
         store.data['remoteServer'] != server) {
       store.data['reviews'] =
@@ -232,6 +240,7 @@ class RemoteSync {
       store.data.remove('remoteCardIds');
       store.data.remove('remoteCardRevisions');
       store.data.remove('workspaceBase');
+      store.data.remove('remoteGoogleLinked');
     }
     store.data['remoteUserId'] = session['userId'];
     store.data['remoteServer'] = server;
@@ -240,6 +249,28 @@ class RemoteSync {
     await store.save();
     await secure.delete('$prefix:access');
     await secure.delete('$prefix:refresh');
+  }
+
+  Future<void> connectGoogle(String firebaseIdToken,
+      {bool confirmAccountChange = false}) async {
+    if (firebaseIdToken.isEmpty) throw StateError('Identificación incompleta.');
+    final initialUser = store.data['remoteUserId'];
+    final initialOwner = store.data['localDataOwnerId'];
+    if (initialUser != null) {
+      // Link the current account; a conflict must never fall back to logging
+      // into another account or silently reassign its study data.
+      await send('/v1/auth/link', body: {'idToken': firebaseIdToken});
+    } else {
+      final session = await send('/v1/auth/oidc',
+          body: {'idToken': firebaseIdToken}, auth: false);
+      if (store.data['remoteUserId'] != initialUser ||
+          store.data['localDataOwnerId'] != initialOwner) {
+        throw StateError('La cuenta ha cambiado durante el acceso. Reintenta.');
+      }
+      await saveSession(session, confirmAccountChange: confirmAccountChange);
+    }
+    store.data['remoteGoogleLinked'] = true;
+    await store.save();
   }
 
   Future<void> activate({bool confirmAccountChange = false}) async {
@@ -254,6 +285,7 @@ class RemoteSync {
     await secure.delete('$prefix:refresh');
     store.data.remove('remoteUserId');
     store.data.remove('remoteServer');
+    store.data.remove('remoteGoogleLinked');
     // Keep data ownership after logout: another login must not silently upload it.
     await store.save();
   }
