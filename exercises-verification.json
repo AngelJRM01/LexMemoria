@@ -3,13 +3,13 @@
   "allNormsChecked": true,
   "exercises": {
     "qa": 684375,
-    "cloze": 681300,
-    "test": 678464,
-    "reference": 658468
+    "cloze": 2747278,
+    "test": 2827050,
+    "reference": 2127659
   },
   "validationPassed": true,
   "legalReview": "not_performed",
   "catalogueSha256": "e34b6db2adfb3eabc6c8d6651435cfa24b255a270edcd231952b988647a8c3b9",
   "independentProcesses": 4,
-  "elapsedSeconds": 473.67
+  "elapsedSeconds": 878.58
 }
