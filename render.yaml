@@ -5,29 +5,35 @@ services:
     name: lexmemoria-api
     runtime: python
     plan: starter
+    region: frankfurt
     rootDir: backend
     buildCommand: pip install -r requirements.lock
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1 --no-access-log
     healthCheckPath: /health
     autoDeployTrigger: off
     envVars:
+      - key: LEXMEMORIA_ENV
+        value: production
       - key: PYTHON_VERSION
         value: 3.12.14
       - key: DATABASE_URL
         sync: false
       - key: FIREBASE_PROJECT_ID
-        sync: false
+        value: lexmemoria-aa86a
       - key: CORS_ORIGINS
         sync: false
   - type: cron
     name: lexmemoria-boe
     runtime: python
     plan: starter
+    region: frankfurt
     rootDir: backend
     schedule: '15 * * * *'
     buildCommand: pip install -r requirements.lock
     startCommand: python -m app.cli daily && python -m app.cli worker --limit 20
     envVars:
+      - key: LEXMEMORIA_ENV
+        value: production
       - key: PYTHON_VERSION
         value: 3.12.14
       - key: DATABASE_URL

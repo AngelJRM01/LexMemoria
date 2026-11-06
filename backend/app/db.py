@@ -2,6 +2,7 @@ import os
 from datetime import datetime, timezone
 from uuid import uuid4
 from sqlalchemy import create_engine, String, Text, JSON, UniqueConstraint, ForeignKey, event
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 
@@ -73,10 +74,20 @@ class Audit(Base):
 
 
 def connect(url=None):
-    url = url or os.getenv('DATABASE_URL', 'sqlite:///./lexmemoria.db')
+    configured = url if url is not None else os.getenv('DATABASE_URL')
+    if os.getenv('LEXMEMORIA_ENV', 'development') in ('staging', 'production'):
+        try:
+            driver = make_url(configured).drivername if configured else ''
+        except Exception:
+            driver = ''
+        if driver not in ('postgres', 'postgresql', 'postgresql+psycopg'):
+            # Render's filesystem is ephemeral. Never silently create a local
+            # SQLite database when production configuration is missing/wrong.
+            raise RuntimeError('PostgreSQL DATABASE_URL is required in staging/production; local fallback is disabled.')
+    url = configured or 'sqlite:///./lexmemoria.db'
     if url.startswith(('postgres://', 'postgresql://')):
         url = 'postgresql+psycopg://' + url.split('://', 1)[1]
-    engine = create_engine(url, connect_args={'check_same_thread': False} if url.startswith('sqlite') else {})
+    engine = create_engine(url, pool_pre_ping=True, connect_args={'check_same_thread': False} if url.startswith('sqlite') else {})
     if url.startswith('sqlite'):
         @event.listens_for(engine, 'connect')
         def fk(connection, _):

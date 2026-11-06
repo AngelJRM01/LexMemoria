@@ -1,5 +1,7 @@
 # Despliegue propuesto
 
+El titular ha comunicado el proyecto Firebase público `lexmemoria-aa86a` y acceso de Render al repositorio. [Pasos concretos y selección de recursos](PRODUCCION_TITULAR.md). Los servicios aún no se han creado desde este entorno.
+
 Render es la opción inicial recomendada para FastAPI y PostgreSQL administrado. Firebase Auth puede gestionar Google y Apple; FCM/APNs debe conectarse a las cuentas del titular para push. No se ha contratado ni desplegado ningún servicio.
 
 `render.yaml` es una propuesta revisable con API y cron. Los planes indicados tienen coste: comprobar precios, región y condiciones antes de crearlos. Añadir PostgreSQL administrado y configurar la misma `DATABASE_URL` en ambos procesos; no usar SQLite efímero en Render. El backend acepta URLs `postgres://`, `postgresql://` y `postgresql+psycopg://`. El proceso horario consulta el día anterior en Madrid y deduplica ambos inventarios; no requiere cambiar el cron durante el horario de verano. Huecos históricos requieren `backfill` para sumarios y `consolidations AAAA-MM-DD` para el catálogo. Domingos sin sumario pueden requerir revisión del resultado BOE; no se interpreta automáticamente un 404 como cobertura completa.
@@ -8,6 +10,7 @@ La API usa un trabajador mientras el rate limiter es local al proceso. Para vari
 
 Variables (introducir secretos en ajustes, nunca en Git):
 
+- `LEXMEMORIA_ENV`: `staging` o `production` exige una conexión PostgreSQL válida y deshabilita el fallback SQLite local.
 - `DATABASE_URL`: conexión PostgreSQL con TLS según las condiciones del proveedor.
 - `FIREBASE_PROJECT_ID`: identificador público del proyecto; el backend verifica firma RSA, emisor, audiencia, fechas y proveedor Google/Apple mediante certificados oficiales HTTPS. Se necesitan salidas hacia `www.googleapis.com`.
 - `CORS_ORIGINS`: orígenes web exactos separados por comas. Vacío no habilita acceso cruzado. No usar `*` para datos privados.
