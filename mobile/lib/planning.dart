@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart' hide Badge;
 import 'models.dart';
 import 'store.dart';
@@ -17,11 +18,20 @@ class _PlannerPageState extends State<PlannerPage> {
   DateTime? exam;
   late List<int> rest;
   late List<Json> vacations;
+  late List<String> preferredTypes;
+  late Json priorities;
+  late double secondsPerCard;
   @override
   void initState() {
     super.initState();
     goal = (widget.store.profile['dailyGoal'] as num? ?? 20).toDouble();
     hours = (widget.store.profile['hours'] as num? ?? 1).toDouble();
+    secondsPerCard =
+        (widget.store.profile['estimatedSecondsPerCard'] as num? ?? 60)
+            .toDouble();
+    preferredTypes =
+        List<String>.from(widget.store.profile['preferredExerciseTypes'] ?? []);
+    priorities = Json.from(widget.store.profile['deckPriorities'] ?? {});
     exam = DateTime.tryParse(widget.store.profile['examDate'] ?? '');
     rest = List<int>.from(widget.store.profile['restDays'] ?? [7]);
     vacations = (widget.store.profile['vacations'] as List? ?? [])
@@ -37,6 +47,8 @@ class _PlannerPageState extends State<PlannerPage> {
         {
           ...widget.store.profile,
           'dailyGoal': goal.round(),
+          'hours': hours,
+          'estimatedSecondsPerCard': secondsPerCard,
           'restDays': rest,
           'vacations': vacations
         },
@@ -53,6 +65,9 @@ class _PlannerPageState extends State<PlannerPage> {
                         () => widget.store.setProfile({
                               'dailyGoal': goal.round(),
                               'hours': hours,
+                              'estimatedSecondsPerCard': secondsPerCard,
+                              'preferredExerciseTypes': preferredTypes,
+                              'deckPriorities': priorities,
                               'examDate': exam?.toIso8601String(),
                               'restDays': rest,
                               'vacations': vacations
@@ -78,6 +93,60 @@ class _PlannerPageState extends State<PlannerPage> {
                     onChanged: (v) => setState(() => goal = v)),
               ])),
           const SizedBox(height: 20),
+          Details('Preferencias de práctica', children: [
+            const Text(
+                'Los repasos vencidos conservan prioridad. Estas preferencias ordenan las tarjetas nuevas.'),
+            Wrap(spacing: 8, children: [
+              for (final item in {
+                'qa': 'Recuerdo',
+                'cloze': 'Huecos',
+                'test': 'Test',
+                'case': 'Casos',
+                'order': 'Ordenación'
+              }.entries)
+                FilterChip(
+                    label: Text(item.value),
+                    selected: preferredTypes.contains(item.key),
+                    onSelected: (v) => setState(() {
+                          if (v) {
+                            preferredTypes.add(item.key);
+                          } else {
+                            preferredTypes.remove(item.key);
+                          }
+                        })),
+            ]),
+            DropdownButtonFormField<String>(
+                decoration:
+                    const InputDecoration(labelText: 'Dar prioridad a un mazo'),
+                isExpanded: true,
+                items: widget.store.cards
+                    .map((c) => c.deck)
+                    .toSet()
+                    .map((d) => DropdownMenuItem(
+                        value: d,
+                        child: Text(d, overflow: TextOverflow.ellipsis)))
+                    .toList(),
+                onChanged: (v) {
+                  if (v != null) setState(() => priorities[v] = 1);
+                }),
+            for (final entry in priorities.entries.where((e) => e.value == 1))
+              ListTile(
+                  title: Text(entry.key),
+                  trailing: IconButton(
+                      tooltip: 'Quitar prioridad',
+                      icon: const Icon(Icons.close),
+                      onPressed: () =>
+                          setState(() => priorities.remove(entry.key)))),
+            Text('${secondsPerCard.round()} segundos estimados por tarjeta'),
+            Slider(
+                value: secondsPerCard.clamp(15, 300),
+                min: 15,
+                max: 300,
+                divisions: 19,
+                onChanged: (v) => setState(() => secondsPerCard = v)),
+            const Text(
+                'Estimación configurable, sin predecir tus respuestas ni garantizar completar un temario.'),
+          ]),
           Details('Disponibilidad, descansos y vacaciones', children: [
             Text('${hours.toStringAsFixed(1)} horas disponibles al día'),
             Slider(
@@ -161,7 +230,7 @@ class _PlannerPageState extends State<PlannerPage> {
                 contentPadding: EdgeInsets.zero,
                 title: Text(displayDate(day['date'])),
                 subtitle: Text(day['study']
-                    ? '${day['planned']} tarjetas previstas'
+                    ? '${day['planned']} tarjetas · ${day['estimatedMinutes']} min aprox.'
                     : 'Descanso'))),
             const Text(
                 'Se recalcula con tus tarjetas actuales; no anticipa nuevos fallos.'),
@@ -190,6 +259,7 @@ class ExamPage extends StatefulWidget {
 
 class _ExamPageState extends State<ExamPage> {
   Json? attempt;
+  dynamic expectedAttempt;
   int index = 0, minutes = 20, count = 10;
   double penalty = .25;
   Timer? timer;
@@ -197,7 +267,9 @@ class _ExamPageState extends State<ExamPage> {
   void initState() {
     super.initState();
     if (widget.store.data['activeExam'] is Map) {
-      attempt = Json.from(widget.store.data['activeExam']);
+      attempt =
+          Json.from(jsonDecode(jsonEncode(widget.store.data['activeExam'])));
+      expectedAttempt = jsonDecode(jsonEncode(attempt));
     }
     timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted && attempt != null && attempt!['result'] == null) {
@@ -220,8 +292,8 @@ class _ExamPageState extends State<ExamPage> {
       ? 0
       : DateTime.parse(attempt!['endsAt']).difference(DateTime.now()).inSeconds;
   Future<void> persist() async {
-    widget.store.data['activeExam'] = attempt;
-    await widget.store.save();
+    await widget.store.updateExam(attempt, expected: expectedAttempt);
+    expectedAttempt = jsonDecode(jsonEncode(attempt));
   }
 
   Future<void> finish() async {
@@ -234,7 +306,6 @@ class _ExamPageState extends State<ExamPage> {
           (attempt!['penalty'] as num).toDouble()),
       'completedAt': DateTime.now().toUtc().toIso8601String()
     };
-    await widget.store.add('examHistory', attempt!);
     await persist();
     if (mounted) setState(() {});
   }

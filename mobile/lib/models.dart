@@ -31,6 +31,32 @@ String normalize(String value) {
   return result;
 }
 
+// Canonical order makes comparison independent of JSON map insertion order.
+dynamic canonicalJsonValue(dynamic value) {
+  if (value is Map) {
+    final keys = value.keys.cast<String>().toList()..sort();
+    return {for (final key in keys) key: canonicalJsonValue(value[key])};
+  }
+  if (value is List) return value.map(canonicalJsonValue).toList();
+  return value;
+}
+
+const accountProfileDefaults = <String, dynamic>{
+  'displayName': '',
+  'alias': '',
+  'avatar': 'initials',
+  'language': 'es',
+  'theme': 'system',
+  'allowAliasInvitations': false,
+  'allowLinkInvitations': false,
+  'studyNotifications': false,
+  'legalNotifications': false,
+  'collaborationNotifications': false,
+  'noticeDailyLimit': 3,
+  'quietStart': '22:00',
+  'quietEnd': '08:00',
+};
+
 typedef Json = Map<String, dynamic>;
 final _familiarNormNames = {
   for (final n in initialCatalogue()) n['id']: n['short'] as String
@@ -432,7 +458,7 @@ bool isStudyDay(DateTime day, Json profile) {
 List<Json> weeklyForecast(
     List<StudyCard> cards, Json states, Json profile, DateTime start) {
   final pending = cards.where((c) => !c.blocked).toList();
-  final limit = (profile['dailyGoal'] as num? ?? 20).toInt().clamp(1, 200);
+  final limit = studyCapacity(profile);
   final assigned = <String>{};
   return List.generate(7, (i) {
     final day = DateTime(start.year, start.month, start.day + i);
@@ -449,7 +475,20 @@ List<Json> weeklyForecast(
       'date': civilDate(day),
       'study': study,
       'planned': count,
+      'estimatedMinutes':
+          (count * (profile['estimatedSecondsPerCard'] as num? ?? 60) / 60)
+              .ceil(),
       'backlog': available.length - count
     };
   });
+}
+
+int studyCapacity(Json profile) {
+  final goal = (profile['dailyGoal'] as num? ?? 20).toInt().clamp(1, 200);
+  if (profile['hours'] is! num) return goal;
+  final seconds =
+      (profile['estimatedSecondsPerCard'] as num? ?? 60).clamp(5, 600);
+  final capacity =
+      ((profile['hours'] as num).clamp(.5, 8) * 3600 / seconds).floor();
+  return min(goal, max(1, capacity));
 }

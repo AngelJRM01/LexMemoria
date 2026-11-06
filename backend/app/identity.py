@@ -37,7 +37,7 @@ class FirebaseVerifier:
         self.expires = 0
         self.lock = threading.Lock()
 
-    def verify(self, token):
+    def verify(self, token, *, max_auth_age=None):
         if not self.project:
             raise IdentityError('Proveedor de identidad no configurado')
         if not isinstance(token, str) or len(token) > 16000:
@@ -71,6 +71,8 @@ class FirebaseVerifier:
                 if type(claims.get(field)) not in (int, float) or not math.isfinite(claims[field]): raise IdentityError('Fecha de identidad no válida')
             if claims['exp'] <= now or claims['iat'] > now + 30 or claims['auth_time'] > now + 30:
                 raise IdentityError('Token caducado o fecha futura')
+            if max_auth_age is not None and now - claims['auth_time'] > max_auth_age:
+                raise IdentityError('Se requiere una identificación reciente')
             if claims.get('firebase', {}).get('sign_in_provider') not in ('google.com', 'apple.com'):
                 raise IdentityError('Proveedor no admitido')
             return {'issuer': claims['iss'], 'subject': subject}

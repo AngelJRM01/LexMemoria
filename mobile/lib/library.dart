@@ -10,6 +10,7 @@ import 'remote.dart';
 import 'reading.dart';
 import 'catalogue.dart';
 import 'browsing_widgets.dart';
+import 'account_pages.dart' show PersonalProfilePage;
 
 class LibraryPage extends StatefulWidget {
   final AppStore store;
@@ -691,8 +692,8 @@ class _ReaderPageState extends State<ReaderPage> {
                           ])))));
   void notes() {
     final key = '${widget.norm['id']}:${widget.unit['id']}';
-    final controller = TextEditingController(
-        text: (widget.store.data['notes'] as Map? ?? {})[key] ?? '');
+    final expected = (widget.store.data['notes'] as Map? ?? {})[key] as String?;
+    final controller = TextEditingController(text: expected ?? '');
     showModalBottomSheet(
         context: context,
         isScrollControlled: true,
@@ -718,11 +719,9 @@ class _ReaderPageState extends State<ReaderPage> {
                       const SizedBox(height: 16),
                       FilledButton(
                           onPressed: () => perform(sheet, () async {
-                                widget.store.data['notes'] = {
-                                  ...(widget.store.data['notes'] as Map? ?? {}),
-                                  key: controller.text
-                                };
-                                await widget.store.save();
+                                await widget.store.updateNote(
+                                    key, controller.text,
+                                    expected: expected);
                                 if (sheet.mounted) Navigator.pop(sheet);
                               }),
                           child: const Text('Guardar nota')),
@@ -1094,13 +1093,21 @@ class _UpdatesPageState extends State<UpdatesPage> {
                     push(context, NormPage(store: store, id: n['id'])))),
       ]),
       Details('Preferencias de avisos', children: [
-        SwitchListTile(
-            value: store.data['internalAlerts'] ?? true,
-            title: const Text('Avisos dentro de la aplicación'),
-            onChanged: (v) {
-              store.data['internalAlerts'] = v;
-              store.save();
-            }),
+        if ((store.profile['account'] as Map?)
+                ?.containsKey('legalNotifications') ==
+            true)
+          ListTile(
+              title: const Text('Configurar avisos jurídicos'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => push(context, PersonalProfilePage(store: store)))
+        else
+          SwitchListTile(
+              value: store.data['internalAlerts'] ?? true,
+              title: const Text('Avisos dentro de la aplicación'),
+              onChanged: (v) {
+                store.data['internalAlerts'] = v;
+                store.save();
+              }),
         if (store.data['remoteUserId'] != null) ...[
           OutlinedButton.icon(
               onPressed: () => perform(
@@ -1108,18 +1115,21 @@ class _UpdatesPageState extends State<UpdatesPage> {
                   success: 'Suscripciones y bandeja sincronizadas'),
               icon: const Icon(Icons.sync),
               label: const Text('Sincronizar mis avisos')),
-          ...store.list('notifications').map((n) => ListTile(
-              leading: Icon(n['read'] == true
-                  ? Icons.drafts_outlined
-                  : Icons.markunread_outlined),
-              title: Text('Actualización de ${n['normId']}'),
-              subtitle: Text(
-                  'Disponible desde ${displayDate(n['createdAt'], time: true)}'),
-              onTap: () => perform(context, () async {
-                    await RemoteSync(store)
-                        .send('/v1/notifications/${n['id']}/read');
-                    await RemoteSync(store).syncNotifications();
-                  }))),
+          ...store
+              .list('notifications')
+              .where((n) => n['category'] == null || n['category'] == 'legal')
+              .map((n) => ListTile(
+                  leading: Icon(n['read'] == true
+                      ? Icons.drafts_outlined
+                      : Icons.markunread_outlined),
+                  title: Text('Actualización de ${n['normId']}'),
+                  subtitle: Text(
+                      'Disponible desde ${displayDate(n['createdAt'], time: true)}'),
+                  onTap: () => perform(context, () async {
+                        await RemoteSync(store)
+                            .send('/v1/notifications/${n['id']}/read');
+                        await RemoteSync(store).syncNotifications();
+                      }))),
         ],
         const Text(
             'Las notificaciones push requieren Firebase/APNs y consentimiento del sistema.',

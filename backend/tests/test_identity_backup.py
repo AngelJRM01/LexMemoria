@@ -64,3 +64,58 @@ def test_backup_authenticated_consistent_and_non_destructive(tmp_path):
     altered = bytearray(archive.read_bytes()); altered[-1] ^= 1; archive.write_bytes(altered)
     with pytest.raises(InvalidTag): restore(archive, tmp_path/'corrupt.db', key)
     assert not (tmp_path/'corrupt.db').exists()
+
+
+def test_recent_identity_deletion_and_public_web_configuration(tmp_path,signed,monkeypatch):
+    app=create_app('sqlite:///'+str(tmp_path/'identity-delete.db'));app.state.identity_verifier=signed[0]
+    c=TestClient(app);session=c.post('/v1/auth/oidc',json={'idToken':signed[1]()} ).json()
+    other=c.post('/v1/auth/guest').json();h={'Authorization':'Bearer '+session['accessToken']}
+    c.post('/v1/decks',headers=h,json={'title':'Private study'})
+    body={'idToken':signed[1](),'confirmation':'ELIMINAR','expectedUserId':session['userId']}
+    assert c.post('/v1/account/check-deletion-identity',json=body).json()['verified']
+    assert c.post('/v1/account/delete-with-identity',json={**body,'expectedUserId':other['userId']}).status_code==409
+    assert c.post('/v1/account/delete-with-identity',json={**body,'idToken':signed[1](auth_time=signed[2]-600)}).status_code==401
+    assert c.post('/v1/account/delete-with-identity',json={**body,'confirmation':'no'}).status_code==422
+    assert c.post('/v1/account/delete-with-identity',json=body).json()['firebaseDeletion']=='client_must_complete'
+    assert c.get('/v1/account/export',headers=h).status_code==401
+    assert c.post('/v1/account/delete-with-identity',json=body).json()['alreadyAbsent']
+    assert c.get('/v1/account/export',headers={'Authorization':'Bearer '+other['accessToken']}).status_code==200
+    monkeypatch.delenv('FIREBASE_WEB_API_KEY',raising=False)
+    assert c.get('/v1/public/identity-config').status_code==503
+    page=c.get('/account/delete');assert page.status_code==200 and 'nonce-' in page.headers['content-security-policy']
+    assert c.get('/account/privacy').status_code==503
+
+
+def test_google_avatar_is_verified_downloaded_once_and_never_accepts_arbitrary_urls(tmp_path,signed):
+    import io
+    from PIL import Image
+    app=create_app('sqlite:///'+str(tmp_path/'google-avatar.db'));app.state.identity_verifier=signed[0]
+    c=TestClient(app);user=c.post('/v1/auth/oidc',json={'idToken':signed[1]()} ).json()
+    h={'Authorization':'Bearer '+user['accessToken']}
+    output=io.BytesIO();Image.new('RGB',(16,16),'blue').save(output,format='PNG')
+    calls=[]
+    app.state.avatar_http=httpx.Client(transport=httpx.MockTransport(lambda request:(calls.append(str(request.url)) or httpx.Response(200,content=output.getvalue(),headers={'Content-Type':'image/png'}))))
+    url='https://lh3.googleusercontent.com/test-avatar'
+    assert c.post('/v1/account/avatar/google',headers=h,json={'idToken':signed[1](picture=url)}).status_code==200
+    assert calls==[url]
+    before=c.get('/v1/account/avatar',headers=h).json()
+    for bad in ['https://127.0.0.1/internal','http://lh3.googleusercontent.com/picture','https://tracker.example/image']:
+        assert c.post('/v1/account/avatar/google',headers=h,json={'idToken':signed[1](picture=bad)}).status_code==422
+    assert calls==[url] and c.get('/v1/account/avatar',headers=h).json()==before
+    other=c.post('/v1/auth/guest').json()
+    assert c.post('/v1/account/avatar/google',headers={'Authorization':'Bearer '+other['accessToken']},json={'idToken':signed[1](picture=url)}).status_code==409
+    assert calls==[url]
+
+
+def test_unlink_requires_recent_identity_and_recovery_before_last_credential(tmp_path,signed):
+    app=create_app('sqlite:///'+str(tmp_path/'unlink.db'));app.state.identity_verifier=signed[0]
+    c=TestClient(app);user=c.post('/v1/auth/oidc',json={'idToken':signed[1]()} ).json()
+    h={'Authorization':'Bearer '+user['accessToken']}
+    identity=c.get('/v1/account/security',headers=h).json()['linkedIdentities'][0]['id']
+    path='/v1/account/identities/'+identity+'/unlink'
+    assert c.post(path,headers=h,json={'idToken':signed[1]()} ).status_code==409
+    code=c.post('/v1/auth/recovery-code',headers=h).json()['recoveryCode']
+    assert c.post(path,headers=h,json={'idToken':signed[1](auth_time=signed[2]-600)}).status_code==401
+    assert c.post(path,headers=h,json={'idToken':signed[1]()} ).status_code==200
+    assert c.get('/v1/account/security',headers=h).json()['linkedIdentities']==[]
+    assert c.post('/v1/auth/recover',json={'recoveryCode':code}).json()['userId']==user['userId']

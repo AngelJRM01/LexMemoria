@@ -10,6 +10,8 @@ import 'planning.dart';
 import 'remote.dart';
 import 'workspace.dart';
 import 'google_identity.dart';
+import 'account_pages.dart';
+import 'collaboration.dart';
 
 ShareParams backupParameters(String json) => ShareParams(
       files: [XFile.fromData(utf8.encode(json), mimeType: 'application/json')],
@@ -24,6 +26,11 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) => PageBody(children: [
         Text('Tu espacio', style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: 24),
+        ListTile(
+            leading: const Icon(Icons.person_outline),
+            title: const Text('Mi perfil'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => push(context, PersonalProfilePage(store: store))),
         Paper(
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -61,6 +68,20 @@ class ProfilePage extends StatelessWidget {
             title: const Text('Ajustes y datos'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => push(context, SettingsPage(store: store))),
+        if (store.data['remoteUserId'] != null)
+          Details('Colaboración opcional', children: [
+            for (final item in {
+              'contacts': 'Compañeros',
+              'invitations': 'Invitaciones',
+              'notices': 'Mis avisos',
+              'reports': 'Mis incidencias'
+            }.entries)
+              ListTile(
+                  title: Text(item.value),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => push(context,
+                      CollaborationListPage(store: store, kind: item.key))),
+          ]),
         ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.privacy_tip_outlined),
@@ -83,6 +104,53 @@ class _AccountPageState extends State<AccountPage> {
   String? code;
   late final GoogleIdentity google =
       widget.googleIdentity ?? NativeGoogleIdentity();
+  Future<void> deleteGoogleAccount() async {
+    if (google is! NativeGoogleIdentity) return;
+    if (!await confirm(context, 'Eliminar cuenta de LexMemoria',
+        'Se eliminarán los datos del servidor y la identidad de Firebase. No se elimina tu cuenta de Google ni los datos educativos locales. Guarda antes una copia.')) {
+      return;
+    }
+    if (!mounted) return;
+    final s = widget.store;
+    final owner = s.data['remoteUserId'];
+    final server = s.apiBase;
+    final pending = s.data['providerDeletionSubject'] != null;
+    final targetOwner = pending
+        ? s.data['providerDeletionOwner']
+        : owner ?? s.data['localDataOwnerId'];
+    if (pending && s.data['providerDeletionServer'] != server) {
+      toast(context,
+          'Vuelve al servidor donde solicitaste la eliminación pendiente.');
+      return;
+    }
+    setState(() => busy = true);
+    await perform(context, () async {
+      final completed = await (google as NativeGoogleIdentity).deleteAccount(
+          (token, subject) async {
+        if (s.data['remoteUserId'] != owner || s.apiBase != server) {
+          throw StateError('La cuenta cambió; repite la identificación.');
+        }
+        final remote = RemoteSync(s);
+        if (!pending) {
+          await remote.checkDeletionIdentity(token,
+              expectedUserId: targetOwner);
+        }
+        await s.providerDeletionMarker(subject,
+            owner: targetOwner, server: server);
+        await remote.eraseWithIdentity(token, expectedUserId: targetOwner);
+      }, expectedSubject: s.data['providerDeletionSubject']);
+      if (completed) {
+        await s.providerDeletionMarker(null);
+        if (mounted) {
+          setState(() => code = null);
+          toast(context,
+              'Cuenta e identidad Firebase eliminadas. Tus datos locales se conservan.');
+        }
+      }
+    });
+    if (mounted) setState(() => busy = false);
+  }
+
   Future<void> connectGoogle() async {
     final remote = RemoteSync(widget.store);
     var confirmed = false;
@@ -133,7 +201,10 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+      listenable: widget.store, builder: (context, _) => content(context));
+
+  Widget content(BuildContext context) {
     final s = widget.store;
     final configured = s.hasRemoteServer;
     return Scaffold(
@@ -147,6 +218,7 @@ class _AccountPageState extends State<AccountPage> {
               : 'Las cuentas en la nube todavía no están disponibles en esta instalación. Puedes conservar todo tu progreso con una copia de tus datos.'),
           const SizedBox(height: 24),
           if (configured) ...[
+            Text(busy ? 'Sincronizando…' : RemoteSync(s).progressStatus),
             if (google.available) ...[
               OutlinedButton.icon(
                   onPressed: busy ? null : connectGoogle,
@@ -186,6 +258,60 @@ class _AccountPageState extends State<AccountPage> {
                 child: const Text('Ya tengo cuenta: recuperar con código')),
             if (s.data['remoteUserId'] != null)
               Details('Más opciones de mi cuenta', children: [
+                if (s.data['lastProgressSync'] != null)
+                  SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text(
+                          'Sincronizar tarjetas y repasos automáticamente'),
+                      subtitle: const Text(
+                          'Mientras la app está abierta. Los conflictos requieren comparación.'),
+                      value: s.data['autoSyncConsent'] is Map &&
+                          s.data['autoSyncConsent']['userId'] ==
+                              s.data['remoteUserId'] &&
+                          s.data['autoSyncConsent']['server'] == s.apiBase,
+                      onChanged: busy
+                          ? null
+                          : (value) => perform(context, () async {
+                                if (value &&
+                                    !await confirm(
+                                        context,
+                                        'Activar guardado automático',
+                                        'Se subirán y recuperarán tarjetas y repasos de esta cuenta mientras la app esté abierta. Las ediciones simultáneas se conservan para compararlas. Puedes desactivarlo cuando quieras.')) {
+                                  return;
+                                }
+                                await s.setAutoSync(value);
+                              })),
+                if (s.data['lastWorkspaceSync'] != null)
+                  SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text(
+                          'Sincronizar notas y plan automáticamente'),
+                      subtitle: Text(s.data['workspaceOutbox']?['state'] ==
+                              'conflict'
+                          ? 'Hay cambios en ambos dispositivos. Abre Sincronizar notas y plan para comparar.'
+                          : s.data['workspaceOutbox']?['state'] == 'error'
+                              ? 'Pendiente de reintento. Se conservan los datos locales.'
+                              : 'Incluye preferencias, cursos, lectura y exámenes. Mientras la app esté abierta.'),
+                      value: s.data['autoWorkspaceConsent'] is Map &&
+                          s.data['autoWorkspaceConsent']['userId'] ==
+                              s.data['remoteUserId'] &&
+                          s.data['autoWorkspaceConsent']['server'] == s.apiBase,
+                      onChanged: busy
+                          ? null
+                          : (value) => perform(context, () async {
+                                if (value &&
+                                    !await confirm(
+                                        context,
+                                        'Sincronización automática',
+                                        'Se combinarán las secciones que hayan cambiado en un solo dispositivo. Si cambian en ambos, tendrás que compararlas. Puedes desactivarlo cuando quieras.')) {
+                                  return;
+                                }
+                                await s.setAutoWorkspace(value);
+                              })),
+                OutlinedButton(
+                    onPressed: () =>
+                        push(context, AccountSecurityPage(store: s)),
+                    child: const Text('Cuenta y seguridad')),
                 OutlinedButton(
                     onPressed: () => perform(context, RemoteSync(s).pull,
                         success:
@@ -202,10 +328,27 @@ class _AccountPageState extends State<AccountPage> {
                     child: const Text('Renovar código de recuperación')),
                 TextButton(
                     onPressed: () => perform(context, () async {
+                          if (!await confirm(context, 'Cerrar sesión',
+                              'Tus datos educativos permanecen en este dispositivo. Guarda una copia antes de cambiar de cuenta. Los accesos antiguos sin identificar pueden cerrarse juntos.')) {
+                            return;
+                          }
                           await RemoteSync(s).disconnect();
                           if (mounted) setState(() => code = null);
                         }),
                     child: const Text('Cerrar sesión en este dispositivo')),
+              ]),
+            if (google is NativeGoogleIdentity &&
+                google.available &&
+                (s.data['remoteGoogleLinked'] == true ||
+                    s.data['providerDeletionSubject'] != null))
+              Details('Eliminar mi cuenta', children: [
+                const Text(
+                    'Esta acción requiere identificarte de nuevo. La copia local no se borra.'),
+                TextButton(
+                    onPressed: busy ? null : deleteGoogleAccount,
+                    child: Text(s.data['providerDeletionSubject'] != null
+                        ? 'Completar eliminación pendiente'
+                        : 'Eliminar cuenta e identidad Google')),
               ]),
           ],
           OutlinedButton.icon(
@@ -226,6 +369,9 @@ class _AccountPageState extends State<AccountPage> {
                   c['kind'] == 'pending_reviews'
                       ? 'Hay repasos locales pendientes de subir.'
                       : 'Una tarjeta cambió en dos dispositivos.')),
+              OutlinedButton(
+                  onPressed: () => push(context, SyncConflictsPage(store: s)),
+                  child: const Text('Comparar y resolver')),
             ]),
         ]));
   }
@@ -283,14 +429,13 @@ class SettingsPage extends StatelessWidget {
         Paper(
             padding: EdgeInsets.zero,
             child: Column(children: [
-              SwitchListTile(
-                  value: store.dark,
-                  secondary: const Icon(Icons.dark_mode_outlined),
-                  title: const Text('Modo oscuro'),
-                  onChanged: (v) {
-                    store.data['dark'] = v;
-                    store.save();
-                  }),
+              ListTile(
+                  leading: const Icon(Icons.dark_mode_outlined),
+                  title: const Text('Apariencia y preferencias'),
+                  subtitle: const Text('Claro, oscuro o sistema en Mi perfil'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () =>
+                      push(context, PersonalProfilePage(store: store))),
               ListTile(
                   leading: const Icon(Icons.calendar_month_outlined),
                   title: const Text('Plan y asignaturas'),

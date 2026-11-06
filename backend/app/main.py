@@ -5,16 +5,22 @@ import secrets
 import time
 from collections import defaultdict, deque
 from datetime import datetime, timedelta, timezone
-from uuid import uuid4
+from uuid import uuid4, uuid5, NAMESPACE_DNS
 from fastapi import FastAPI, Depends, Header, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, Response, HTMLResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select, delete
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import StaleDataError
 from .identity import ExternalIdentity, FirebaseVerifier, IdentityError
-from .notifications import inbox
+from .accounts import (UserSession, SessionToken, AliasClaim, session_for_token,
+                       revoke_current, register_account_routes, effective_entitlements)
+from .collaboration import register_collaboration, Membership, Relationship, Invitation
+from .editorial_security import require_editorial
+from .sync_clock import AccountSyncClock
+from .recovery_receipts import RecoveryReceipt, read_receipt, add_receipt
+from .notifications import inbox, release_optional_notices, study_notices
 from .catalogue import NormIndex, normalize, rebuild_index
 from .exercises import validate_exercise, grade_exercise
 from .db import connect, Record, Account, Token, RecoveryCode, Mutation, Audit, now, uid
@@ -26,7 +32,7 @@ def create_app(database_url=None):
     engine, factory = connect(database_url)
     with factory() as session:
         rebuild_index(session)
-    app = FastAPI(title='LexMemoria', version='0.5.0')
+    app = FastAPI(title='LexMemoria', version='0.6.0')
     origins = [v.strip() for v in os.getenv('CORS_ORIGINS', '').split(',') if v.strip()]
     if origins:
         app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=False,
@@ -63,6 +69,7 @@ def create_app(database_url=None):
                 return JSONResponse({'title': 'Solicitud demasiado grande', 'status': 413, 'requestId': request_id}, status_code=413, media_type='application/problem+json')
             chunks.append(chunk)
         request._body = b''.join(chunks)
+        request.state.body_hash = hashlib.sha256(request._body).hexdigest()
         response = await call_next(request)
         response.headers['X-Request-ID'] = request_id
         response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -73,7 +80,7 @@ def create_app(database_url=None):
     async def error(request, exc):
         return JSONResponse({'type': 'about:blank', 'title': str(exc.detail), 'status': exc.status_code,
                              'requestId': request.state.request_id, 'retryable': exc.status_code in (429, 503)},
-                            status_code=exc.status_code, media_type='application/problem+json')
+                            status_code=exc.status_code, headers=exc.headers, media_type='application/problem+json')
 
     @app.exception_handler(StaleDataError)
     async def concurrent_error(request, exc):
@@ -96,7 +103,8 @@ def create_app(database_url=None):
         return user
 
     def pack(r):
-        return {**r.data, 'id': r.id, 'revision': r.revision}
+        defaults = {'clientId':None,'explanation':'','type':'qa','citations':[],'options':[],'correct':None} if r.kind == 'card' else {}
+        return {**defaults, **r.data, 'id': r.id, 'revision': r.revision}
 
     def own(s, id, user, kind=None):
         r = s.get(Record, id)
@@ -104,14 +112,27 @@ def create_app(database_url=None):
             raise HTTPException(404, 'Recurso no encontrado')
         return r
 
-    def issue(s, user):
+    def issue(s, user, session=None, commit=True):
+        if session is None:
+            session = UserSession(user_id=user.id)
+            s.add(session)
+            s.flush()
+        session.last_active_at = now()
         result = {'userId': user.id, 'role': user.role}
         for kind, duration in [('access', timedelta(minutes=15)), ('refresh', timedelta(days=30))]:
             raw = secrets.token_urlsafe(48)
-            s.add(Token(digest=hashlib.sha256(raw.encode()).hexdigest(), user_id=user.id,
+            digest = hashlib.sha256(raw.encode()).hexdigest()
+            s.add(Token(digest=digest, user_id=user.id,
                         kind=kind, expires_at=(datetime.now(timezone.utc) + duration).isoformat()))
+            s.flush()
+            s.add(SessionToken(digest=digest, session_id=session.id))
             result[kind + 'Token'] = raw
-        s.commit()
+        s.flush()
+        s.execute(delete(Token).where(Token.expires_at < now()))
+        s.execute(delete(UserSession).where(UserSession.id.not_in(select(SessionToken.session_id))))
+        s.execute(delete(RecoveryReceipt).where(RecoveryReceipt.expires_at < now()))
+        if commit:
+            s.commit()
         return result
 
     class IdentityInput(BaseModel):
@@ -177,19 +198,33 @@ def create_app(database_url=None):
         # Minimal authenticated identity proof for safe client-session upgrades.
         return {'userId': user.id}
 
+    @app.get('/v1/sync/status')
+    def synchronization_status(user=Depends(identity), s=Depends(db)):
+        clock=s.get(AccountSyncClock,user.id)
+        workspace=s.scalar(select(Record.revision).where(Record.id==user.id+':workspace'))
+        profile=s.scalar(select(Record.revision).where(Record.id==user.id+':account-profile'))
+        return {'userId':user.id,'progressVersion':clock.version if clock else 0,
+                'workspaceRevision':workspace or 0,
+                'profileRevision':profile or 0}
+
     @app.post('/v1/auth/refresh')
     def refresh(body: Refresh, s=Depends(db)):
         t = s.get(Token, hashlib.sha256(body.refreshToken.encode()).hexdigest())
         if not t or t.kind != 'refresh' or t.expires_at < now():
             raise HTTPException(401, 'Renovación no disponible')
         user = s.get(Account, t.user_id)
+        session = session_for_token(s, t.digest)
+        if session:
+            # Serialize refresh/revocation for this token family on PostgreSQL.
+            session = s.scalar(select(UserSession).where(UserSession.id == session.id).with_for_update())
         consumed = s.execute(delete(Token).where(Token.digest == t.digest, Token.kind == 'refresh'))
         if consumed.rowcount != 1:
             s.rollback()
             raise HTTPException(401, 'Renovación no disponible')
-        return issue(s, user)
+        return issue(s, user, session)
 
     def new_recovery(s, user):
+        s.execute(delete(RecoveryReceipt).where(RecoveryReceipt.user_id == user.id))
         s.execute(delete(RecoveryCode).where(RecoveryCode.user_id == user.id))
         raw = secrets.token_urlsafe(32)
         s.add(RecoveryCode(digest=hashlib.sha256(raw.encode()).hexdigest(), user_id=user.id))
@@ -203,29 +238,49 @@ def create_app(database_url=None):
 
     class RecoveryInput(BaseModel):
         recoveryCode: str = Field(min_length=20, max_length=128)
+        attemptId: str | None = Field(default=None, min_length=32, max_length=80, pattern=r'^[A-Za-z0-9_-]+$')
+        attemptSecret: str | None = Field(default=None, min_length=32, max_length=128)
 
     @app.post('/v1/auth/recover')
-    def recover(body: RecoveryInput, s=Depends(db)):
+    @app.post('/v1/auth/recover-idempotent')
+    def recover(body: RecoveryInput, request: Request, s=Depends(db)):
+        if request.url.path.endswith('recover-idempotent') and not body.attemptId:
+            raise HTTPException(422, 'Se requiere identificador y secreto del intento')
+        if bool(body.attemptId) != bool(body.attemptSecret):
+            raise HTTPException(422, 'Reintento incompleto')
+        s.execute(delete(RecoveryReceipt).where(RecoveryReceipt.expires_at < now()))
+        previous = read_receipt(s, body)
+        if previous:
+            return previous
         code = s.get(RecoveryCode, hashlib.sha256(body.recoveryCode.encode()).hexdigest())
         if not code:
+            previous = read_receipt(s, body)
+            if previous:
+                return previous
             raise HTTPException(401, 'Código de recuperación no válido o ya utilizado')
         user = s.get(Account, code.user_id)
         # Consume once with an atomic conditional delete, including concurrent attempts.
         consumed = s.execute(delete(RecoveryCode).where(RecoveryCode.digest == code.digest))
         if consumed.rowcount != 1:
             s.rollback()
+            previous = read_receipt(s, body)
+            if previous:
+                return previous
             raise HTTPException(401, 'Código de recuperación no válido o ya utilizado')
         s.execute(delete(Token).where(Token.user_id == user.id))
+        s.execute(delete(UserSession).where(UserSession.user_id == user.id))
+        s.execute(delete(RecoveryReceipt).where(RecoveryReceipt.user_id == user.id))
         replacement = secrets.token_urlsafe(32)
         s.add(RecoveryCode(digest=hashlib.sha256(replacement.encode()).hexdigest(), user_id=user.id))
-        session = issue(s, user)
-        return {**session, 'recoveryCode': replacement}
+        session = issue(s, user, commit=False)
+        result = {**session, 'recoveryCode': replacement}
+        add_receipt(s, body, user.id, result)
+        s.commit()
+        return result
 
     @app.post('/v1/auth/logout')
-    def logout(user=Depends(identity), s=Depends(db)):
-        s.execute(delete(Token).where(Token.user_id == user.id))
-        s.commit()
-        return {'revoked': True}
+    def logout(authorization: str = Header(default=''), user=Depends(identity), s=Depends(db)):
+        return revoke_current(s, user, authorization)
 
     @app.get('/v1/library/coverage')
     def coverage(s=Depends(db)):
@@ -340,8 +395,10 @@ def create_app(database_url=None):
         if not 1 <= limit <= 100:
             raise HTTPException(422, 'Límite entre 1 y 100')
         inbox(s, user.id)
+        study_notices(s, user.id)
+        release_optional_notices(s, user.id)
         rows = list(s.scalars(select(Record).where(Record.kind == 'notification_delivery', Record.owner == user.id,
-                                                  Record.id > cursor).order_by(Record.id).limit(limit + 1)))
+                                                  Record.id > cursor, Record.data['status'].as_string() != 'queued').order_by(Record.id).limit(limit + 1)))
         return {'items': [pack(r) for r in rows[:limit]], 'nextCursor': rows[limit - 1].id if len(rows) > limit else None}
 
     @app.post('/v1/notifications/{id}/read')
@@ -385,9 +442,12 @@ def create_app(database_url=None):
         clientId: str | None = Field(default=None, min_length=8, max_length=80, pattern=r'^[A-Za-z0-9_-]+$')
 
     @app.get('/v1/decks')
-    def decks(user=Depends(identity), s=Depends(db)):
-        return {'items': [pack(r) for r in s.scalars(select(Record).where(
-            Record.kind == 'deck', Record.owner == user.id))]}
+    def decks(cursor: str = '', limit: int = 20, q: str = '', user=Depends(identity), s=Depends(db)):
+        if not 1 <= limit <= 100 or len(q)>120: raise HTTPException(422, 'Consulta no válida')
+        escaped = q.replace('\\','\\\\').replace('%','\\%').replace('_','\\_')
+        rows = list(s.scalars(select(Record).where(Record.kind == 'deck', Record.owner == user.id,
+            Record.id > cursor, Record.data['title'].as_string().ilike('%'+escaped+'%',escape='\\')).order_by(Record.id).limit(limit + 1)))
+        return {'items': [pack(r) for r in rows[:limit]], 'nextCursor': rows[limit - 1].id if len(rows) > limit else None}
 
     @app.post('/v1/decks', status_code=201)
     def deck(body: DeckInput, user=Depends(identity), s=Depends(db)):
@@ -450,14 +510,59 @@ def create_app(database_url=None):
         citation_state = validate_card(s, body)
         id_ = user.id + ':card:' + body.clientId if body.clientId else uid()
         old = s.get(Record, id_)
+        if old is None and body.clientId:
+            candidates = list(s.scalars(select(Record).where(Record.kind == 'card', Record.owner == user.id,
+                Record.data['clientId'].as_string() == body.clientId).limit(2)))
+            if len(candidates) > 1:
+                raise HTTPException(409, 'Identificador de tarjeta ambiguo; conserva los datos y compara')
+            old = candidates[0] if candidates else None
         if old:
             if old.owner != user.id or old.kind != 'card' or any(old.data.get(k) != v for k, v in body.model_dump().items()):
                 raise HTTPException(409, 'Identificador de tarjeta en conflicto')
             return pack(old)
         r = Record(id=id_, kind='card', owner=user.id, data={**body.model_dump(), 'citationState': citation_state, 'editorialState': 'user', 'authorId': user.id})
         s.add(r)
+        publication = s.get(Record, body.deckId + ':publication')
+        if publication:
+            publication.data = {**publication.data, 'state': 'pending'}
         s.commit()
         return pack(r)
+
+    @app.get('/v1/cards/by-client/{client_id}')
+    def card_by_client(client_id: str, user=Depends(identity), s=Depends(db)):
+        if not 8 <= len(client_id) <= 80:raise HTTPException(404, 'Tarjeta no encontrada')
+        rows = list(s.scalars(select(Record).where(Record.kind == 'card', Record.owner == user.id,
+            Record.data['clientId'].as_string() == client_id).limit(2)))
+        if len(rows) != 1:raise HTTPException(404 if not rows else 409, 'Tarjeta no disponible o ambigua')
+        deck = own(s, rows[0].data['deckId'], user, 'deck')
+        return {**pack(rows[0]), 'deckTitle': deck.data['title']}
+
+    class CardLookup(BaseModel):
+        clientIds: list[str] = Field(min_length=1, max_length=100)
+
+    @app.post('/v1/cards/lookup')
+    def cards_lookup(body: CardLookup, user=Depends(identity), s=Depends(db)):
+        if any(not 8 <= len(value) <= 80 for value in body.clientIds):
+            raise HTTPException(422, 'Identificador de tarjeta no válido')
+        rows = s.scalars(select(Record).where(Record.kind=='card',Record.owner==user.id,
+            Record.data['clientId'].as_string().in_(body.clientIds)))
+        result = {}; decks = {}
+        for row in rows:
+            client_id = row.data['clientId']
+            if client_id in result:raise HTTPException(409,'Identificador de tarjeta ambiguo; conserva y compara')
+            deck_id = row.data['deckId']
+            if deck_id not in decks:decks[deck_id] = own(s,deck_id,user,'deck').data['title']
+            result[client_id] = {**pack(row),'deckTitle':decks[deck_id]}
+        missing = set(body.clientIds) - set(result)
+        if missing:
+            for row in s.scalars(select(Record).where(Record.kind=='card',Record.owner==user.id,
+                Record.data['clientId'].as_string().is_(None))):
+                legacy_id = str(uuid5(NAMESPACE_DNS,row.id))
+                if legacy_id not in missing:continue
+                deck_id = row.data['deckId']
+                if deck_id not in decks:decks[deck_id] = own(s,deck_id,user,'deck').data['title']
+                result[legacy_id] = {**pack(row),'lookupClientId':legacy_id,'deckTitle':decks[deck_id]}
+        return {'items': list(result.values())}
 
     @app.get('/v1/cards/{id}/history')
     def card_history(id: str, user=Depends(identity), s=Depends(db)):
@@ -470,17 +575,22 @@ def create_app(database_url=None):
     def edit_card(id: str, body: CardInput, if_match: str = Header(), user=Depends(identity), s=Depends(db)):
         card = own(s, id, user, 'card')
         own(s, body.deckId, user, 'deck')
-        if if_match.strip('"') != str(card.revision):
-            raise HTTPException(409, 'Conflicto de edición; conserva ambas versiones')
         citation_state = validate_card(s, body)
         if body.clientId != card.data.get('clientId'):
             raise HTTPException(422, 'El identificador estable no puede cambiar')
         if all(card.data.get(k) == v for k, v in body.model_dump().items()):
             return JSONResponse(pack(card), headers={'ETag': str(card.revision)})
+        if if_match.strip('"') != str(card.revision):
+            raise HTTPException(409, 'Conflicto de edición; conserva ambas versiones')
         s.add(Record(kind='card_revision', owner=user.id, data={
             'cardId': id, 'cardRevision': card.revision, 'content': card.data, 'archivedAt': now()}))
         card.data = {**body.model_dump(), 'citationState': citation_state, 'editorialState': 'user', 'authorId': user.id,
-                     'blocked': bool(card.data.get('blocked')), 'updatedAt': now()}
+                     'blocked': bool(card.data.get('blocked')), 'updatedAt': now(),
+                     **({k: card.data[k] for k in ('sourceCardId', 'sourceCardRevision') if k in card.data}),
+                     **({'sourceDetached': True} if card.data.get('sourceCardId') else {})}
+        publication = s.get(Record, body.deckId + ':publication')
+        if publication:
+            publication.data = {**publication.data, 'state': 'pending'}
         s.commit()
         return JSONResponse(pack(card), headers={'ETag': str(card.revision)})
 
@@ -546,6 +656,11 @@ def create_app(database_url=None):
         notes: dict[str, str] = Field(default_factory=dict)
         courses: list[dict] = Field(default_factory=list, max_length=500)
         follows: list[str] = Field(default_factory=list, max_length=1000)
+        bookmarks: list[str] = Field(default_factory=list, max_length=10000)
+        favoriteCards: list[str] = Field(default_factory=list, max_length=20000)
+        readerPositions: dict = Field(default_factory=dict)
+        examHistory: list[dict] = Field(default_factory=list, max_length=2000)
+        activeExam: dict | None = None
 
     @app.get('/v1/workspace')
     def workspace(user=Depends(identity), s=Depends(db)):
@@ -560,7 +675,9 @@ def create_app(database_url=None):
             raise HTTPException(409, 'El espacio de estudio ha cambiado; conserva ambas versiones y vuelve a sincronizar')
         if any(len(k) > 256 or len(v) > 20000 for k, v in body.notes.items()):
             raise HTTPException(422, 'Nota demasiado larga')
-        data = body.model_dump()
+        # Older clients only know four sections. Do not erase newer sections
+        # when those clients save their explicitly supplied fields.
+        data = {**(row.data if row else {}), **body.model_dump(exclude_unset=True)}
         if row:
             row.data = data
         else:
@@ -596,7 +713,17 @@ def create_app(database_url=None):
             raise HTTPException(403, 'Registro inmutable')
         if if_match.strip('"') != str(r.revision):
             raise HTTPException(409, 'Conflicto de edición; conserva ambas versiones')
-        r.data = body.data
+        if r.kind == 'deck':
+            if set(body.data) - {'title', 'visibility'} or body.data.get('visibility', 'private') != 'private':
+                raise HTTPException(422, 'Usa los permisos de colaboración; no se puede modificar la procedencia del mazo')
+            title = body.data.get('title', r.data.get('title'))
+            if not isinstance(title, str) or not 1 <= len(title.strip()) <= 160:
+                raise HTTPException(422, 'Título no válido')
+            r.data = {**r.data, 'title': title.strip(), 'visibility': 'private'}
+            publication = s.get(Record, r.id + ':publication')
+            if publication: publication.data = {**publication.data, 'state': 'pending'}
+        else:
+            r.data = body.data
         r.revision += 1
         s.commit()
         return JSONResponse(pack(r), headers={'ETag': str(r.revision)})
@@ -604,27 +731,99 @@ def create_app(database_url=None):
     @app.get('/v1/account/export')
     def export(user=Depends(identity), s=Depends(db)):
         return {'schemaVersion': 1, 'exportedAt': now(), 'userId': user.id,
+                'accountCreatedAt': user.created_at,
+                'collaboration': {
+                    'memberships': [{'targetId': m.target_id, 'role': m.role} for m in s.scalars(select(Membership).where(Membership.user_id == user.id))],
+                    'connections': [{'id': r.id, 'otherUserId': r.target_id if r.source_id == user.id else r.source_id,
+                                     'kind': r.kind, 'outgoing': r.source_id == user.id} for r in s.scalars(select(Relationship).where(
+                                        (Relationship.source_id == user.id) | ((Relationship.target_id == user.id) & (Relationship.kind != 'blocked'))))],
+                    'invitations': [{'id': i.id, 'targetId': i.target_id, 'role': i.role, 'expiresAt': i.expires_at,
+                                     'revoked': i.revoked} for i in s.scalars(select(Invitation).where(
+                                        (Invitation.issuer_id == user.id) | (Invitation.recipient_id == user.id)))]},
                 'records': [{**pack(r), 'kind': r.kind} for r in s.scalars(select(Record).where(Record.owner == user.id))]}
 
     @app.delete('/v1/account')
     def erase(confirmation: str, user=Depends(identity), s=Depends(db)):
         if confirmation != 'ELIMINAR':
             raise HTTPException(422, 'Confirmación específica requerida')
+        owned_groups = select(Record.id).where(Record.kind == 'study_group', Record.owner == user.id)
+        s.execute(delete(Record).where(Record.kind == 'group_resource', Record.data['groupId'].as_string().in_(owned_groups)))
+        for copy in s.scalars(select(Record).where(Record.kind == 'deck', Record.data['attribution']['id'].as_string() == user.id)):
+            copy.data = {**copy.data, 'attribution': {'displayName': 'Autor retirado'}}
         s.execute(delete(Record).where(Record.owner == user.id))
         s.execute(delete(Mutation).where(Mutation.user_id == user.id))
         s.execute(delete(Token).where(Token.user_id == user.id))
+        s.execute(delete(UserSession).where(UserSession.user_id == user.id))
+        s.execute(delete(AliasClaim).where(AliasClaim.user_id == user.id))
         s.execute(delete(RecoveryCode).where(RecoveryCode.user_id == user.id))
         s.execute(delete(ExternalIdentity).where(ExternalIdentity.user_id == user.id))
         s.delete(s.get(Account, user.id))
         s.commit()
         return {'deleted': True, 'backupRetention': 'Configure según política antes de producción'}
 
+    class IdentityDeletion(BaseModel):
+        idToken: str = Field(min_length=20, max_length=16000)
+        confirmation: str
+        expectedUserId: str | None = None
+
+    def deletion_identity(body, s):
+        try:
+            claim = app.state.identity_verifier.verify(body.idToken, max_auth_age=300)
+        except IdentityError:
+            raise HTTPException(401, 'Identifícate de nuevo para eliminar la cuenta')
+        external = s.scalar(select(ExternalIdentity).where(ExternalIdentity.issuer == claim['issuer'], ExternalIdentity.subject == claim['subject']))
+        if external and body.expectedUserId and external.user_id != body.expectedUserId:
+            raise HTTPException(409, 'La identidad elegida corresponde a otra cuenta')
+        return external
+
+    @app.post('/v1/account/check-deletion-identity')
+    def check_deletion_identity(body: IdentityDeletion, s=Depends(db)):
+        external = deletion_identity(body, s)
+        if not external and body.expectedUserId:
+            raise HTTPException(409, 'Esta identidad no está vinculada a la cuenta activa')
+        return {'verified': True}
+
+    @app.post('/v1/account/delete-with-identity')
+    def erase_with_identity(body: IdentityDeletion, s=Depends(db)):
+        if body.confirmation != 'ELIMINAR':
+            raise HTTPException(422, 'Confirmación específica requerida')
+        external = deletion_identity(body, s)
+        if not external:
+            return {'deleted': True, 'alreadyAbsent': True, 'firebaseDeletion': 'client_must_complete'}
+        result = erase('ELIMINAR', s.get(Account, external.user_id), s)
+        return {**result, 'firebaseDeletion': 'client_must_complete'}
+
+    @app.get('/account/delete', response_class=HTMLResponse)
+    def deletion_page():
+        from pathlib import Path
+        nonce = secrets.token_urlsafe(24)
+        html = (Path(__file__).parent / 'web' / 'delete_account.html').read_text().replace('__NONCE__', nonce)
+        return HTMLResponse(html, headers={'Referrer-Policy': 'no-referrer',
+            'Content-Security-Policy': f"default-src 'none'; script-src 'nonce-{nonce}' https://www.gstatic.com; style-src 'nonce-{nonce}'; connect-src 'self' https://*.googleapis.com https://*.firebaseapp.com https://securetoken.googleapis.com; frame-src https://*.firebaseapp.com https://accounts.google.com; frame-ancestors 'none'; base-uri 'none'"})
+
+    @app.get('/v1/public/identity-config')
+    def public_identity_configuration():
+        project = app.state.identity_verifier.project
+        key = os.getenv('FIREBASE_WEB_API_KEY', '')
+        if not project or not key:
+            raise HTTPException(503, 'Acceso web pendiente de configuración; usa la eliminación desde la aplicación')
+        return {'apiKey': key, 'projectId': project, 'authDomain': project + '.firebaseapp.com'}
+
+    @app.get('/account/privacy', response_class=HTMLResponse)
+    def privacy_contact_page():
+        from html import escape
+        name = os.getenv('PUBLIC_CONTROLLER_NAME', '')
+        email = os.getenv('PUBLIC_SUPPORT_EMAIL', '')
+        policy = os.getenv('PUBLIC_PRIVACY_POLICY_URL', '')
+        configured = bool(name and email and policy.startswith('https://'))
+        content = ('<p>Responsable: '+escape(name)+'</p><p>Contacto: '+escape(email)+'</p><p><a href="'+escape(policy, quote=True)+'">Política de privacidad</a></p>') if configured else '<p>Este servicio está en pruebas. La política definitiva y el contacto público del responsable están pendientes de configuración. Consulta la información de datos y fuentes de la aplicación.</p>'
+        return HTMLResponse('<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Privacidad · LexMemoria</title><main><h1>Privacidad de LexMemoria</h1>'+content+'<p><a href="/account/delete">Eliminar cuenta</a></p></main></html>',
+            status_code=200 if configured else 503,
+            headers={'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"})
+
     @app.get('/v1/payments/entitlements')
     def entitlements(user=Depends(identity), s=Depends(db)):
-        # Promotions never become a store subscription or trigger charges.
-        end = datetime.fromisoformat(user.created_at) + timedelta(days=30)
-        return {'plan': 'promotion' if end.isoformat() > now() else 'free', 'expiresAt': end.isoformat(),
-                'autoRenew': False, 'storePurchasesAvailable': False}
+        return effective_entitlements(s, user)
 
     @app.post('/v1/payments/validate')
     def payment(user=Depends(identity)):
@@ -665,16 +864,12 @@ def create_app(database_url=None):
         s.commit()
         return r.data
 
-    def editorial(user):
-        if user.role not in ['reviewer', 'publisher', 'admin']:
-            raise HTTPException(403, 'Rol editorial requerido')
-        # Editorial routes are disabled until external MFA gateway is configured.
-        if os.getenv('EDITORIAL_MFA_GATEWAY') != 'configured':
-            raise HTTPException(503, 'Configura y verifica la pasarela MFA editorial antes de habilitar publicaciones')
+    def editorial(user, request, session):
+        require_editorial(user, request, session)
 
     @app.get('/v1/admin/ingestions')
-    def ingestions(user=Depends(identity), s=Depends(db)):
-        editorial(user)
+    def ingestions(request: Request, user=Depends(identity), s=Depends(db)):
+        editorial(user, request, s)
         return {'items': [pack(r) for r in s.scalars(select(Record).where(Record.kind == 'ingestion'))]}
 
     class Approval(BaseModel):
@@ -682,8 +877,8 @@ def create_app(database_url=None):
         reason: str = Field(min_length=20, max_length=4000)
 
     @app.post('/v1/admin/editorial/{id}/approve')
-    def approve(id: str, body: Approval, user=Depends(identity), s=Depends(db)):
-        editorial(user)
+    def approve(id: str, body: Approval, request: Request, user=Depends(identity), s=Depends(db)):
+        editorial(user, request, s)
         r = s.get(Record, id)
         if not r or r.kind != 'card':
             raise HTTPException(404, 'Tarjeta no encontrada')
@@ -711,6 +906,8 @@ def create_app(database_url=None):
         s.commit()
         return pack(r)
 
+    register_account_routes(app, identity, db, editorial)
+    register_collaboration(app, identity, db, pack, CardInput, validate_card, editorial)
     return app
 
 

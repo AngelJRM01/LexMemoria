@@ -29,6 +29,7 @@ class AppStore extends ChangeNotifier {
   List<Json> preparedDecks = [];
   List<String> get availableSubjects => catalogueSubjects(catalogue);
   String? error;
+  void syncStatusChanged() => notifyListeners();
   bool syncing = false;
   Future<void> _write = Future.value();
   int _writeGeneration = 0;
@@ -219,7 +220,9 @@ class AppStore extends ChangeNotifier {
 
   Json get profile => Json.from(data['profile'] ?? {});
   String get mode => profile['mode'] ?? 'Ambos';
-  bool get dark => data['dark'] == true;
+  bool get dark =>
+      profile['theme'] == 'dark' ||
+      (profile['theme'] == null && data['dark'] == true);
   List<StudyCard> get cards => (data['cards'] as List? ?? [])
       .map((v) => StudyCard.fromJson(Json.from(v)))
       .toList();
@@ -278,6 +281,16 @@ class AppStore extends ChangeNotifier {
     queue.sort((a, b) {
       final sa = state(a.id), sb = state(b.id);
       if (sa.isEmpty != sb.isEmpty) return sa.isEmpty ? 1 : -1;
+      if (sa.isEmpty && sb.isEmpty) {
+        final priorities = profile['deckPriorities'] as Map? ?? {};
+        final priority = ((priorities[b.deck] as num?) ?? 0)
+            .compareTo((priorities[a.deck] as num?) ?? 0);
+        if (priority != 0) return priority;
+        final preferred = profile['preferredExerciseTypes'] as List? ?? [];
+        if (preferred.contains(a.type) != preferred.contains(b.type)) {
+          return preferred.contains(a.type) ? -1 : 1;
+        }
+      }
       final due = (sa['dueAt'] as String? ?? '')
           .compareTo(sb['dueAt'] as String? ?? '');
       if (due != 0) return due;
@@ -285,9 +298,7 @@ class AppStore extends ChangeNotifier {
           (sb['lapses'] as num? ?? 0).compareTo(sa['lapses'] as num? ?? 0);
       return lapses == 0 ? a.id.compareTo(b.id) : lapses;
     });
-    return queue
-        .take((profile['dailyGoal'] as num? ?? 20).toInt().clamp(1, 200))
-        .toList();
+    return queue.take(studyCapacity(profile)).toList();
   }
 
   Future<void> save() {
@@ -306,6 +317,237 @@ class AppStore extends ChangeNotifier {
           'profile': {...profile, ...p}
         });
   }
+
+  Future<void> providerDeletionMarker(String? subject,
+          {String? owner, String? server}) =>
+      _commitMutation(() => {
+            ...data,
+            'providerDeletionSubject': subject,
+            'providerDeletionOwner': subject == null ? null : owner,
+            'providerDeletionServer': subject == null ? null : server,
+          });
+
+  Future<void> setSyncQueue(Json value) => _commitMutation(() {
+        if (value['userId'] != data['remoteUserId'] ||
+            value['server'] != apiBase) {
+          throw StateError('La cuenta cambió durante la sincronización.');
+        }
+        return {...data, 'syncOutbox': value};
+      });
+
+  Future<void> acknowledgeProgressVersion(
+          dynamic version, String owner, String server) =>
+      _commitMutation(() {
+        if (data['remoteUserId'] != owner || apiBase != server) {
+          throw StateError('La cuenta cambió.');
+        }
+        return {...data, 'serverProgressVersion': version};
+      });
+
+  Future<void> setAutoSync(bool enabled) => _commitMutation(() => {
+        ...data,
+        'autoSyncConsent': enabled
+            ? {
+                'userId': data['remoteUserId'],
+                'server': apiBase,
+                'mode': 'bidirectional-v1'
+              }
+            : null,
+      });
+
+  Future<void> setAutoWorkspace(bool enabled) => _commitMutation(() => {
+        ...data,
+        'autoWorkspaceConsent': enabled
+            ? {'userId': data['remoteUserId'], 'server': apiBase}
+            : null,
+      });
+
+  Future<void> setWorkspaceQueue(Json value) => _commitMutation(() {
+        if (value['userId'] != data['remoteUserId'] ||
+            value['server'] != apiBase) {
+          throw StateError('La cuenta cambió.');
+        }
+        return {...data, 'workspaceOutbox': value};
+      });
+
+  Future<void> commitAccountProfile(Json expected, Json value, int revision,
+          String owner, String server) =>
+      _commitMutation(() {
+        if (data['remoteUserId'] != owner ||
+            apiBase != server ||
+            jsonEncode(profile['account'] ?? {}) != jsonEncode(expected)) {
+          throw StateError(
+              'Tu perfil o la cuenta cambió. Se conserva la edición local.');
+        }
+        return {
+          ...data,
+          'profile': {...profile, 'account': value, 'theme': value['theme']},
+          'accountProfileBase': value,
+          'accountProfileRevision': revision
+        };
+      });
+
+  Future<void> commitConflictFork(
+          String id,
+          Json expected,
+          StudyCard remote,
+          List<Json> remoteHistory,
+          List<Json> remoteEvents,
+          Json? remoteState,
+          String owner,
+          String server) =>
+      _commitMutation(() {
+        if (data['remoteUserId'] != owner || apiBase != server) {
+          throw StateError('La cuenta cambió; el conflicto se conserva.');
+        }
+        final current = cards.where((c) => c.id == id).firstOrNull;
+        if (current == null ||
+            jsonEncode(current.toJson()) != jsonEncode(expected)) {
+          throw StateError('La tarjeta cambió. Vuelve a comparar.');
+        }
+        final forkId = const Uuid().v4();
+        final localHistory = list('cardHistory')
+            .where((h) =>
+                h['id'] == id && (h['revision'] as int) < current.revision)
+            .toList();
+        for (var revision = 1; revision < current.revision; revision++) {
+          if (!localHistory.any((h) => h['revision'] == revision)) {
+            throw StateError(
+                'Falta una revisión local; guarda una copia antes de resolver.');
+          }
+        }
+        final eventConflicts = list('syncConflicts')
+            .where((c) => c['cardId'] == id && c['kind'] == 'review_event')
+            .map((c) => c['eventId'])
+            .toSet();
+        final pending = list('reviews')
+            .where((e) =>
+                e['cardId'] == id &&
+                (e['syncedUserId'] != owner ||
+                    eventConflicts.contains(e['id'])))
+            .toList()
+          ..sort((a, b) =>
+              a['occurredAt'].toString().compareTo(b['occurredAt'].toString()));
+        Json forkState = {};
+        final forkEvents = <Json>[];
+        for (final event in pending) {
+          forkEvents.add({
+            ...event,
+            'id': const Uuid().v4(),
+            'cardId': forkId,
+            'synced': false,
+            'syncedUserId': null,
+            'previous': forkState
+          });
+          forkState = schedule(
+              forkState, event['rating'], DateTime.parse(event['occurredAt']));
+        }
+        final conflict = list('syncConflicts')
+            .where((c) => c['cardId'] == id && c['kind'] == 'card_content')
+            .firstOrNull;
+        final fork = {
+          ...current.toJson(),
+          'id': forkId,
+          'deck': '${current.deck} · versión local',
+          'blocked': conflict?['local']?['blocked'] ?? current.blocked,
+          'editorialState': 'user'
+        };
+        return {
+          ...data,
+          'cards': [
+            ...cards.where((c) => c.id != id).map((c) => c.toJson()),
+            remote.toJson(),
+            fork
+          ],
+          'cardHistory': [
+            ...list('cardHistory').where((h) => h['id'] != id),
+            ...remoteHistory,
+            ...localHistory
+                .map((h) => {...h, 'id': forkId, 'deck': fork['deck']})
+          ],
+          'reviews': [
+            ...list('reviews').where((e) => e['cardId'] != id),
+            ...remoteEvents,
+            ...forkEvents
+          ],
+          'states': {
+            ...Json.from(data['states'] ?? {}),
+            id: remoteState ?? {},
+            forkId: forkState
+          },
+          'conflictArchive': [
+            ...list('conflictArchive'),
+            {
+              'at': DateTime.now().toUtc().toIso8601String(),
+              'cardId': id,
+              'local': current.toJson(),
+              'localState': state(id),
+              'pendingReviews': pending,
+              'forkId': forkId
+            }
+          ],
+          'syncConflicts':
+              list('syncConflicts').where((c) => c['cardId'] != id).toList(),
+          'syncOutbox': null,
+          'session': null,
+        };
+      });
+
+  Future<void> commitRemotePull(
+          String expected, Json changes, String owner, String server) =>
+      _commitMutation(() {
+        if (data['remoteUserId'] != owner ||
+            apiBase != server ||
+            jsonEncode(data) != expected) {
+          throw StateError(
+              'Tus datos o la cuenta cambiaron durante la descarga. Se conservan; vuelve a comparar.');
+        }
+        return {...data, ...changes};
+      });
+
+  Future<void> commitWorkspace(Json expected, Json chosen, dynamic base,
+          String? owner, String server,
+          {int? revision}) =>
+      _commitMutation(() {
+        if (data['remoteUserId'] != owner || apiBase != server) {
+          throw StateError('La cuenta cambió. Se conserva el espacio local.');
+        }
+        for (final key in expected.keys) {
+          final fallback = expected[key] is List
+              ? []
+              : expected[key] is Map
+                  ? {}
+                  : null;
+          final current = key == 'profile'
+              ? (Json.from(profile)
+                ..remove('account')
+                ..remove('theme'))
+              : data[key] ?? fallback;
+          if (jsonEncode(canonicalJsonValue(current)) !=
+              jsonEncode(canonicalJsonValue(expected[key]))) {
+            throw StateError(
+                'Tus datos han cambiado durante la sincronización. Vuelve a comparar; no se han sobrescrito.');
+          }
+        }
+        return {
+          ...data,
+          for (final key in expected.keys)
+            if (key != 'profile') key: chosen[key],
+          'profile': {
+            ...Json.from(chosen['profile'] ?? {}),
+            if (profile.containsKey('account')) 'account': profile['account'],
+            if (profile.containsKey('theme')) 'theme': profile['theme']
+          },
+          'workspaceHistory': [
+            ...list('workspaceHistory'),
+            {'at': DateTime.now().toUtc().toIso8601String(), 'data': expected}
+          ],
+          'workspaceBase': base,
+          if (revision != null) 'workspaceRevision': revision,
+          'workspaceOutbox': null,
+          'lastWorkspaceSync': DateTime.now().toUtc().toIso8601String()
+        };
+      });
 
   Json readingPosition(String normId, String unitId) {
     final positions = data['readerPositions'];
@@ -373,6 +615,53 @@ class AppStore extends ChangeNotifier {
       };
     });
   }
+
+  Future<void> updateCourse(Json course, {required Json expected}) =>
+      _commitMutation(() {
+        final courses = list('courses');
+        final index = courses.indexWhere((c) => c['id'] == expected['id']);
+        if (index < 0 ||
+            course['id'] != expected['id'] ||
+            jsonEncode(canonicalJsonValue(courses[index])) !=
+                jsonEncode(canonicalJsonValue(expected))) {
+          throw StateError(
+              'La asignatura cambió mientras la editabas. Se conserva su estado; vuelve a comparar.');
+        }
+        courses[index] = course;
+        return {...data, 'courses': courses};
+      });
+
+  Future<void> updateNote(String key, String value,
+          {required String? expected}) =>
+      _commitMutation(() {
+        final notes = Json.from(data['notes'] ?? {});
+        if (notes[key] != expected) {
+          throw StateError(
+              'La nota cambió mientras la editabas. Conserva tu texto y vuelve a comparar.');
+        }
+        return {
+          ...data,
+          'notes': {...notes, key: value}
+        };
+      });
+
+  Future<void> updateExam(Json? value, {required dynamic expected}) =>
+      _commitMutation(() {
+        if (jsonEncode(canonicalJsonValue(data['activeExam'])) !=
+            jsonEncode(canonicalJsonValue(expected))) {
+          throw StateError(
+              'El simulacro cambió en otro dispositivo. Se conserva su estado; vuelve a consultarlo.');
+        }
+        return {
+          ...data,
+          'activeExam': value,
+          if (value?['result'] != null)
+            'examHistory': [
+              ...list('examHistory').where((e) => e['id'] != value!['id']),
+              value
+            ]
+        };
+      });
 
   Future<void> add(String key, Json value) async {
     await _commitMutation(() => {

@@ -1,0 +1,44 @@
+{
+  "archive": {
+    "source": "Publications Office CDM",
+    "scope": "CELEX sectors 0 and 3 with a Spanish expression; primary textual manifestation",
+    "expected_works": 184706,
+    "identified": 184732,
+    "states": {
+      "complete": 63560,
+      "failed": 3,
+      "metadata_only": 7534,
+      "pending": 113632,
+      "running": 3
+    },
+    "documents": 99591,
+    "inventory_complete": true,
+    "all_available_records_archived": false,
+    "all_texts_archived": false,
+    "blocker": null,
+    "observed_at": "2026-11-06T20:20:38.686707+00:00",
+    "legal_review": "not_performed",
+    "inventory_reconciliation": {
+      "initial_source_count": 184706,
+      "current_source_count": 184726,
+      "local_count": 184708,
+      "consistent": false,
+      "response_hash": "44f108d29e966a29ff5ddd329888138f62896701b9d8bcfe24e89c028e61cdc7",
+      "observed_at": "2026-11-06T05:34:00.226015+00:00"
+    },
+    "attribution": "Fuente: Oficina de Publicaciones de la Unión Europea",
+    "licence_url": "https://op.europa.eu/en/web/about-us/legal-notices/publications-office-reuse-policy"
+  },
+  "derived": {
+    "parser": "eu-html-paragraphs-1",
+    "observedAt": "2026-11-06T20:20:25.437473+00:00",
+    "states": {
+      "deferred": 50890,
+      "extracted": 48667,
+      "failed": 20
+    },
+    "clientIntegrated": false,
+    "legalReview": "not_performed",
+    "scope": "Derived HTML paragraphs only; non-HTML files deferred; original archive unchanged"
+  }
+}

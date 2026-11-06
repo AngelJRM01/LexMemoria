@@ -1,0 +1,38 @@
+{
+  "observedAt": "2026-11-06T20:20:08.522988+00:00",
+  "backend": {
+    "passed": 174,
+    "database": "SQLite fixtures; separate actual PostgreSQL evidence in postgres-*.json"
+  },
+  "flutter": {
+    "passed": 107,
+    "analyze": "No issues found"
+  },
+  "androidNative": {
+    "passed": 2,
+    "emulator": "Android 15 API 35 software acceleration",
+    "physicalOppoVerified": false,
+    "sqlCipherKeystoreReal": true
+  },
+  "previewSmoke": {
+    "releaseStarted": true,
+    "guestHomeOpened": true,
+    "systemUiWarningObservedAndDismissed": true,
+    "screenshot": "android15-preview.png",
+    "notPhysicalPerformanceAcceptance": true,
+    "finalApkUpdateInstalled": true,
+    "finalApkProcessRunning": true,
+    "observedAt": "2026-11-06T20:20:27.326658+00:00"
+  },
+  "googleLiveVerified": false,
+  "renderLiveVerified": false,
+  "iosNativeVerified": false,
+  "legalReviewPerformed": false,
+  "web": {
+    "releaseBuildPassed": true,
+    "mode": "JavaScript",
+    "wasmValidated": false,
+    "googleWebAcceptance": false,
+    "warnings": "Third-party flutter_tts JS interop and optional font diagnostics; build succeeded"
+  }
+}

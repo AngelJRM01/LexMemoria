@@ -25,6 +25,16 @@ class Vault implements CredentialVault {
   }
 }
 
+class SessionFailingVault extends Vault {
+  @override
+  Future<void> write(String key, String value) async {
+    if (key.endsWith(':session')) {
+      throw StateError('simulated session vault failure');
+    }
+    return super.write(key, value);
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -166,6 +176,12 @@ void main() {
     final seen = <String>[];
     final store = AppStore(await SharedPreferences.getInstance(),
         {'apiUrl': 'https://example.test'}, client: MockClient((r) async {
+      if (r.url.path == '/v1/cards/lookup') {
+        return http.Response('{"items":[]}', 200);
+      }
+      if (r.url.path == '/v1/auth/session') {
+        return http.Response('{"userId":"u"}', 200);
+      }
       final body = jsonDecode(r.body) as Map;
       if (r.url.path == '/v1/decks') return http.Response('{"id":"deck"}', 201);
       if (r.url.path == '/v1/cards') {
@@ -430,7 +446,7 @@ void main() {
               'recoveryCode': replacement
             }),
             200)));
-    final vault = Vault()..failWrites = true;
+    final vault = SessionFailingVault();
     try {
       await RemoteSync(store, secure: vault)
           .recover('old-private-code-1234567890');
@@ -468,6 +484,12 @@ void main() {
     Json? uploaded;
     final store = AppStore(await SharedPreferences.getInstance(),
         {'apiUrl': 'https://example.test'}, client: MockClient((r) async {
+      if (r.url.path == '/v1/cards/lookup') {
+        return http.Response('{"items":[]}', 200);
+      }
+      if (r.url.path == '/v1/auth/session') {
+        return http.Response('{"userId":"alice"}', 200);
+      }
       if (r.url.path == '/v1/decks') return http.Response('{"id":"d"}', 201);
       if (r.url.path == '/v1/cards') {
         return http.Response('{"id":"remote","revision":1}', 201);

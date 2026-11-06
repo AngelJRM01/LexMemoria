@@ -1,0 +1,18 @@
+{
+  "observedAt": "2026-11-06T20:19:00.338471+00:00",
+  "artifact": "LexMemoria-0.6.0-google-prueba.apk",
+  "sha256": "203503d6a5c50d6266e568e07ea06acecb06dc9a8ccb38b6b0b282a548de78cd",
+  "bytes": 88053661,
+  "manifest": [
+    "package: name='es.lexmemoria.app.preview' versionCode='9' versionName='0.6.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'",
+    "sdkVersion:'24'",
+    "targetSdkVersion:'36'"
+  ],
+  "signing": [
+    "Signer #1 certificate SHA-256 digest: 525f9dca164c4e161fc6acd8ef10ac5453cd10b090a001ebacbf0c486e921292",
+    "Signer #1 certificate SHA-1 digest: 967643569eddb573c9153ce97b4b789671c29008"
+  ],
+  "debuggable": false,
+  "googleProviderAcceptance": false,
+  "renderAcceptance": false
+}

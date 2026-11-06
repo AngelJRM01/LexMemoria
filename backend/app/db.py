@@ -1,7 +1,7 @@
 import os
 from datetime import datetime, timezone
 from uuid import uuid4
-from sqlalchemy import create_engine, String, Text, JSON, UniqueConstraint, ForeignKey, event
+from sqlalchemy import create_engine, String, Text, JSON, UniqueConstraint, ForeignKey, event, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
@@ -74,6 +74,8 @@ class Audit(Base):
 
 
 def connect(url=None):
+    # Register additive clock schema and history hooks in API and CLI workers.
+    from . import sync_clock
     configured = url if url is not None else os.getenv('DATABASE_URL')
     if os.getenv('LEXMEMORIA_ENV', 'development') in ('staging', 'production'):
         try:
@@ -92,5 +94,10 @@ def connect(url=None):
         @event.listens_for(engine, 'connect')
         def fk(connection, _):
             connection.execute('PRAGMA foreign_keys=ON')
-    Base.metadata.create_all(engine)
+    with engine.begin() as connection:
+        if engine.dialect.name == 'postgresql':
+            # Serialize additive schema creation across starting API workers.
+            # This does not replace versioned migrations for future ALTERs.
+            connection.execute(text('SELECT pg_advisory_xact_lock(753309520061106)'))
+        Base.metadata.create_all(connection)
     return engine, sessionmaker(engine, expire_on_commit=False)

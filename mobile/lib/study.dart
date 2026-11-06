@@ -9,6 +9,7 @@ import 'widgets.dart';
 import 'catalogue.dart';
 import 'browsing_widgets.dart';
 import 'exercises.dart';
+import 'collaboration.dart';
 
 class StudyPage extends StatefulWidget {
   final AppStore store;
@@ -111,14 +112,18 @@ class _StudyPageState extends State<StudyPage> {
             tooltip: 'Más opciones',
             onSelected: (v) => v == 'csv'
                 ? importCsv()
-                : v == 'archive'
-                    ? push(context, ArchivedExercisesPage(store: s))
-                    : push(context, CardEditor(store: s)),
+                : v == 'shared'
+                    ? push(context, CollaborationPage(store: s))
+                    : v == 'archive'
+                        ? push(context, ArchivedExercisesPage(store: s))
+                        : push(context, CardEditor(store: s)),
             itemBuilder: (_) => [
                   const PopupMenuItem(
                       value: 'new', child: Text('Crear tarjeta propia')),
                   const PopupMenuItem(
                       value: 'csv', child: Text('Importar CSV')),
+                  const PopupMenuItem(
+                      value: 'shared', child: Text('Materiales compartidos')),
                   if (s.list('supersededPreparedCards').isNotEmpty)
                     const PopupMenuItem(
                         value: 'archive', child: Text('Ejercicios anteriores'))
@@ -207,6 +212,7 @@ class CardEditor extends StatefulWidget {
   final Json? norm, unit, sourceVersion;
   final String? deck;
   final StudyCard? existing;
+  final Future<void> Function(StudyCard)? onSaveShared;
   const CardEditor(
       {super.key,
       required this.store,
@@ -214,6 +220,7 @@ class CardEditor extends StatefulWidget {
       this.unit,
       this.sourceVersion,
       this.deck,
+      this.onSaveShared,
       this.existing});
   @override
   State<CardEditor> createState() => _CardEditorState();
@@ -359,7 +366,9 @@ class _CardEditorState extends State<CardEditor> {
               : [],
           correct:
               ['test', 'case', 'truefalse'].contains(type) ? correct : null);
-      if (widget.existing == null) {
+      if (widget.onSaveShared != null) {
+        await widget.onSaveShared!(card);
+      } else if (widget.existing == null) {
         await widget.store.addCard(card);
       } else {
         await widget.store
@@ -384,6 +393,7 @@ class _CardEditorState extends State<CardEditor> {
             padding: const EdgeInsets.only(bottom: 16),
             child: TextFormField(
                 controller: c,
+                readOnly: widget.onSaveShared != null && c == deck,
                 minLines: lines,
                 maxLines: lines + 3,
                 maxLength: max,
@@ -395,9 +405,11 @@ class _CardEditorState extends State<CardEditor> {
                     : null));
     return Scaffold(
         appBar: AppBar(
-            title: Text(widget.existing == null
-                ? 'Nueva tarjeta privada'
-                : 'Editar tarjeta privada')),
+            title: Text(widget.onSaveShared != null
+                ? 'Editar tarjeta compartida'
+                : widget.existing == null
+                    ? 'Nueva tarjeta privada'
+                    : 'Editar tarjeta privada')),
         body: Form(
             key: form,
             child: PageBody(children: [
@@ -467,9 +479,11 @@ class _CardEditorState extends State<CardEditor> {
                 const SizedBox(height: 20)
               ],
               Paper(
-                  child: Text(widget.norm == null
-                      ? 'Sin fuente jurídica anclada. Puedes crear una tarjeta desde un artículo descargado para conservar norma, versión y bloque.'
-                      : 'Fuente: ${widget.norm!['id']} · ${widget.unit!['title']}\nVersión: ${widget.norm!['latestVersion']}')),
+                  child: Text(widget.existing?.normId.isNotEmpty == true
+                      ? 'Fuente: ${widget.existing!.normId} · ${widget.existing!.unitId}\nVersión: ${widget.existing!.versionId}'
+                      : widget.norm == null
+                          ? 'Sin fuente jurídica anclada. Puedes crear una tarjeta desde un artículo descargado para conservar norma, versión y bloque.'
+                          : 'Fuente: ${widget.norm!['id']} · ${widget.unit!['title']}\nVersión: ${widget.norm!['latestVersion']}')),
               const SizedBox(height: 24),
               FilledButton(
                   onPressed: saving ? null : save,

@@ -1,3 +1,4 @@
+from editorial_helpers import enable_editorial
 """Private progress must survive a server without the mobile source catalogue."""
 from datetime import datetime, timezone
 
@@ -45,7 +46,7 @@ def test_private_cited_card_roundtrip_history_and_progress_on_empty_server(tmp_p
     with app.state.factory() as session:
         session.get(Account, reviewer['userId']).role = 'reviewer'
         session.commit()
-    monkeypatch.setenv('EDITORIAL_MFA_GATEWAY', 'configured')
+    enable_editorial(monkeypatch,client,app)
     approval = client.post('/v1/admin/editorial/' + card['id'] + '/approve',
                            headers={'Authorization': 'Bearer ' + reviewer['accessToken']},
                            json={'revision': 2, 'reason': 'Revisión editorial de prueba sin fuente importada'})

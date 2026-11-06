@@ -43,3 +43,29 @@ def test_export_metadata_cannot_be_spoofed_by_private_data(c):
     assert r.json()['id'] != 'spoof' and r.json()['revision'] == 1
     exported = c.get('/v1/account/export', headers=h).json()['records'][0]
     assert exported['kind'] == 'note' and exported['revision'] == 1
+
+
+def test_lost_response_can_retry_only_same_secret_attempt(c):
+    import secrets
+    from app.recovery_receipts import RecoveryReceipt
+    from sqlalchemy import select
+    session=c.post('/v1/auth/guest').json();h={'Authorization':'Bearer '+session['accessToken']}
+    code=c.post('/v1/auth/recovery-code',headers=h).json()['recoveryCode']
+    body={'recoveryCode':code,'attemptId':secrets.token_urlsafe(32),'attemptSecret':secrets.token_urlsafe(32)}
+    first=c.post('/v1/auth/recover-idempotent',json=body)
+    assert first.status_code==200
+    # Simulate total response loss: repeat original request rather than using
+    # anything returned by the first response.
+    second=c.post('/v1/auth/recover-idempotent',json=body)
+    assert second.status_code==200 and second.json()==first.json()
+    assert c.post('/v1/auth/recover-idempotent',json={**body,'attemptSecret':secrets.token_urlsafe(32)}).status_code==401
+    assert c.post('/v1/auth/recover-idempotent',json={**body,'attemptId':secrets.token_urlsafe(32)}).status_code==401
+    assert c.post('/v1/auth/recover-idempotent',json={'recoveryCode':first.json()['recoveryCode']}).status_code==422
+    recovered_h={'Authorization':'Bearer '+first.json()['accessToken']}
+    exported=c.get('/v1/account/export',headers=recovered_h).text
+    assert body['attemptSecret'] not in exported and first.json()['refreshToken'] not in exported
+    with c.app.state.factory() as s:
+        receipt=s.scalar(select(RecoveryReceipt))
+        assert first.json()['accessToken'] not in receipt.ciphertext
+    assert c.delete('/v1/account?confirmation=ELIMINAR',headers=recovered_h).status_code==200
+    assert c.post('/v1/auth/recover-idempotent',json=body).status_code==401

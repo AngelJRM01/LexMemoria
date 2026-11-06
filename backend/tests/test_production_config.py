@@ -1,6 +1,6 @@
 """Fail closed before touching an ephemeral filesystem or logging a secret URL."""
 import pytest
-from unittest.mock import Mock
+from unittest.mock import MagicMock
 from app import db
 
 @pytest.mark.parametrize('environment',['staging','production'])
@@ -23,7 +23,7 @@ def test_bad_url_error_never_contains_password(monkeypatch):
 @pytest.mark.parametrize('scheme',['postgres','postgresql','postgresql+psycopg'])
 def test_postgres_configuration_uses_expected_driver_without_contacting_provider(monkeypatch,scheme):
     monkeypatch.setenv('LEXMEMORIA_ENV','production')
-    engine=Mock();received={}
+    engine=MagicMock();engine.dialect.name='postgresql';received={}
     def factory(url,**options):received.update(url=url,options=options);return engine
     monkeypatch.setattr(db,'create_engine',factory)
     monkeypatch.setattr(db.Base.metadata,'create_all',lambda _:None)

@@ -41,7 +41,28 @@ class NativeGoogleIdentity implements GoogleIdentity {
   }
 
   @override
-  Future<String?> authenticate() async {
+  Future<String?> authenticate() => _authenticate();
+
+  Future<bool> deleteAccount(
+          Future<void> Function(String token, String subject) deleteBackend,
+          {String? expectedSubject}) async =>
+      await _authenticate(operation: (token, user) async {
+        if (expectedSubject != null && user.uid != expectedSubject) {
+          throw StateError(
+              'Selecciona la misma cuenta de Google cuya eliminación quedó pendiente.');
+        }
+        await deleteBackend(token, user.uid);
+        try {
+          await user.delete();
+        } catch (_) {
+          throw StateError(
+              'Los datos del servidor están eliminados. Vuelve a identificarte para completar la eliminación de la identidad Firebase.');
+        }
+      }) !=
+      null;
+
+  Future<String?> _authenticate(
+      {Future<void> Function(String token, User user)? operation}) async {
     if (!available) {
       throw StateError('Google no está configurado en esta versión.');
     }
@@ -62,6 +83,7 @@ class NativeGoogleIdentity implements GoogleIdentity {
       if (token == null || token.isEmpty) {
         throw StateError('No se pudo verificar el acceso. Reintenta.');
       }
+      if (operation != null) await operation(token, signed.user!);
       return token;
     } on GoogleSignInException catch (error) {
       if (error.code == GoogleSignInExceptionCode.canceled) return null;

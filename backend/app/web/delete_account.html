@@ -1,0 +1,28 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Eliminar cuenta · LexMemoria</title>
+<style nonce="__NONCE__">body{font:1rem/1.6 system-ui;max-width:42rem;margin:2rem auto;padding:1.25rem 1.25rem 4rem;color:#17365d}button{font:inherit;padding:.7rem 1rem;margin:.5rem 0}#delete{color:#922}p{overflow-wrap:anywhere}</style>
+<main><h1>Eliminar mi cuenta de LexMemoria</h1><p>Este proceso elimina la cuenta y los datos educativos guardados en el servidor. Las copias locales de tus dispositivos y las copias personales que otras personas hayan hecho de materiales compartidos se gestionan por separado. No elimina tu cuenta de Google.</p>
+<p>Si tienes datos sin guardar, expórtalos antes desde la aplicación. La conservación de copias de seguridad y las obligaciones legales deben consultarse en la política del responsable.</p>
+<button id="login">Identificarme con Google</button><p id="identity"></p><button id="delete" hidden>Eliminar mi cuenta y datos</button><p role="status" id="status"></p>
+<p><a href="/account/privacy">Privacidad y contacto</a></p></main>
+<script type="module" nonce="__NONCE__">
+const login=document.querySelector('#login'),remove=document.querySelector('#delete'),status=document.querySelector('#status');let auth, user, sdk;
+login.onclick=async()=>{login.disabled=true;try{
+ const configResponse=await fetch('/v1/public/identity-config',{cache:'no-store'});
+ if(!configResponse.ok)throw Error('El acceso web todavía no está configurado. Puedes solicitar la eliminación desde la aplicación.');
+ const config=await configResponse.json();
+ const [{initializeApp},authSdk]=await Promise.all([import('https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js')]);
+ sdk=authSdk;auth=sdk.getAuth(initializeApp(config));await sdk.signOut(auth);
+ const result=await sdk.signInWithPopup(auth,new sdk.GoogleAuthProvider());user=result.user;
+ document.querySelector('#identity').textContent='Cuenta seleccionada: '+(user.email||'Google');remove.hidden=false;
+ status.textContent='Comprueba la cuenta seleccionada antes de confirmar.';
+}catch(error){status.textContent=error.message||'No se pudo verificar el acceso.';}finally{login.disabled=false;}};
+remove.onclick=async()=>{if(!user||!confirm('¿Eliminar definitivamente esta cuenta y sus datos guardados en LexMemoria?'))return;remove.disabled=true;login.disabled=true;
+ try{const idToken=await user.getIdToken(true);const response=await fetch('/v1/account/delete-with-identity',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idToken,confirmation:'ELIMINAR'})});
+ if(!response.ok)throw Error('No se confirmó la eliminación. Vuelve a identificarte y reintenta.');
+ status.textContent='Datos del servidor eliminados. Completando eliminación de la identidad Firebase…';
+ try{await sdk.deleteUser(user);status.textContent='Cuenta, datos del servidor e identidad Firebase eliminados.';remove.hidden=true;}
+ catch(_){status.textContent='Los datos del servidor están eliminados. Vuelve a identificarte y reintenta para completar la eliminación de la identidad Firebase.';}
+ }catch(error){status.textContent=error.message||'No se pudo completar la eliminación.';}
+ finally{try{await sdk.signOut(auth);}catch(_){}user=null;login.disabled=false;remove.disabled=false;remove.hidden=true;}
+};
+</script></html>

@@ -22,6 +22,9 @@ Json decodeStudyBackup(String text) {
     'lastReadUnits',
     'remoteCardIds',
     'remoteCardRevisions',
+    'remoteCardClientIds',
+    'remoteCardDeckIds',
+    'remoteDeckNames',
     'workspaceBase'
   ]) {
     if (data[key] != null && data[key] is! Map) invalid(key);
@@ -106,6 +109,35 @@ Json decodeStudyBackup(String text) {
     if (value is! String) invalid('notes');
   }
   final profile = data['profile'] as Map? ?? {};
+  if (profile['deckPriorities'] != null &&
+      (profile['deckPriorities'] is! Map ||
+          (profile['deckPriorities'] as Map).entries.any((e) =>
+              e.key is! String ||
+              e.value is! num ||
+              !(e.value as num).isFinite ||
+              e.value < 0 ||
+              e.value > 3))) {
+    invalid('profile');
+  }
+  if (profile['preferredExerciseTypes'] != null &&
+      (profile['preferredExerciseTypes'] is! List ||
+          (profile['preferredExerciseTypes'] as List).any((v) => ![
+                'qa',
+                'cloze',
+                'test',
+                'truefalse',
+                'order',
+                'case'
+              ].contains(v)))) {
+    invalid('profile');
+  }
+  if (profile['estimatedSecondsPerCard'] != null &&
+      (profile['estimatedSecondsPerCard'] is! num ||
+          !(profile['estimatedSecondsPerCard'] as num).isFinite ||
+          profile['estimatedSecondsPerCard'] < 5 ||
+          profile['estimatedSecondsPerCard'] > 600)) {
+    invalid('profile');
+  }
   if (profile['dailyGoal'] != null &&
       (profile['dailyGoal'] is! num ||
           !(profile['dailyGoal'] as num).isFinite ||
@@ -200,8 +232,23 @@ Json decodeStudyBackup(String text) {
     'remoteUserId',
     'remoteServer',
     'remoteGoogleLinked',
+    'autoSyncConsent',
+    'autoWorkspaceConsent',
+    'workspaceOutbox',
+    'workspaceRevision',
+    'accountProfileBase',
+    'accountProfileRevision',
+    'serverProgressVersion',
+    'syncOutbox',
+    'progressSyncHash',
+    'providerDeletionSubject',
+    'providerDeletionOwner',
+    'providerDeletionServer',
     'remoteCardIds',
     'remoteCardRevisions',
+    'remoteCardClientIds',
+    'remoteCardDeckIds',
+    'remoteDeckNames',
     'workspaceBase'
   ]) {
     data.remove(key);

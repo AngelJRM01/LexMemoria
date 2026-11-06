@@ -146,14 +146,11 @@ class _UniversityPageState extends State<UniversityPage> {
 
 class CoursePage extends StatelessWidget {
   final AppStore store;
-  final int index;
-  const CoursePage({super.key, required this.store, required this.index});
-  Future<void> update(Json course) async {
-    final courses = store.list('courses');
-    courses[index] = course;
-    store.data['courses'] = courses;
-    await store.save();
-  }
+  final String courseId;
+  CoursePage({super.key, required this.store, required int index})
+      : courseId = store.list('courses')[index]['id'];
+  Future<void> update(Json course, {required Json expected}) =>
+      store.updateCourse(course, expected: expected);
 
   Future<void> assessment(BuildContext context, Json course) async {
     final name = TextEditingController(),
@@ -250,7 +247,7 @@ class CoursePage extends StatelessWidget {
                 : double.parse(score.text.replaceAll(',', '.'))
           }
         ]
-      });
+      }, expected: course);
     }
     for (final c in [name, weight, maximum, score]) {
       c.dispose();
@@ -261,7 +258,16 @@ class CoursePage extends StatelessWidget {
   Widget build(BuildContext context) => AnimatedBuilder(
       animation: store,
       builder: (context, _) {
-        final course = store.list('courses')[index];
+        final course =
+            store.list('courses').where((c) => c['id'] == courseId).firstOrNull;
+        if (course == null) {
+          return Scaffold(
+              appBar: AppBar(title: const Text('Asignatura')),
+              body: const PageBody(children: [
+                Text(
+                    'Esta asignatura ya no está disponible. Vuelve a la lista para consultar tus asignaturas actuales.')
+              ]));
+        }
         final assessments = (course['assessments'] as List? ?? [])
             .map((v) => Json.from(v))
             .toList();
@@ -292,7 +298,7 @@ class CoursePage extends StatelessWidget {
                             'assessments': assessments
                                 .where((v) => v['id'] != a['id'])
                                 .toList()
-                          });
+                          }, expected: course);
                         }
                       }))),
               OutlinedButton.icon(
@@ -354,7 +360,7 @@ class CoursePage extends StatelessWidget {
                             'notes': notes.text.trim()
                           }
                         ]
-                      });
+                      }, expected: course);
                     }
                     title.dispose();
                     notes.dispose();
@@ -371,7 +377,8 @@ class CoursePage extends StatelessWidget {
                             ? 'Archivar asignatura'
                             : 'Recuperar asignatura',
                         'Se conservan temas, evaluaciones y progreso.')) {
-                      await update({...course, 'archived': archive});
+                      await update({...course, 'archived': archive},
+                          expected: course);
                     }
                   },
                   icon: const Icon(Icons.archive_outlined),

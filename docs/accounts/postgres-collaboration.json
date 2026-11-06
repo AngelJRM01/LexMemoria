@@ -1,0 +1,67 @@
+{
+  "observedAt": "2026-11-06T20:13:19.388014+00:00",
+  "database": "isolated PostgreSQL 18 localhost",
+  "renderVerified": false,
+  "results": [
+    {
+      "test": "test_alias_discovery_rate_limit_is_persistent_and_returns_retry_after",
+      "passed": true
+    },
+    {
+      "test": "test_contacts_discovery_and_blocking",
+      "passed": true
+    },
+    {
+      "test": "test_contacts_link_direct_acceptance_and_group_role_changes",
+      "passed": true
+    },
+    {
+      "test": "test_copy_updates_are_explicit_revisioned_and_preserve_personal_edits",
+      "passed": true
+    },
+    {
+      "test": "test_group_members_and_resources_are_paged_without_leaking_outsiders",
+      "passed": true
+    },
+    {
+      "test": "test_group_roles_materials_leave_and_delete",
+      "passed": true
+    },
+    {
+      "test": "test_invitation_expiry_uses_and_revocation",
+      "passed": true
+    },
+    {
+      "test": "test_optional_notices_respect_silence_and_frequency",
+      "passed": true
+    },
+    {
+      "test": "test_personal_copy_survives_original_account_deletion",
+      "passed": true
+    },
+    {
+      "test": "test_publication_and_moderation_do_not_certify_law",
+      "passed": true
+    },
+    {
+      "test": "test_reports_appeals_and_restrictions_preserve_private_data",
+      "passed": true
+    },
+    {
+      "test": "test_retry_same_edit_after_lost_response_and_client_id_lookup",
+      "passed": true
+    },
+    {
+      "test": "test_shared_roles_revocation_and_progress_privacy",
+      "passed": true
+    },
+    {
+      "test": "concurrent_single_use_invitation",
+      "passed": true,
+      "statuses": [
+        404,
+        200
+      ]
+    }
+  ]
+}

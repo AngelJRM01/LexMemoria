@@ -5,27 +5,51 @@ import 'store.dart';
 import 'remote.dart';
 import 'widgets.dart' hide Badge;
 
-const workspaceKeys = ['profile', 'notes', 'courses', 'follows'];
+const workspaceKeys = [
+  'profile',
+  'notes',
+  'courses',
+  'follows',
+  'bookmarks',
+  'favoriteCards',
+  'readerPositions',
+  'examHistory',
+  'activeExam'
+];
+Json studyProfile(Json profile) => Json.from(profile)
+  ..remove('account')
+  ..remove('theme');
 Json localWorkspace(AppStore store) => {
-      'profile': store.profile,
+      'profile': studyProfile(store.profile),
       'notes': store.data['notes'] ?? {},
       'courses': store.data['courses'] ?? [],
       'follows': store.data['follows'] ?? [],
+      'bookmarks': store.data['bookmarks'] ?? [],
+      'favoriteCards': store.data['favoriteCards'] ?? [],
+      'readerPositions': store.data['readerPositions'] ?? {},
+      'examHistory': store.data['examHistory'] ?? [],
+      'activeExam': store.data['activeExam'],
     };
-// Canonical order makes comparison independent of JSON map insertion order.
-dynamic canonical(dynamic value) {
-  if (value is Map) {
-    final keys = value.keys.cast<String>().toList()..sort();
-    return {for (final key in keys) key: canonical(value[key])};
-  }
-  if (value is List) return value.map(canonical).toList();
-  return value;
-}
+Json normalizedWorkspace(Json value) => {
+      ...value,
+      'profile': studyProfile(Json.from(value['profile'] ?? {})),
+      'notes': value['notes'] ?? {},
+      'courses': value['courses'] ?? [],
+      'follows': value['follows'] ?? [],
+      'bookmarks': value['bookmarks'] ?? [],
+      'favoriteCards': value['favoriteCards'] ?? [],
+      'readerPositions': value['readerPositions'] ?? {},
+      'examHistory': value['examHistory'] ?? [],
+      'activeExam': value['activeExam'],
+    };
 
 bool equalWorkspace(dynamic a, dynamic b) =>
-    jsonEncode(canonical(a)) == jsonEncode(canonical(b));
+    jsonEncode(canonicalJsonValue(a)) == jsonEncode(canonicalJsonValue(b));
 Json mergeWorkspace(Json local, Json remote, Json base) {
-  final merged = <String, dynamic>{};
+  final merged = <String, dynamic>{
+    for (final entry in remote.entries)
+      if (!workspaceKeys.contains(entry.key)) entry.key: entry.value
+  };
   final conflicts = <String>[];
   for (final key in workspaceKeys) {
     if (equalWorkspace(local[key], remote[key]) ||
@@ -41,6 +65,102 @@ Json mergeWorkspace(Json local, Json remote, Json base) {
   return {'merged': merged, 'conflicts': conflicts};
 }
 
+class WorkspaceSynchronizer {
+  final AppStore store;
+  final RemoteSync remote;
+  WorkspaceSynchronizer(this.store, {RemoteSync? remote})
+      : remote = remote ?? RemoteSync(store);
+  Future<void> synchronizeProfile({Json? legacy}) async {
+    final owner = store.data['remoteUserId'] as String?;
+    final server = store.apiBase;
+    if (owner == null) {
+      throw StateError('Conecta una cuenta para sincronizar el perfil.');
+    }
+    final result = await remote.request('GET', '/v1/account/profile');
+    final expected = Json.from(store.profile['account'] ?? {});
+    final local = {
+      ...accountProfileDefaults,
+      ...expected,
+      if (store.profile['theme'] != null) 'theme': store.profile['theme']
+    };
+    final base = {
+      ...accountProfileDefaults,
+      ...Json.from(store.data['accountProfileBase'] ?? {})
+    };
+    var other = {...accountProfileDefaults, ...Json.from(result['data'])};
+    if (result['revision'] == 0 && legacy != null) {
+      other = {...other, ...legacy};
+    }
+    final merged = <String, dynamic>{};
+    for (final key in {...local.keys, ...base.keys, ...other.keys}) {
+      if (equalWorkspace(local[key], other[key]) ||
+          equalWorkspace(other[key], base[key])) {
+        merged[key] = local[key];
+      } else if (equalWorkspace(local[key], base[key])) {
+        merged[key] = other[key];
+      } else {
+        throw RemoteSyncFailure(409,
+            'Tu perfil cambió en dos dispositivos. Revisa Mi perfil; se conservan los valores locales.');
+      }
+    }
+    var revision = result['revision'] as int;
+    if (!equalWorkspace(merged, result['data'])) {
+      final saved = await remote.request('PUT', '/v1/account/profile',
+          body: merged, extraHeaders: {'If-Match': '$revision'});
+      if (!equalWorkspace(saved['data'], merged)) {
+        throw StateError('El servidor no confirmó todas las preferencias.');
+      }
+      revision = saved['revision'];
+    }
+    if (equalWorkspace(expected, merged) &&
+        store.data['accountProfileRevision'] == revision &&
+        equalWorkspace(store.data['accountProfileBase'], merged)) {
+      return;
+    }
+    await store.commitAccountProfile(expected, merged, revision, owner, server);
+  }
+
+  Future<void> synchronize({Json? status}) async {
+    final owner = store.data['remoteUserId'] as String?;
+    final server = store.apiBase;
+    if (owner == null) throw StateError('Conecta una cuenta para sincronizar.');
+    final localBefore = localWorkspace(store);
+    final baseBefore =
+        normalizedWorkspace(Json.from(store.data['workspaceBase'] ?? {}));
+    final dirty = !equalWorkspace(localBefore, baseBefore);
+    Json? result;
+    if (dirty ||
+        status == null ||
+        store.data['workspaceRevision'] != status['workspaceRevision']) {
+      result = await remote.request('GET', '/v1/workspace');
+    }
+    final legacy = (result?['data'] as Map?)?['profile'] as Map?;
+    await synchronizeProfile(
+        legacy:
+            legacy?['account'] is Map ? Json.from(legacy!['account']) : null);
+    if (result == null) return;
+    final local = localWorkspace(store);
+    final other = normalizedWorkspace(Json.from(result['data'] ?? {}));
+    final base =
+        normalizedWorkspace(Json.from(store.data['workspaceBase'] ?? {}));
+    final comparison = mergeWorkspace(local, other, base);
+    if ((comparison['conflicts'] as List).isNotEmpty) {
+      throw RemoteSyncFailure(409,
+          'Hay secciones cambiadas en ambos dispositivos. Compara notas y plan antes de continuar.');
+    }
+    final chosen = Json.from(comparison['merged']);
+    final saved = await remote.request('PUT', '/v1/workspace',
+        body: chosen, extraHeaders: {'If-Match': '${result['revision']}'});
+    if (!equalWorkspace(
+        normalizedWorkspace(Json.from(saved['data'])), chosen)) {
+      throw StateError(
+          'El servidor no confirmó todas las secciones; se conserva el espacio local.');
+    }
+    await store.commitWorkspace(local, chosen, saved['data'], owner, server,
+        revision: saved['revision']);
+  }
+}
+
 class WorkspacePage extends StatefulWidget {
   final AppStore store;
   const WorkspacePage({super.key, required this.store});
@@ -52,28 +172,39 @@ class _WorkspacePageState extends State<WorkspacePage> {
   Json? local, remote, merged;
   int revision = 0;
   bool busy = false;
+  String? ownerScope;
+  String? serverScope;
   List<String> conflicts = [];
   final choices = <String, String>{};
   static const labels = {
     'profile': 'Perfil y planificación',
     'notes': 'Notas jurídicas privadas',
     'courses': 'Asignaturas, temas y evaluaciones',
-    'follows': 'Normas seguidas'
+    'follows': 'Normas seguidas',
+    'bookmarks': 'Marcadores',
+    'favoriteCards': 'Tarjetas favoritas',
+    'readerPositions': 'Puntos de lectura',
+    'examHistory': 'Historial de simulacros',
+    'activeExam': 'Simulacro en curso',
   };
   Future<void> prepare() async {
     setState(() => busy = true);
     await perform(context, () async {
       final result =
           await RemoteSync(widget.store).request('GET', '/v1/workspace');
+      ownerScope = widget.store.data['remoteUserId'];
+      serverScope = widget.store.apiBase;
       local = localWorkspace(widget.store);
-      remote = result['data'] == null ? null : Json.from(result['data']);
+      remote = result['data'] == null
+          ? null
+          : normalizedWorkspace(Json.from(result['data']));
       revision = result['revision'];
       if (remote == null) {
         merged = local;
         conflicts = [];
       } else {
-        final base = Json.from(widget.store.data['workspaceBase'] ??
-            {'profile': {}, 'notes': {}, 'courses': [], 'follows': []});
+        final base = normalizedWorkspace(
+            Json.from(widget.store.data['workspaceBase'] ?? {}));
         final merge = mergeWorkspace(local!, remote!, base);
         merged = Json.from(merge['merged']);
         conflicts = List<String>.from(merge['conflicts']);
@@ -90,25 +221,27 @@ class _WorkspacePageState extends State<WorkspacePage> {
         throw StateError(
             'Los datos locales han cambiado durante la comparación. Compara de nuevo.');
       }
+      if (widget.store.data['remoteUserId'] != ownerScope ||
+          widget.store.apiBase != serverScope) {
+        throw StateError(
+            'La cuenta cambió. Compara de nuevo antes de sincronizar.');
+      }
       final chosen = {...merged!};
       for (final key in conflicts) {
         chosen[key] = choices[key] == 'remote' ? remote![key] : local![key];
       }
+      await WorkspaceSynchronizer(widget.store).synchronizeProfile();
       final result = await RemoteSync(widget.store).request(
           'PUT', '/v1/workspace',
           body: chosen, extraHeaders: {'If-Match': '$revision'});
-      // Keep the previous local copy even when the user selects remote content.
-      widget.store.data['workspaceHistory'] = [
-        ...widget.store.list('workspaceHistory'),
-        {'at': DateTime.now().toUtc().toIso8601String(), 'data': local}
-      ];
-      for (final key in workspaceKeys) {
-        widget.store.data[key] = chosen[key];
+      if (!equalWorkspace(
+          normalizedWorkspace(Json.from(result['data'])), chosen)) {
+        throw StateError(
+            'El servidor no confirmó todas las secciones. Actualiza el servidor antes de reintentar. Tus datos locales se conservan.');
       }
-      widget.store.data['workspaceBase'] = result['data'];
-      widget.store.data['lastWorkspaceSync'] =
-          DateTime.now().toUtc().toIso8601String();
-      await widget.store.save();
+      await widget.store.commitWorkspace(
+          local!, chosen, result['data'], ownerScope, serverScope!,
+          revision: result['revision']);
       if (mounted) {
         setState(() {
           merged = null;

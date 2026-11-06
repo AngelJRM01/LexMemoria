@@ -34,3 +34,5 @@ websockets==17.4
 cffi==2.1.1
 cryptography==50.0.2
 pycparser==3.12
+
+Pillow==12.0.0

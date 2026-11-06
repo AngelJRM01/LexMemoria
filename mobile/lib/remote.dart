@@ -1,9 +1,50 @@
 import 'dart:convert';
+import 'dart:async';
+import 'dart:math';
+import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:uuid/uuid.dart';
 import 'models.dart';
 import 'store.dart';
+
+StudyCard remoteStudyCard(Json record, String id, String deck,
+    {int? revision}) {
+  final citation = (record['citations'] as List? ?? []).firstOrNull as Map?;
+  return StudyCard(
+      id: id,
+      deck: deck,
+      front: record['front'],
+      back: record['back'],
+      explanation: record['explanation'] ?? '',
+      type: record['type'] ?? 'qa',
+      normId: citation?['normId'] ?? '',
+      unitId: citation?['unitId'] ?? '',
+      versionId: citation?['versionId'] ?? '',
+      unitVersionHash: citation?['unitVersionHash'] ?? '',
+      revision: revision ?? record['revision'] ?? 1,
+      blocked: record['blocked'] ?? false,
+      editorialState: record['editorialState'] ?? 'user',
+      options: List<String>.from(record['options'] ?? []),
+      correct: record['correct']);
+}
+
+String progressFingerprintOf(Json data) => sha256
+    .convert(utf8.encode(jsonEncode({
+      'cards': (data['cards'] as List? ?? [])
+          .map((c) => StudyCard.fromJson(Json.from(c)).toJson())
+          .toList(),
+      'history': data['cardHistory'] ?? [],
+      'reviews': (data['reviews'] as List? ?? [])
+          .map((r) => Json.from(r))
+          .map((r) => {
+                for (final entry in r.entries)
+                  if (!['synced', 'syncedUserId'].contains(entry.key))
+                    entry.key: entry.value
+              })
+          .toList(),
+    })))
+    .toString();
 
 /// Optional remote identity. Tokens never enter preferences, exports or logs.
 abstract interface class CredentialVault {
@@ -32,7 +73,14 @@ class RecoveryPersistenceFailure implements Exception {
       'No se pudo guardar la sesión recuperada. Conserva el código nuevo.';
 }
 
+class RemoteSyncFailure extends StateError {
+  final int status;
+  RemoteSyncFailure(this.status, String message) : super(message);
+}
+
 final _refreshes = Expando<Map<String, Future<Json>>>();
+final _uploads = Expando<Future<void>>();
+final _pulls = Expando<Future<void>>();
 
 class RemoteSync {
   final AppStore store;
@@ -47,6 +95,30 @@ class RemoteSync {
   }
 
   String get prefix => 'lexmemoria:$base';
+
+  String get progressFingerprint => progressFingerprintOf(store.data);
+
+  String get progressStatus {
+    if (_uploads[store] != null || _pulls[store] != null) {
+      return 'Sincronizando';
+    }
+    if (store.list('syncConflicts').isNotEmpty) return 'Conflicto';
+    final queue = store.data['syncOutbox'];
+    if (queue is Map &&
+        queue['userId'] == store.data['remoteUserId'] &&
+        queue['server'] == store.apiBase) {
+      if (queue['state'] == 'conflict') return 'Conflicto';
+      if (queue['state'] == 'error') {
+        return queue['connection'] == true
+            ? 'Error de conexión'
+            : 'Error al sincronizar';
+      }
+    }
+    if (store.data['lastProgressSync'] == null) return 'Sin sincronizar';
+    return store.data['progressSyncHash'] == progressFingerprint
+        ? 'Sincronizado'
+        : 'Cambios pendientes';
+  }
 
   bool get needsAccountConfirmation =>
       store.data['localDataOwnerId'] != null ||
@@ -148,6 +220,7 @@ class RemoteSync {
       {Json? body,
       bool auth = true,
       bool retry = true,
+      int rateRetries = 2,
       Json extraHeaders = const {}}) async {
     final server = base;
     final session = auth ? await _boundSession(server) : null;
@@ -187,12 +260,28 @@ class RemoteSync {
       return request(method, path,
           body: body, retry: false, extraHeaders: extraHeaders);
     }
+    if (response.statusCode == 429 && rateRetries > 0) {
+      final seconds =
+          (int.tryParse(response.headers['retry-after'] ?? '') ?? 60)
+              .clamp(1, 120);
+      await Future<void>.delayed(Duration(seconds: seconds));
+      if (base != server ||
+          (auth && store.data['remoteUserId'] != session!['userId'])) {
+        throw StateError('La cuenta ha cambiado durante la espera.');
+      }
+      return request(method, path,
+          body: body,
+          auth: auth,
+          retry: retry,
+          rateRetries: rateRetries - 1,
+          extraHeaders: extraHeaders);
+    }
     if (response.statusCode >= 400) {
       if (response.statusCode == 409) {
-        throw StateError(
+        throw RemoteSyncFailure(response.statusCode,
             'Conflicto al sincronizar. Se conserva la revisión local para resolverla sin sobrescribir el historial.');
       }
-      throw StateError(
+      throw RemoteSyncFailure(response.statusCode,
           'Sincronización no disponible (${response.statusCode}). Reintenta; no se han borrado tus datos.');
     }
     return Json.from(jsonDecode(response.body));
@@ -239,8 +328,25 @@ class RemoteSync {
           store.list('reviews').map((e) => {...e, 'synced': false}).toList();
       store.data.remove('remoteCardIds');
       store.data.remove('remoteCardRevisions');
-      store.data.remove('workspaceBase');
+      store.data.remove('remoteCardDeckIds');
+      store.data.remove('remoteCardClientIds');
+      store.data.remove('remoteDeckNames');
+      for (final key in [
+        'workspaceBase',
+        'workspaceRevision',
+        'accountProfileBase',
+        'accountProfileRevision',
+        'autoWorkspaceConsent',
+        'workspaceOutbox',
+        'serverProgressVersion',
+        'autoSyncConsent',
+        'syncOutbox'
+      ]) {
+        store.data.remove(key);
+      }
       store.data.remove('remoteGoogleLinked');
+      store.data.remove('progressSyncHash');
+      store.data.remove('lastProgressSync');
     }
     store.data['remoteUserId'] = session['userId'];
     store.data['remoteServer'] = server;
@@ -291,10 +397,14 @@ class RemoteSync {
   }
 
   Future<void> disconnect() async {
+    final owner = store.data['remoteUserId'];
+    final server = base;
     try {
       await send('/v1/auth/logout');
     } finally {
-      await _clearSession();
+      if (store.data['remoteUserId'] == owner && base == server) {
+        await _clearSession();
+      }
     }
   }
 
@@ -304,8 +414,23 @@ class RemoteSync {
   Future<String> recover(String code,
       {bool confirmAccountChange = false}) async {
     _confirmAccountOperation(confirmAccountChange);
-    final session = await send('/v1/auth/recover',
-        body: {'recoveryCode': code.trim()}, auth: false);
+    final receiptKey =
+        '$prefix:recovery:${sha256.convert(utf8.encode(code.trim()))}';
+    var stored = await secure.read(receiptKey);
+    if (stored == null) {
+      final random = Random.secure();
+      stored = jsonEncode({
+        'attemptId': const Uuid().v4(),
+        'attemptSecret':
+            base64UrlEncode(List.generate(32, (_) => random.nextInt(256)))
+      });
+      // Persist before consuming the code remotely. A failed vault write must
+      // not destroy the only available recovery credential.
+      await secure.write(receiptKey, stored);
+    }
+    final attempt = Json.from(jsonDecode(stored));
+    final session = await send('/v1/auth/recover-idempotent',
+        body: {'recoveryCode': code.trim(), ...attempt}, auth: false);
     final replacement = session['recoveryCode'];
     if (replacement is! String || replacement.length < 20) {
       throw StateError(
@@ -318,6 +443,7 @@ class RemoteSync {
       // just because Keychain/Keystore or the local disk rejected the session.
       throw RecoveryPersistenceFailure(replacement);
     }
+    await secure.delete(receiptKey);
     return replacement;
   }
 
@@ -326,8 +452,52 @@ class RemoteSync {
     await _clearSession();
   }
 
+  Future<void> eraseWithIdentity(String idToken,
+      {String? expectedUserId}) async {
+    final owner = store.data['remoteUserId'];
+    final server = base;
+    await send('/v1/account/delete-with-identity', auth: false, body: {
+      'idToken': idToken,
+      'confirmation': 'ELIMINAR',
+      'expectedUserId': expectedUserId
+    });
+    if (store.data['remoteUserId'] == owner &&
+        base == server &&
+        (owner == null || expectedUserId == owner)) {
+      await _clearSession();
+    }
+  }
+
+  Future<void> checkDeletionIdentity(String idToken,
+      {String? expectedUserId}) async {
+    await send('/v1/account/check-deletion-identity', auth: false, body: {
+      'idToken': idToken,
+      'confirmation': 'ELIMINAR',
+      'expectedUserId': expectedUserId
+    });
+  }
+
   Future<void> pull() async {
+    final upload = _uploads[store];
+    if (upload != null) await upload;
+    final previous = _pulls[store];
+    if (previous != null) return previous;
+    final operation = _performPull();
+    _pulls[store] = operation;
+    store.syncStatusChanged();
+    try {
+      await operation;
+    } finally {
+      if (identical(_pulls[store], operation)) _pulls[store] = null;
+      store.syncStatusChanged();
+    }
+  }
+
+  Future<void> _performPull() async {
     final snapshot = await exportRemote();
+    final expected = jsonEncode(store.data);
+    final server = base;
+    var pendingEdits = false;
     final records =
         (snapshot['records'] as List).map((v) => Json.from(v)).toList();
     final userId = snapshot['userId'];
@@ -351,23 +521,8 @@ class RemoteSync {
       aliases[id] = r['id'];
       final knownRevision = revisions[id];
       revisions[id] = r['revision'];
-      final citation = (r['citations'] as List? ?? []).firstOrNull as Map?;
-      final remote = StudyCard(
-          id: id,
-          deck: decks[r['deckId']] ?? local[id]?.deck ?? 'Mazo recuperado',
-          front: r['front'],
-          back: r['back'],
-          explanation: r['explanation'] ?? '',
-          type: r['type'] ?? 'qa',
-          normId: citation?['normId'] ?? '',
-          unitId: citation?['unitId'] ?? '',
-          versionId: citation?['versionId'] ?? '',
-          unitVersionHash: citation?['unitVersionHash'] ?? '',
-          revision: r['revision'] ?? 1,
-          blocked: r['blocked'] ?? false,
-          editorialState: r['editorialState'] ?? 'user',
-          options: List<String>.from(r['options'] ?? []),
-          correct: r['correct']);
+      final remote = remoteStudyCard(
+          r, id, decks[r['deckId']] ?? local[id]?.deck ?? 'Mazo recuperado');
       final before = local[id];
       bool sameContent(StudyCard a, StudyCard b) =>
           jsonEncode([
@@ -400,7 +555,12 @@ class RemoteSync {
         if (knownRevision != null &&
             before.revision > knownRevision &&
             remote.revision == knownRevision) {
+          pendingEdits = true;
           // The server has not changed since our last download. Preserve local edits for If-Match upload.
+        } else if (knownRevision != null &&
+            before.revision == knownRevision &&
+            remote.revision > knownRevision) {
+          local[id] = remote;
         } else {
           conflicts.add({
             'cardId': id,
@@ -426,21 +586,8 @@ class RemoteSync {
       final id = remoteToLocal[row['cardId']];
       if (id == null) continue;
       final content = Json.from(row['content']);
-      final citation =
-          (content['citations'] as List? ?? []).firstOrNull as Map?;
-      final historical = StudyCard(
-              id: id,
-              deck: decks[content['deckId']] ?? local[id]!.deck,
-              front: content['front'],
-              back: content['back'],
-              explanation: content['explanation'] ?? '',
-              type: content['type'] ?? 'qa',
-              normId: citation?['normId'] ?? '',
-              unitId: citation?['unitId'] ?? '',
-              versionId: citation?['versionId'] ?? '',
-              unitVersionHash: citation?['unitVersionHash'] ?? '',
-              options: List<String>.from(content['options'] ?? []),
-              correct: content['correct'],
+      final historical = remoteStudyCard(
+              content, id, decks[content['deckId']] ?? local[id]!.deck,
               revision: row['cardRevision'])
           .toJson();
       final key = '$id:${row['cardRevision']}';
@@ -448,7 +595,6 @@ class RemoteSync {
         histories[key] = {...historical, 'archivedAt': row['archivedAt']};
       }
     }
-    store.data['cardHistory'] = histories.values.toList();
     final events = {for (final e in store.list('reviews')) e['id']: e};
     for (final r in records.where((r) => r['kind'] == 'review_event')) {
       final card = remoteToLocal[r['cardId']];
@@ -475,6 +621,9 @@ class RemoteSync {
         'cardRevision': r['cardRevision'],
         'rating': r['rating'],
         'occurredAt': r['occurredAt'],
+        'latencyMs': r['latencyMs'] ?? 0,
+        'response': r['response'],
+        'objectiveCorrect': r['objectiveCorrect'],
         'algorithm': r['algorithm'],
         'synced': true,
         'syncedUserId': userId
@@ -496,20 +645,99 @@ class RemoteSync {
     final ordered = events.values.toList()
       ..sort((a, b) =>
           a['occurredAt'].toString().compareTo(b['occurredAt'].toString()));
-    store.data['cards'] = local.values.map((c) => c.toJson()).toList();
-    store.data['reviews'] = ordered;
-    store.data['states'] = states;
-    store.data['remoteCardIds'] = aliases;
-    store.data['remoteCardRevisions'] = revisions;
-    store.data['syncConflicts'] = conflicts;
-    store.data['lastProgressSync'] = DateTime.now().toUtc().toIso8601String();
-    await store.save();
+    final changes = <String, dynamic>{
+      'cards': local.values.map((c) => c.toJson()).toList(),
+      'cardHistory': histories.values.toList(),
+      'reviews': ordered,
+      'states': states,
+      'remoteCardIds': aliases,
+      'remoteCardDeckIds': {
+        for (final r in records.where((r) => r['kind'] == 'card'))
+          remoteToLocal[r['id']]: r['deckId']
+      },
+      'remoteCardClientIds': {
+        for (final r in records.where((r) => r['kind'] == 'card'))
+          remoteToLocal[r['id']]: r['clientId']
+      },
+      'remoteDeckNames': decks,
+      'remoteCardRevisions': revisions,
+      'syncConflicts': conflicts,
+      'syncOutbox': null,
+      'lastProgressSync': DateTime.now().toUtc().toIso8601String(),
+    };
+    if (!pendingEdits &&
+        conflicts.isEmpty &&
+        local.keys.every(remoteToLocal.values.contains) &&
+        ordered.every((e) => e['syncedUserId'] == userId)) {
+      changes['progressSyncHash'] =
+          progressFingerprintOf({...store.data, ...changes});
+    }
+    await store.commitRemotePull(expected, changes, userId, server);
+  }
+
+  Future<void> forkConflict(String id) async {
+    final owner = store.data['remoteUserId'] as String?;
+    final server = base;
+    if (owner == null) throw StateError('Conecta la cuenta del conflicto.');
+    final expected = store.cards.where((c) => c.id == id).firstOrNull?.toJson();
+    if (expected == null) throw StateError('La tarjeta no está disponible.');
+    final snapshot = await exportRemote();
+    if (snapshot['userId'] != owner) {
+      throw StateError('El servidor devolvió otra cuenta.');
+    }
+    final rows =
+        (snapshot['records'] as List).map((r) => Json.from(r)).toList();
+    final alias = (store.data['remoteCardIds'] as Map? ?? {})[id];
+    final record =
+        rows.where((r) => r['kind'] == 'card' && r['id'] == alias).firstOrNull;
+    if (record == null ||
+        (store.data['remoteCardRevisions'] as Map? ?? {})[id] !=
+            record['revision']) {
+      throw StateError(
+          'El servidor cambió. Descarga de nuevo antes de resolver.');
+    }
+    final deck = rows
+            .where((r) => r['kind'] == 'deck' && r['id'] == record['deckId'])
+            .firstOrNull?['title'] ??
+        expected['deck'];
+    final remote = remoteStudyCard(record, id, deck);
+    final history = rows
+        .where((r) => r['kind'] == 'card_revision' && r['cardId'] == alias)
+        .map((r) => {
+              ...remoteStudyCard(Json.from(r['content']), id, deck,
+                      revision: r['cardRevision'])
+                  .toJson(),
+              'archivedAt': r['archivedAt']
+            })
+        .toList();
+    final events = rows
+        .where((r) => r['kind'] == 'review_event' && r['cardId'] == alias)
+        .map((r) => {
+              'id': r['idempotencyKey'] ?? r['id'],
+              'cardId': id,
+              'cardRevision': r['cardRevision'],
+              'rating': r['rating'],
+              'occurredAt': r['occurredAt'],
+              'latencyMs': r['latencyMs'] ?? 0,
+              'response': r['response'],
+              'algorithm': r['algorithm'],
+              'synced': true,
+              'syncedUserId': owner,
+            })
+        .toList();
+    final state = rows
+        .where((r) => r['kind'] == 'review_state' && r['cardId'] == alias)
+        .firstOrNull;
+    await store.commitConflictFork(
+        id, expected, remote, history, events, state, owner, server);
   }
 
   Future<void> syncNotifications() async {
     await send('/v1/legal-updates/subscriptions', body: {
       'normIds': List<String>.from(store.data['follows'] ?? []),
-      'enabled': store.data['internalAlerts'] ?? true,
+      'enabled': (store.profile['account'] as Map?)?['legalNotifications'] ??
+          store.data['internalAlerts'] ??
+          true,
       'frequency': store.data['alertFrequency'] ?? 'immediate',
     });
     final result = await request('GET', '/v1/notifications');
@@ -542,7 +770,10 @@ class RemoteSync {
   }
 
   Json cardPayload(StudyCard c, String deckId) => {
-        'clientId': c.id,
+        'clientId':
+            (store.data['remoteCardClientIds'] as Map? ?? {}).containsKey(c.id)
+                ? store.data['remoteCardClientIds'][c.id]
+                : c.id,
         'deckId': deckId,
         'front': c.front,
         'back': c.back,
@@ -563,10 +794,122 @@ class RemoteSync {
               ],
       };
   Future<void> upload() async {
+    final pull = _pulls[store];
+    if (pull != null) await pull;
+    final existing = _uploads[store];
+    if (existing != null) return existing;
+    final operationOwner = store.data['remoteUserId'];
+    final operationServer = base;
+    final operation = _performUpload();
+    _uploads[store] = operation;
+    store.syncStatusChanged();
+    try {
+      await operation;
+    } catch (error) {
+      final owner = store.data['remoteUserId'];
+      if (owner != null && owner == operationOwner && base == operationServer) {
+        try {
+          await store.setSyncQueue({
+            'userId': owner,
+            'server': base,
+            'state': error is RemoteSyncFailure && error.status == 409
+                ? 'conflict'
+                : 'error',
+            'connection':
+                error is http.ClientException || error is TimeoutException,
+          });
+        } catch (_) {
+          /* Preserve the original error if local storage also fails. */
+        }
+      }
+      rethrow;
+    } finally {
+      if (identical(_uploads[store], operation)) _uploads[store] = null;
+      store.syncStatusChanged();
+    }
+  }
+
+  Future<void> _performUpload() async {
+    final owner = store.data['remoteUserId'];
+    final server = base;
+    final identity = await request('GET', '/v1/auth/session');
+    if (identity['userId'] != owner) {
+      throw StateError('El servidor no confirmó la cuenta de la copia.');
+    }
+    void checkOwner() {
+      if (store.data['remoteUserId'] != owner || base != server) {
+        throw StateError(
+            'La cuenta cambió durante la subida. Tus datos se conservan.');
+      }
+    }
+
+    final fingerprint = progressFingerprint;
+    final unknown = store.cards
+        .where((c) => (store.data['remoteCardIds'] as Map? ?? {})[c.id] == null)
+        .map((c) => c.id)
+        .toList();
+    for (var offset = 0; offset < unknown.length; offset += 100) {
+      final batch = unknown.skip(offset).take(100).toList();
+      final result = await send('/v1/cards/lookup', body: {'clientIds': batch});
+      checkOwner();
+      for (final raw in result['items'] as List) {
+        final existing = Json.from(raw);
+        final id =
+            (existing['lookupClientId'] ?? existing['clientId']) as String;
+        if (!batch.contains(id)) {
+          throw StateError(
+              'El servidor devolvió un identificador ajeno al lote.');
+        }
+        final history = [
+          ...store
+              .list('cardHistory')
+              .where((h) => h['id'] == id)
+              .map(StudyCard.fromJson),
+          ...store.cards.where((c) => c.id == id)
+        ];
+        final matching = history
+            .where((c) => c.revision == existing['revision'])
+            .firstOrNull;
+        if (matching == null ||
+            matching.deck != existing['deckTitle'] ||
+            !({
+              ...cardPayload(matching, existing['deckId']),
+              'clientId': existing['clientId']
+            }).entries.every((e) =>
+                jsonEncode(canonicalJsonValue(e.value)) ==
+                jsonEncode(canonicalJsonValue(existing[e.key])))) {
+          throw RemoteSyncFailure(409,
+              'Hay otra revisión en la cuenta. Descarga y compara antes de subir; se conserva la versión local.');
+        }
+        store.data['remoteCardClientIds'] = {
+          ...(store.data['remoteCardClientIds'] as Map? ?? {}),
+          id: existing['clientId']
+        };
+        store.data['remoteCardIds'] = {
+          ...(store.data['remoteCardIds'] as Map? ?? {}),
+          id: existing['id']
+        };
+        store.data['remoteCardRevisions'] = {
+          ...(store.data['remoteCardRevisions'] as Map? ?? {}),
+          id: existing['revision']
+        };
+        store.data['remoteCardDeckIds'] = {
+          ...(store.data['remoteCardDeckIds'] as Map? ?? {}),
+          id: existing['deckId']
+        };
+        store.data['remoteDeckNames'] = {
+          ...(store.data['remoteDeckNames'] as Map? ?? {}),
+          existing['deckId']: existing['deckTitle']
+        };
+      }
+      await store.save();
+    }
+    final uploadedDecks = <String, Json>{};
     final remoteCards = <String, String>{};
     final conflictCards =
         store.list('syncConflicts').map((c) => c['cardId']).toSet();
     for (final c in store.cards) {
+      checkOwner();
       if (conflictCards.contains(c.id)) continue;
       var alias = (store.data['remoteCardIds'] as Map? ?? {})[c.id] as String?;
       var revision =
@@ -583,23 +926,63 @@ class RemoteSync {
             'Descarga el progreso antes de subir ediciones de este dispositivo.');
       }
       for (final version in history) {
+        checkOwner();
         if (revision != null && version.revision <= revision) continue;
         final deckId = const Uuid()
             .v5('6ba7b811-9dad-11d1-80b4-00c04fd430c8', version.deck);
-        final deck = await send('/v1/decks', body: {
-          'title': version.deck,
-          'visibility': 'private',
-          'clientId': deckId
-        });
+        final knownDeckId =
+            (store.data['remoteCardDeckIds'] as Map? ?? {})[c.id];
+        final keepDeck = knownDeckId != null &&
+            (store.data['remoteDeckNames'] as Map? ?? {})[knownDeckId] ==
+                version.deck;
+        final deck = keepDeck
+            ? <String, dynamic>{'id': knownDeckId}
+            : uploadedDecks[deckId] ??
+                await send('/v1/decks', body: {
+                  'title': version.deck,
+                  'visibility': 'private',
+                  'clientId': deckId
+                });
+        uploadedDecks[deckId] = deck;
+        checkOwner();
         if (version.revision != (revision ?? 0) + 1) {
           throw StateError(
               'Falta una revisión local de la tarjeta. Se conserva el historial sin sobrescribirlo.');
         }
-        final card = alias == null
-            ? await send('/v1/cards', body: cardPayload(version, deck['id']))
-            : await request('PUT', '/v1/cards/$alias',
-                body: cardPayload(version, deck['id']),
-                extraHeaders: {'If-Match': '$revision'});
+        Json card;
+        try {
+          card = alias == null
+              ? await send('/v1/cards', body: cardPayload(version, deck['id']))
+              : await request('PUT', '/v1/cards/$alias',
+                  body: cardPayload(version, deck['id']),
+                  extraHeaders: {'If-Match': '$revision'});
+        } on RemoteSyncFailure catch (failure) {
+          if (failure.status != 409) rethrow;
+          final existing = await request(
+              'GET', '/v1/cards/by-client/${Uri.encodeComponent(c.id)}');
+          final matching = history
+              .where((h) => h.revision == existing['revision'])
+              .firstOrNull;
+          if (matching == null || existing['deckTitle'] != matching.deck) {
+            rethrow;
+          }
+          final payload = cardPayload(matching, existing['deckId']);
+          if (!payload.entries.every((e) =>
+              jsonEncode(canonicalJsonValue(e.value)) ==
+              jsonEncode(canonicalJsonValue(existing[e.key])))) {
+            rethrow;
+          }
+          card = existing;
+        }
+        checkOwner();
+        store.data['remoteCardDeckIds'] = {
+          ...(store.data['remoteCardDeckIds'] as Map? ?? {}),
+          c.id: card['deckId'] ?? deck['id']
+        };
+        store.data['remoteDeckNames'] = {
+          ...(store.data['remoteDeckNames'] as Map? ?? {}),
+          (card['deckId'] ?? deck['id']): version.deck
+        };
         alias = card['id'];
         revision = card['revision'];
         store.data['remoteCardIds'] = {
@@ -616,6 +999,7 @@ class RemoteSync {
     }
     final events = store.list('reviews');
     for (var i = 0; i < events.length; i++) {
+      checkOwner();
       final e = events[i];
       if (e['syncedUserId'] == store.data['remoteUserId'] ||
           remoteCards[e['cardId']] == null) {
@@ -639,11 +1023,18 @@ class RemoteSync {
       await store.save();
     }
     await uploadReports();
+    checkOwner();
     if (conflictCards.isNotEmpty) {
       throw StateError(
           'Se han conservado los conflictos. El resto del progreso se ha subido sin sobrescribirlos.');
     }
     store.data['lastProgressSync'] = DateTime.now().toUtc().toIso8601String();
+    store.data['progressSyncHash'] = fingerprint;
+    store.data['syncOutbox'] = {
+      'state': 'confirmed',
+      'userId': owner,
+      'server': server
+    };
     await store.save();
   }
 }

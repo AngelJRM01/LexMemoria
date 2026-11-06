@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'store.dart';
 import 'shell.dart';
 import 'startup.dart';
+import 'auto_sync.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +32,10 @@ class _AppBootstrapState extends State<AppBootstrap> {
   Widget build(BuildContext context) => FutureBuilder<AppStore>(
       future: loading,
       builder: (context, snapshot) {
-        if (snapshot.hasData) return LexMemoria(store: snapshot.data!);
+        if (snapshot.hasData) {
+          return AutoSyncHost(
+              store: snapshot.data!, child: LexMemoria(store: snapshot.data!));
+        }
         final error = snapshot.error;
         final code = error is StartupFailure ? error.code : 'STARTUP_UNKNOWN';
         const mode = kReleaseMode
@@ -39,7 +43,7 @@ class _AppBootstrapState extends State<AppBootstrap> {
             : kProfileMode
                 ? 'profile'
                 : 'debug';
-        final diagnostic = 'LexMemoria 0.5.0+8 · $mode · $code';
+        final diagnostic = 'LexMemoria 0.6.0+9 · $mode · $code';
         return MaterialApp(
             debugShowCheckedModeBanner: false,
             home: Scaffold(
@@ -150,7 +154,15 @@ class LexMemoria extends StatelessWidget {
             localizationsDelegates: GlobalMaterialLocalizations.delegates,
             theme: theme(Brightness.light),
             darkTheme: theme(Brightness.dark),
-            themeMode: store.dark ? ThemeMode.dark : ThemeMode.light,
+            themeMode: store.profile['theme'] == 'system'
+                ? ThemeMode.system
+                : store.profile['theme'] == 'dark'
+                    ? ThemeMode.dark
+                    : store.profile['theme'] == 'light'
+                        ? ThemeMode.light
+                        : store.dark
+                            ? ThemeMode.dark
+                            : ThemeMode.light,
             home: store.onboarded
                 ? AppShell(store: store)
                 : WelcomePage(store: store));

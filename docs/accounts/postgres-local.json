@@ -1,0 +1,11 @@
+{
+  "observedAt": "2026-11-06T20:04:18.407499+00:00",
+  "postgres": "18 isolated Docker localhost, not Render",
+  "health": true,
+  "privateCitationSync": true,
+  "profile": true,
+  "appRecreatedPersistence": true,
+  "pgDumpPgRestoreRoundtrip": true,
+  "recordsCompared": 6,
+  "renderVerified": false
+}

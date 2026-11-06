@@ -6,6 +6,7 @@ import 'study.dart';
 import 'library.dart';
 import 'profile.dart';
 import 'planning.dart';
+import 'collaboration.dart';
 
 class WelcomePage extends StatefulWidget {
   final AppStore store;
@@ -235,6 +236,9 @@ class HomePage extends StatelessWidget {
             onPressed: () => push(context, AccountPage(store: store)),
             icon: const Icon(Icons.cloud_outlined),
             label: const Text('Conservar mi progreso al cambiar de móvil')),
+      if (store.data['remoteUserId'] != null)
+        TextButton.icon(onPressed: () => push(context, CollaborationPage(store: store)),
+            icon: const Icon(Icons.folder_shared_outlined), label: const Text('Materiales compartidos')),
     ]);
   }
 }

@@ -1,0 +1,9 @@
+{
+  "observedAt": "2026-11-06T20:03:25.593375+00:00",
+  "database": "isolated PostgreSQL 18 localhost",
+  "encryptedPgDumpRestore": true,
+  "nonEmptyTargetRejected": true,
+  "alteredArchiveRejectedBeforeWrites": true,
+  "recordsEqual": true,
+  "renderVerified": false
+}
