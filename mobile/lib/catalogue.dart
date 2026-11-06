@@ -70,3 +70,7 @@ class ResultPage<T> {
   }
   List<T> get items => rows.skip(page * size).take(size).toList();
 }
+
+final _normSearchCache = Expando<String>();
+String normSearchText(Json norm) => _normSearchCache[norm] ??= normalize(
+    '${norm['title']} ${norm['subject'] ?? ''} ${norm['id']} ${norm['authority'] ?? ''}');

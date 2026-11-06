@@ -11,6 +11,7 @@ import 'models.dart';
 import 'persistence.dart';
 import 'startup.dart';
 import 'prepared.dart';
+import 'legal_units.dart';
 import 'pack_cache.dart';
 import 'catalogue.dart';
 import 'backup.dart';
@@ -91,26 +92,7 @@ class AppStore extends ChangeNotifier {
         store.error =
             'No se ha podido cargar el catálogo incluido (LEGAL_CATALOGUE). Tus tarjetas y notas se conservan.';
       }
-      for (final norm in store
-          .list('norms')
-          .where((n) => n['bundledReady'] == true)
-          .toList()
-          .reversed
-          .take(4)) {
-        final asset = store.bundledNorms
-            .where((n) =>
-                n['id'] == norm['id'] &&
-                n['latestVersion'] == norm['latestVersion'])
-            .firstOrNull;
-        if (asset != null) {
-          try {
-            await store.loadBundledPack(asset);
-          } catch (_) {
-            store.error =
-                'No se ha podido abrir un paquete de lectura (LEGAL_PACK). Tus datos personales se conservan; vuelve a descargar el texto.';
-          }
-        }
-      }
+      // Reading packs open on demand; never decompress several laws before the home screen.
       await store.loadPreparedCards();
       return store;
     } catch (_) {
@@ -163,9 +145,11 @@ class AppStore extends ChangeNotifier {
         asset.buffer.asUint8List(asset.offsetInBytes, asset.lengthInBytes);
     final input = <String, dynamic>{'bytes': bytes, 'hash': deck['hash']};
     final prepared = bytes.length < 64000
-        ? await Future<List<Json>>.sync(() => decodePreparedCards(input))
-        : await compute(decodePreparedCards, input);
-    final count = await addPreparedCards(prepared);
+        ? await Future<Json>.sync(() => decodePreparedInstallation(input))
+        : await compute(decodePreparedInstallation, input);
+    final count = await addPreparedCards(
+        (prepared['cards'] as List).map((c) => Json.from(c)).toList(),
+        legacyIds: Set<String>.from(prepared['legacyIds']));
     if (deck['id'] != null) {
       data['installedDecks'] = {
         ...List<String>.from(data['installedDecks'] ?? []),
@@ -223,12 +207,39 @@ class AppStore extends ChangeNotifier {
   bool get dark =>
       profile['theme'] == 'dark' ||
       (profile['theme'] == null && data['dark'] == true);
-  List<StudyCard> get cards => (data['cards'] as List? ?? [])
-      .map((v) => StudyCard.fromJson(Json.from(v)))
-      .toList();
+  List<StudyCard> get cards {
+    if (_cardCache == null || !identical(_cardSource, data['cards'])) {
+      _cardSource = data['cards'];
+      _cardCache = (data['cards'] as List? ?? [])
+          .map((v) => StudyCard.fromJson(Json.from(v)))
+          .toList();
+    }
+    return _cardCache!;
+  }
+
   List<Json> list(String key) =>
       (data[key] as List? ?? []).map((v) => Json.from(v)).toList();
+  List<Json>? _catalogueCache;
+  Object? _catalogueLocal, _catalogueCorpus, _catalogueBundled;
+  int _packGeneration = 0, _cataloguePackGeneration = -1;
+  List<StudyCard>? _cardCache;
+  Object? _cardSource;
   List<Json> get catalogue {
+    if (_catalogueCache == null ||
+        !identical(_catalogueLocal, data['norms']) ||
+        !identical(_catalogueCorpus, corpusNorms) ||
+        !identical(_catalogueBundled, bundledNorms) ||
+        _cataloguePackGeneration != _packGeneration) {
+      _catalogueCache = _buildCatalogue();
+      _catalogueLocal = data['norms'];
+      _catalogueCorpus = corpusNorms;
+      _catalogueBundled = bundledNorms;
+      _cataloguePackGeneration = _packGeneration;
+    }
+    return _catalogueCache!;
+  }
+
+  List<Json> _buildCatalogue() {
     final norms = {for (final n in initialCatalogue()) n['id']: n};
     for (final n in [...corpusNorms, ...bundledNorms, ...list('norms')]) {
       norms[n['id']] = {...?norms[n['id']], ...n};
@@ -258,6 +269,7 @@ class AppStore extends ChangeNotifier {
   }
 
   void rememberPack(Json norm, List<dynamic> items) {
+    _packGeneration++;
     bundledPacks.remove(norm['id']);
     bundledPacks[norm['id']] = items;
     loadedPackVersions[norm['id']] = norm['latestVersion'];
@@ -738,6 +750,7 @@ class AppStore extends ChangeNotifier {
   Future<void> reset() async {
     await _replaceSnapshot({});
     bundledPacks.clear();
+    _packGeneration++;
   }
 
   Future<void> _replaceSnapshot(Json replacement) {
@@ -1082,6 +1095,11 @@ Json decodeBundledPack(Json input) {
       pack['norm']['latestVersion'] != input['version']) {
     throw StateError('Versión de paquete incompatible.');
   }
+  for (final unit in pack['items'] as List) {
+    for (final version in unit['versions'] as List) {
+      version['bodyText'] = legalBodyText(version);
+    }
+  }
   return pack;
 }
 
@@ -1101,7 +1119,12 @@ List<Json> decodeCorpusCatalogue(Uint8List bytes) {
   return items;
 }
 
-List<Json> decodePreparedCards(Json input) {
+List<Json> decodePreparedCards(Json input) =>
+    (decodePreparedInstallation(input)['cards'] as List)
+        .map((c) => Json.from(c))
+        .toList();
+
+Json decodePreparedInstallation(Json input) {
   final bytes = input['bytes'] as List<int>;
   if (sha256.convert(bytes).toString() != input['hash']) {
     throw StateError('No se ha podido verificar el mazo preparado.');
@@ -1109,7 +1132,10 @@ List<Json> decodePreparedCards(Json input) {
   final decoded = GZipDecoder().decodeBytes(bytes);
   if (decoded.length > 32000000) throw StateError('Mazo demasiado grande.');
   final pack = Json.from(jsonDecode(utf8.decode(decoded)));
-  return (pack['cards'] as List)
-      .map((c) => StudyCard.fromJson(Json.from(c)).toJson())
-      .toList();
+  return {
+    'cards': (pack['cards'] as List)
+        .map((c) => StudyCard.fromJson(Json.from(c)).toJson())
+        .toList(),
+    'legacyIds': pack['legacyIds'] ?? []
+  };
 }

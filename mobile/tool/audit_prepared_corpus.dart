@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:lexmemoria/models.dart';
 import 'package:lexmemoria/prepared.dart';
+import 'package:lexmemoria/legal_units.dart';
 
 void main(List<String> args) {
   final root = args.isEmpty ? '/workspace/lexmemoria-distribution' : args.first;
@@ -39,6 +40,17 @@ void main(List<String> args) {
       }
       for (final card in cards) {
         final unit = byId[card['unitId']]!;
+        if (legalUnitKind(unit) != 'article') {
+          throw StateError('Non-article used as an exercise');
+        }
+        if (format == 'qa' && (card['back'] as String).runes.length > 320) {
+          throw StateError('Oversized recall rule');
+        }
+        if (format == 'test' &&
+            (card['options'] as List)
+                .any((v) => targetCategory(v) != targetCategory(card['back']))) {
+          throw StateError('Unrelated distractor category');
+        }
         if (!ids.add(card['id']) ||
             card['normId'] != entry['id'] ||
             card['unitVersionHash'] != unit['versions'].last['hash']) {

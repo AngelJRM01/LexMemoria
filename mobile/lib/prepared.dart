@@ -2,20 +2,17 @@ import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import 'package:uuid/uuid.dart';
 import 'models.dart';
+import 'legal_units.dart';
 
 final articleHeading =
     RegExp(r'^(?:Art[íi]culo|Art\.?)\s', caseSensitive: false);
-final literalWord = RegExp(r"\p{L}[\p{L}\p{M}·’'-]{5,}", unicode: true);
 String sourceComparable(String value) =>
     value.replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
 
 List<String> literalChunks(String title, String text) {
   final paragraphs =
       text.split('\n').map((p) => p.trim()).where((p) => p.isNotEmpty).toList();
-  if (paragraphs.isNotEmpty &&
-      (paragraphs.first == title.trim() ||
-          RegExp(r'^Art[íi]culo\s', caseSensitive: false)
-              .hasMatch(paragraphs.first))) {
+  if (paragraphs.isNotEmpty && paragraphs.first == title.trim()) {
     paragraphs.removeAt(0);
   }
   final pieces = <String>[];
@@ -65,6 +62,36 @@ List<String> literalChunks(String title, String text) {
 /// Short contiguous extracts. QA retains its original full-reference chunks.
 List<String> exercisePassages(String title, String text,
     {bool paragraphsOnly = true}) {
+  final paragraphs =
+      text.split('\n').map((p) => p.trim()).where((p) => p.isNotEmpty).toList();
+  if (paragraphs.isNotEmpty && paragraphs.first == title.trim()) {
+    paragraphs.removeAt(0);
+  }
+  final result = <String>[];
+  for (final paragraph
+      in paragraphsOnly ? paragraphs : [paragraphs.join('\n')]) {
+    if (paragraph.runes.length <= 320) {
+      if (paragraph.length >= 35) result.add(paragraph);
+      continue;
+    }
+    var prefix = '';
+    for (final sentence in paragraph.split(RegExp(r'(?<=[.;!?])\s+'))) {
+      final part =
+          prefix.isEmpty ? sentence.trim() : '$prefix ${sentence.trim()}';
+      prefix = '';
+      if (part.length < 35) {
+        prefix = part;
+        continue;
+      }
+      // Never manufacture a rule by cutting a sentence in the middle.
+      if (part.runes.length <= 320) result.add(part);
+    }
+  }
+  return result;
+}
+
+List<String> _legacyPassages(String title, String text,
+    {bool paragraphsOnly = true}) {
   final result = <String>[];
   for (final block in literalChunks(title, text)) {
     for (final paragraph in paragraphsOnly ? block.split('\n') : [block]) {
@@ -101,66 +128,104 @@ class _Target {
   const _Target(this.start, this.end, this.answer, this.weight);
 }
 
-const _filler = {
-  'mediante',
-  'tambien',
-  'podran',
-  'debera',
-  'deberan',
-  'podria',
-  'cuando',
-  'cualquier',
-  'cualesquiera',
-  'aquellos',
-  'aquellas',
-  'mismos',
-  'mismas',
-  'respectivamente',
-  'siguiente',
-  'siguientes',
-  'establece',
-  'establecen',
-  'realizar',
-  'presente',
-  'correspondiente',
-  'correspondientes',
-  'asimismo',
-  'siempre'
-};
-final _legalConcept = RegExp(
-    r'derech|obliga|plazo|tribunal|jue[zc]|pena|multa|recurso|competen|constituc|garanti|prohib|libert|sancion|consentim|autoriz|procedim|contrat|responsab');
 final _quantity = RegExp(
     r'\b(?:\d+|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|quince|veinte|treinta|sesenta)[ \t\u00a0]+(?:días?|mes(?:es)?|años?|horas?|semanas?|euros?)\b',
     unicode: true,
     caseSensitive: false);
 
+const _institutions = [
+  'Tribunal Constitucional',
+  'Tribunal Supremo',
+  'Congreso de los Diputados',
+  'Cortes Generales',
+  'Consejo de Ministros',
+  'Ministerio Fiscal',
+  'Consejo General del Poder Judicial',
+  'Administración pública',
+  'Administraciones públicas',
+  'Gobierno',
+  'Senado',
+  'Juez',
+  'Tribunal'
+];
+const _concepts = [
+  'derechos fundamentales',
+  'garantías constitucionales',
+  'procedimientos administrativos',
+  'tutela judicial efectiva',
+  'presunción de inocencia',
+  'seguridad jurídica',
+  'responsabilidad patrimonial',
+  'libertad ideológica',
+  'libertad religiosa',
+  'libertad de expresión',
+  'libertad sindical',
+  'libertad personal',
+  'igualdad ante la ley',
+  'derecho de defensa',
+  'derecho de reunión',
+  'derecho de asociación',
+  'derecho de petición',
+  'derecho de huelga',
+  'sufragio universal',
+  'propiedad privada',
+  'interés general',
+  'orden público',
+  'fuerza mayor',
+  'buena fe',
+  'cosa juzgada',
+  'recurso de amparo',
+  'recurso de apelación',
+  'recurso de casación',
+  'silencio administrativo',
+  'procedimiento administrativo',
+  'acto administrativo',
+  'prescripción',
+  'caducidad',
+  'competencia',
+  'consentimiento',
+  'domicilio',
+  'nacionalidad',
+  'inviolabilidad',
+  'imparcialidad',
+  'legalidad',
+  'irretroactividad',
+  'publicidad',
+  'proporcionalidad',
+  'indemnización',
+  'notificación',
+  'motivación'
+];
+String targetCategory(String answer) {
+  if (_quantity.hasMatch(answer)) {
+    return RegExp(r'euros?', caseSensitive: false).hasMatch(answer)
+        ? 'amount'
+        : 'duration';
+  }
+  if (_institutions.any((v) => normalize(v) == normalize(answer))) {
+    return 'institution';
+  }
+  return 'concept';
+}
+
+final _legalTermPattern = (() {
+  final terms = [..._institutions, ..._concepts]
+    ..sort((a, b) => b.length.compareTo(a.length));
+  return RegExp(
+      r'(?<![\p{L}])(?:' + terms.map(RegExp.escape).join('|') + r')(?![\p{L}])',
+      unicode: true,
+      caseSensitive: false);
+})();
 List<_Target> _targets(String text, {int limit = 100}) {
   final found = <_Target>[];
   for (final m in _quantity.allMatches(text).take(limit)) {
-    found.add(_Target(m.start, m.end, m.group(0)!, 3));
+    found.add(_Target(m.start, m.end, m.group(0)!, 4));
   }
-  final words = literalWord.allMatches(text).take(limit).toList();
-  for (var i = 0; i < words.length; i++) {
-    final word = words[i];
-    if (_filler.contains(normalize(word.group(0)!))) continue;
-    if (found.any((t) => word.start >= t.start && word.start < t.end)) continue;
-    final single = word.group(0)!;
-    found.add(_Target(word.start, word.end, single,
-        _legalConcept.hasMatch(normalize(single)) ? 2 : 1));
-    var end = word.end;
-    if (i + 1 < words.length &&
-        RegExp(r'^[ \t\u00a0]+$')
-            .hasMatch(text.substring(word.end, words[i + 1].start)) &&
-        words[i + 1].end - word.start <= 48 &&
-        !_filler.contains(normalize(words[i + 1].group(0)!))) {
-      end = words[i + 1].end;
-      i++;
-    }
-    final answer = text.substring(word.start, end);
-    if (end > word.end) {
-      found.add(_Target(word.start, end, answer,
-          _legalConcept.hasMatch(normalize(answer)) ? 3 : 2));
-    }
+  for (final m in _legalTermPattern.allMatches(text)) {
+    if (found.any((t) => m.start < t.end && m.end > t.start)) continue;
+    final answer = m.group(0)!;
+    found.add(_Target(m.start, m.end, answer, answer.contains(' ') ? 3 : 2));
+    if (found.length >= limit) break;
   }
   return found;
 }
@@ -185,16 +250,7 @@ List<Json> buildLiteralCards(Json input) {
   if (!['qa', 'cloze', 'test', 'reference'].contains(format)) {
     throw ArgumentError('Formato no disponible');
   }
-  final articles =
-      units.where((u) => articleHeading.hasMatch(u['title'])).toList();
-  final eligible = articles.isNotEmpty
-      ? articles
-      : units
-          .where((u) =>
-              !['preambulo', 'fi'].contains(u['id']) &&
-              (u['versions'] as List).isNotEmpty &&
-              (u['versions'].last['text'] as String? ?? '').trim().length > 60)
-          .toList();
+  final eligible = units.where(studyArticle).toList();
   final title = friendlyNormLabel(norm);
   final custom = (input['deck'] as String? ?? '').trim();
   var label = custom.isNotEmpty
@@ -220,7 +276,7 @@ List<Json> buildLiteralCards(Json input) {
   if (format == 'test') {
     for (final u in eligible) {
       if (globalPool.length >= 512) break;
-      for (final t in _targets(u['versions'].last['text'] ?? '', limit: 64)) {
+      for (final t in _targets(legalBodyText(u['versions'].last), limit: 64)) {
         if (globalSeen.add(t.answer)) globalPool.add(t.answer);
         if (globalPool.length >= 512) break;
       }
@@ -232,12 +288,10 @@ List<Json> buildLiteralCards(Json input) {
     final version = Json.from(versions.last);
     final displayUnit =
         '${unit['title']}${(titleCounts[sourceComparable(unit['title'])] ?? 0) > 1 ? ' [${unit['id']}]' : ''}';
-    final chunks = format == 'qa'
-        ? literalChunks(unit['title'], version['text'] ?? '')
-        : exercisePassages(unit['title'], version['text'] ?? '',
-            paragraphsOnly: format != 'reference');
+    final chunks = exercisePassages(unit['title'], legalBodyText(versions.last),
+        paragraphsOnly: format != 'reference');
     final localPool = format == 'test'
-        ? _targets(version['text'] ?? '', limit: 64)
+        ? _targets(legalBodyText(versions.last), limit: 64)
             .map((t) => t.answer)
             .toList()
         : <String>[];
@@ -245,8 +299,9 @@ List<Json> buildLiteralCards(Json input) {
       final chunk = chunks[i];
       final seed =
           "lexmemoria:${norm['id']}:${norm['latestVersion']}:${unit['id']}:$i";
+      final cue = chunk.split(RegExp(r'\s+')).take(5).join(' ');
       var front =
-          "¿Qué establece $displayUnit de $title?${chunks.length > 1 ? ' Tramo ${i + 1} de ${chunks.length}.' : ''}";
+          'Completa de memoria esta regla de $displayUnit de $title.\n\n$cue…';
       var back = chunk;
       final options = <String>[];
       int? correct;
@@ -316,7 +371,13 @@ List<Json> buildLiteralCards(Json input) {
                 alternatives.any((v) => normalize(v) == normalize(value))) {
               continue;
             }
-            if (value.length > 64) continue;
+            if (value.length > 64 ||
+                targetCategory(value) != targetCategory(back) ||
+                sourceComparable(chunk).contains(sourceComparable(value)) ||
+                normalize(value).contains(normalize(back)) ||
+                normalize(back).contains(normalize(value))) {
+              continue;
+            }
             alternatives.add(value);
             if (alternatives.length == 3) break;
           }
@@ -331,7 +392,7 @@ List<Json> buildLiteralCards(Json input) {
       }
 
       final idSeed =
-          '$seed${format == 'qa' ? '' : ':$format-v2'}${custom.isEmpty ? '' : ':group:$custom'}';
+          '$seed:$format-v3${custom.isEmpty ? '' : ':group:$custom'}';
       result.add(StudyCard(
               id: const Uuid()
                   .v5('6ba7b811-9dad-11d1-80b4-00c04fd430c8', idSeed),
@@ -359,18 +420,29 @@ Json buildPreparedInstallation(Json input) {
   final prepared = buildLiteralCards(input);
   final format = input['format'] ?? 'qa';
   final legacy = <String>[];
-  if (format != 'qa') {
+  {
     final norm = Json.from(input['norm']);
     final group = (input['deck'] as String? ?? '').trim();
     for (final unit in input['units'] as List) {
       final versions = unit['versions'] as List;
       if (versions.isEmpty) continue;
-      final chunks = literalChunks(unit['title'], versions.last['text'] ?? '');
+      final oldText = versions.last['text'] ?? '';
+      final a = literalChunks(unit['title'], oldText).length;
+      final b = _legacyPassages(unit['title'], oldText,
+              paragraphsOnly: format != 'reference')
+          .length;
+      final chunks = List.filled(a > b ? a : b, '');
       for (var i = 0; i < chunks.length; i++) {
         final seed =
             "lexmemoria:${norm['id']}:${norm['latestVersion']}:${unit['id']}:$i:$format-v1${group.isEmpty ? '' : ':group:$group'}";
         legacy
             .add(const Uuid().v5('6ba7b811-9dad-11d1-80b4-00c04fd430c8', seed));
+        final v2 = seed.replaceFirst(':$format-v1', ':$format-v2');
+        legacy.add(const Uuid().v5('6ba7b811-9dad-11d1-80b4-00c04fd430c8', v2));
+        if (format == 'qa') {
+          legacy.add(const Uuid().v5('6ba7b811-9dad-11d1-80b4-00c04fd430c8',
+              seed.replaceFirst(':qa-v1', '')));
+        }
       }
     }
   }

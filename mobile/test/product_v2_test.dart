@@ -141,6 +141,12 @@ void main() {
     expect(
         restored.catalogue
             .firstWhere((n) => n['id'] == constitution['id'])['units'],
+        isNull);
+    await restored.loadBundledPack(
+        restored.catalogue.firstWhere((n) => n['id'] == constitution['id']));
+    expect(
+        restored.catalogue
+            .firstWhere((n) => n['id'] == constitution['id'])['units'],
         isNotNull);
     Object? integrityError;
     try {

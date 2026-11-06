@@ -162,7 +162,7 @@ void main() {
     final text = List.generate(
             30,
             (i) =>
-                '$i. El tribunal competente garantiza los derechos fundamentales mediante el procedimiento administrativo previsto para las personas interesadas.')
+                '$i. El tribunal competente garantiza los derechos fundamentales mediante el procedimiento administrativo en un plazo de ${i + 1} días para las personas interesadas.')
         .join('\n');
     final unit = {
       'id': 'a1',

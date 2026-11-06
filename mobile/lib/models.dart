@@ -492,3 +492,7 @@ int studyCapacity(Json profile) {
       ((profile['hours'] as num).clamp(.5, 8) * 3600 / seconds).floor();
   return min(goal, max(1, capacity));
 }
+
+final _cardSearchCache = Expando<String>();
+String studyCardSearchText(StudyCard card) => _cardSearchCache[card] ??= normalize(
+    '${card.deck} ${card.front} ${card.back} ${card.explanation} ${card.normId} ${card.unitId}');

@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+from app.prepared import passages,body_text
 
 
 def test_every_prepared_answer_is_literal_and_cited_without_missing_articles():
@@ -29,13 +30,13 @@ def test_every_prepared_answer_is_literal_and_cited_without_missing_articles():
             assert card['normId']==deck['id'] and card['versionId']==source['latestVersion']
             assert card['unitVersionHash']==version['hash']
             assert ' '.join(card['back'].split()) in ' '.join(version['text'].split())
-            assert 0<len(card['back'])<=1200 and card['editorialState']=='source_literal'
+            assert 0<len(card['back'])<=320 and card['editorialState']=='source_literal'
         for unit in units:
             if not re.match(r'^(?:Art[íi]culo|Art\.?)\s',unit['title'],re.I) or not unit['versions']:continue
             text=unit['versions'][-1]['text'].strip()
             lines=[line.strip() for line in text.splitlines() if line.strip()]
             if lines and lines[0]==unit['title'].strip():lines.pop(0)
-            if lines and text.lower() not in ('(derogado)','(derogada)','derogado.','derogada.'):
+            if passages(unit['title'],body_text(unit['versions'][-1])) and lines and text.lower() not in ('(derogado)','(derogada)','derogado.','derogada.'):
                 assert unit['id'] in covered
     assert len(ready['items'])==20 and len(all_ids)>10000
     assert next(d['count'] for d in ready['items'] if d['id']=='BOE-A-1889-4763')>1000

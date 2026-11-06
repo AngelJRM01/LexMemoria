@@ -25,7 +25,10 @@ void main() {
     final store =
         await AppStore.load(persistence: PreferencesPersistence(prefs));
     expect(store.cards.length, 20);
-    expect(store.preparedDecks.length, 12451);
+    expect(store.preparedDecks.length,
+        store.corpusNorms.where((n) => (n['count'] as num? ?? 0) > 0).length);
+    expect(store.preparedDecks.every((d) => (d['count'] as num? ?? 0) > 0),
+        isTrue);
     final original = store.cards.first;
     expect(original.normId, 'BOE-A-1978-31229');
     expect(original.unitVersionHash, isNotEmpty);

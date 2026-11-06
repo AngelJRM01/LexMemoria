@@ -8,6 +8,7 @@ import 'widgets.dart';
 import 'study.dart';
 import 'remote.dart';
 import 'reading.dart';
+import 'legal_units.dart';
 import 'catalogue.dart';
 import 'browsing_widgets.dart';
 import 'account_pages.dart' show PersonalProfilePage;
@@ -59,14 +60,14 @@ class _LibraryPageState extends State<LibraryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final needle = normalize(query);
     final rows = widget.store.catalogue
         .where((n) =>
             CatalogueFilters(
                     subject: subject, scope: scope, community: community)
                 .matches(n) &&
             (!saved || widget.store.has('bookmarks', n['id'])) &&
-            normalize('${n['title']} ${n['id']} ${n['authority'] ?? ''}')
-                .contains(normalize(query)))
+            (needle.isEmpty || normSearchText(n).contains(needle)))
         .toList();
     final slice = ResultPage(rows, page, pageSize);
     final shown = slice.items;
@@ -197,8 +198,21 @@ class NormPage extends StatefulWidget {
 }
 
 class _NormPageState extends State<NormPage> {
-  String query = '';
+  String query = '', unitKind = 'article';
   int indexPage = 0, indexSize = 50;
+  Object? unitSource;
+  List<Json> unitRows = [];
+  Map<String, String> unitContexts = {};
+  List<Json> readUnits(Json norm) {
+    if (!identical(unitSource, norm['units'])) {
+      unitSource = norm['units'];
+      unitRows =
+          (norm['units'] as List? ?? []).map((u) => Json.from(u)).toList();
+      unitContexts = legalUnitContexts(unitRows);
+    }
+    return unitRows;
+  }
+
   final indexScroll = ScrollController();
   void resetIndex() {
     indexPage = 0;
@@ -237,8 +251,9 @@ class _NormPageState extends State<NormPage> {
           .map((u) => <String, dynamic>{
                 'id': u['id'],
                 'title': u['title'],
-                'text':
-                    (u['versions'] as List? ?? []).lastOrNull?['text'] ?? '',
+                'text': (u['versions'] as List? ?? []).isEmpty
+                    ? ''
+                    : legalBodyText(u['versions'].last),
               })
           .toList();
       final result = await compute(buildReadingIndex, rows);
@@ -301,9 +316,10 @@ class _NormPageState extends State<NormPage> {
   @override
   Widget build(BuildContext context) {
     final n = widget.store.catalogue.firstWhere((n) => n['id'] == widget.id);
-    final all = (n['units'] as List? ?? []).map((u) => Json.from(u)).toList();
+    final all = readUnits(n);
     final needle = normalize(query.trim());
     final units = all
+        .where((u) => legalUnitKind(u) == unitKind)
         .where((u) =>
             (!fullText || !indexing) &&
             (fullText
@@ -322,6 +338,21 @@ class _NormPageState extends State<NormPage> {
             null;
     return Scaffold(
         appBar: AppBar(title: const Text('Leer norma'), actions: [
+          PopupMenuButton<String>(
+              tooltip: 'Partes de la norma',
+              icon: const Icon(Icons.toc_outlined),
+              onSelected: (kind) => setState(() {
+                    unitKind = kind;
+                    query = '';
+                    resetIndex();
+                  }),
+              itemBuilder: (_) => const [
+                    PopupMenuItem(value: 'article', child: Text('Artículos')),
+                    PopupMenuItem(
+                        value: 'provision', child: Text('Disposiciones')),
+                    PopupMenuItem(value: 'preamble', child: Text('Preámbulo')),
+                    PopupMenuItem(value: 'annex', child: Text('Anexos')),
+                  ]),
           IconButton(
               tooltip: 'Tarjetas de esta norma',
               onPressed: () => push(
@@ -343,7 +374,7 @@ class _NormPageState extends State<NormPage> {
         ]),
         body: SearchPageBody(
             resultsController: indexScroll,
-            footer: all.isEmpty
+            footer: units.isEmpty
                 ? null
                 : PageControls(
                     total: units.length,
@@ -381,7 +412,9 @@ class _NormPageState extends State<NormPage> {
                     decoration: InputDecoration(
                         hintText: fullText
                             ? 'Buscar en el texto de esta norma'
-                            : 'Buscar artículo en el índice',
+                            : unitKind == 'article'
+                                ? 'Buscar artículo en el índice'
+                                : 'Buscar en esta parte de la norma',
                         prefixIcon: Icon(Icons.search)),
                     onChanged: (v) => setState(() {
                           query = v;
@@ -408,11 +441,28 @@ class _NormPageState extends State<NormPage> {
             resultBuilder: (context, i) {
               if (i < shown.length) {
                 final u = shown[i];
-                return ListTile(
+                final tile = ListTile(
                     contentPadding: const EdgeInsets.symmetric(vertical: 6),
                     title: Text(u['title']),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => read(n, u));
+                final section = unitContexts[u['id']] ?? '';
+                if (unitKind == 'article' &&
+                    section.isNotEmpty &&
+                    (i == 0 || unitContexts[shown[i - 1]['id']] != section)) {
+                  return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                            padding: const EdgeInsets.only(top: 12, bottom: 4),
+                            child: Text(section,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.labelLarge)),
+                        tile
+                      ]);
+                }
+                return tile;
               }
               return Details('Fuente, fechas y seguimiento', children: [
                 Text(n['title']),
@@ -457,10 +507,13 @@ class _NormPageState extends State<NormPage> {
                         : 'Abrir y guardar texto')),
               ],
               if (all.isNotEmpty && units.isEmpty && !indexing)
-                const EmptyState(
-                    title: 'Sin coincidencias',
-                    detail:
-                        'Prueba otro término, número o título de artículo.'),
+                EmptyState(
+                    title: query.isEmpty && unitKind == 'article'
+                        ? 'Esta norma no contiene artículos para mostrar'
+                        : 'Sin coincidencias',
+                    detail: query.isEmpty && unitKind == 'article'
+                        ? 'Consulta el resto del texto desde Partes de la norma o abre la fuente oficial.'
+                        : 'Prueba otro término o número.'),
             ]));
   }
 }
@@ -565,7 +618,7 @@ class _ReaderPageState extends State<ReaderPage> {
         } else {
           final selected = (widget.unit['versions'] as List)[version];
           final fragments =
-              articleParagraphs(selected['text'] ?? '', widget.unit['title']);
+              articleParagraphs(legalBodyText(selected), widget.unit['title']);
           final first = fragments
               .indexWhere((p) => normalize(p).contains(normalize(query)));
           if (first >= 0) rememberParagraph(first);
@@ -579,7 +632,7 @@ class _ReaderPageState extends State<ReaderPage> {
     if (studyDate != null || version < 0 || version >= versions.length) return;
     final selected = Json.from(versions[version]);
     final count =
-        articleParagraphs(selected['text'] ?? '', widget.unit['title']).length;
+        articleParagraphs(legalBodyText(selected), widget.unit['title']).length;
     if (count == 0) return;
     naturalParagraph = index.clamp(0, count - 1);
     perform(
@@ -747,7 +800,8 @@ class _ReaderPageState extends State<ReaderPage> {
     final unavailable = selection != null && selection['selectedIndex'] == null;
     final selectedIndex = selection?['selectedIndex'] as int? ?? version;
     final v = Json.from(versions[selectedIndex]);
-    final paragraphs = articleParagraphs(v['text'] ?? '', widget.unit['title']);
+    final paragraphs =
+        articleParagraphs(legalBodyText(v), widget.unit['title']);
     final matches = <int>[
       for (var i = 0; i < paragraphs.length; i++)
         if (normalize(paragraphs[i]).contains(normalize(query))) i
@@ -757,62 +811,69 @@ class _ReaderPageState extends State<ReaderPage> {
     final reference =
         '${widget.norm['id']} · ${widget.unit['title']} · efecto ${displayDate(v['effectiveFrom'])}';
     return Scaffold(
-        appBar: AppBar(title: const Text('Leer artículo'), actions: [
-          IconButton(
-              tooltip: 'Mis notas',
-              onPressed: notes,
-              icon: const Icon(Icons.edit_note)),
-          IconButton(
-              tooltip: 'Opciones de lectura',
-              onPressed: () => options(versions, selectedIndex),
-              icon: const Icon(Icons.tune)),
-          PopupMenuButton<String>(
-              tooltip: 'Más acciones',
-              onSelected: (action) {
-                if (action == 'source') {
-                  openSource(context, widget.norm['sourceUrl']);
-                }
-                if (action == 'compare') {
-                  push(context, ComparePage(unit: widget.unit));
-                }
-                if (unavailable) return;
-                if (action == 'copy') {
-                  Clipboard.setData(ClipboardData(text: reference));
-                }
-                if (action == 'listen') {
-                  perform(context, () async {
-                    await tts.setLanguage('es-ES');
-                    await tts.speak(v['text']);
-                  });
-                }
-                if (action == 'stop') tts.stop();
-                if (action == 'card') {
-                  push(
-                      context,
-                      CardEditor(
-                          store: widget.store,
-                          norm: widget.norm,
-                          unit: widget.unit,
-                          sourceVersion: v));
-                }
-              },
-              itemBuilder: (_) => [
-                    const PopupMenuItem(
-                        value: 'source', child: Text('Fuente oficial')),
-                    const PopupMenuItem(
-                        value: 'compare', child: Text('Comparar versiones')),
-                    if (!unavailable) ...[
-                      const PopupMenuItem(
-                          value: 'listen', child: Text('Escuchar artículo')),
-                      const PopupMenuItem(
-                          value: 'stop', child: Text('Detener lectura')),
-                      const PopupMenuItem(
-                          value: 'copy', child: Text('Copiar referencia')),
-                      const PopupMenuItem(
-                          value: 'card', child: Text('Crear tarjeta propia'))
-                    ],
-                  ]),
-        ]),
+        appBar: AppBar(
+            title: Text(legalUnitKind(widget.unit) == 'article'
+                ? 'Leer artículo'
+                : 'Leer apartado'),
+            actions: [
+              IconButton(
+                  tooltip: 'Mis notas',
+                  onPressed: notes,
+                  icon: const Icon(Icons.edit_note)),
+              IconButton(
+                  tooltip: 'Opciones de lectura',
+                  onPressed: () => options(versions, selectedIndex),
+                  icon: const Icon(Icons.tune)),
+              PopupMenuButton<String>(
+                  tooltip: 'Más acciones',
+                  onSelected: (action) {
+                    if (action == 'source') {
+                      openSource(context, widget.norm['sourceUrl']);
+                    }
+                    if (action == 'compare') {
+                      push(context, ComparePage(unit: widget.unit));
+                    }
+                    if (unavailable) return;
+                    if (action == 'copy') {
+                      Clipboard.setData(ClipboardData(text: reference));
+                    }
+                    if (action == 'listen') {
+                      perform(context, () async {
+                        await tts.setLanguage('es-ES');
+                        await tts.speak(legalBodyText(v));
+                      });
+                    }
+                    if (action == 'stop') tts.stop();
+                    if (action == 'card') {
+                      push(
+                          context,
+                          CardEditor(
+                              store: widget.store,
+                              norm: widget.norm,
+                              unit: widget.unit,
+                              sourceVersion: v));
+                    }
+                  },
+                  itemBuilder: (_) => [
+                        const PopupMenuItem(
+                            value: 'source', child: Text('Fuente oficial')),
+                        const PopupMenuItem(
+                            value: 'compare',
+                            child: Text('Comparar versiones')),
+                        if (!unavailable) ...[
+                          const PopupMenuItem(
+                              value: 'listen',
+                              child: Text('Escuchar artículo')),
+                          const PopupMenuItem(
+                              value: 'stop', child: Text('Detener lectura')),
+                          const PopupMenuItem(
+                              value: 'copy', child: Text('Copiar referencia')),
+                          const PopupMenuItem(
+                              value: 'card',
+                              child: Text('Crear tarjeta propia'))
+                        ],
+                      ]),
+            ]),
         bottomNavigationBar: unavailable || !focus || matches.isEmpty
             ? null
             : SafeArea(

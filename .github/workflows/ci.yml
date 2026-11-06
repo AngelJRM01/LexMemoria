@@ -59,7 +59,7 @@ jobs:
           LEXMEMORIA_PREVIEW_SIGNING: "1"
       - uses: actions/upload-artifact@v4
         with:
-          name: lexmemoria-android-preview-release
+          name: lexmemoria-android-preview-sin-google
           path: mobile/build/app/outputs/flutter-apk/app-release.apk
   ios:
     runs-on: macos-latest

@@ -88,13 +88,12 @@ class _StudyPageState extends State<StudyPage> {
         .map((id) => s.cards.where((c) => c.id == id && !c.blocked).firstOrNull)
         .whereType<StudyCard>()
         .toList();
+    final needle = normalize(query);
     final eligible = s.cards
         .where((c) =>
             (!favoritesOnly || s.has('favoriteCards', c.id)) &&
             (!weakOnly || (s.state(c.id)['lapses'] as num? ?? 0) > 0) &&
-            normalize(
-                    '${c.deck} ${c.front} ${c.back} ${c.explanation} ${c.normId} ${c.unitId}')
-                .contains(normalize(query)))
+            (needle.isEmpty || studyCardSearchText(c).contains(needle)))
         .toList();
     final eligibleIds = eligible.map((c) => c.id).toSet();
     final decks = eligible.map((c) => c.deck).toSet().toList();
@@ -931,12 +930,11 @@ class _PreparedDecksPageState extends State<PreparedDecksPage> {
 
   @override
   Widget build(BuildContext context) {
+    final needle = normalize(query);
     final rows = widget.store.preparedDecks
         .where((d) =>
             filters.matches(d) &&
-            normalize(
-                    '${d['title']} ${d['subject']} ${d['id']} ${d['authority'] ?? ''}')
-                .contains(normalize(query)))
+            (needle.isEmpty || normSearchText(d).contains(needle)))
         .toList();
     final slice = ResultPage(rows, page, pageSize);
     final shown = slice.items;

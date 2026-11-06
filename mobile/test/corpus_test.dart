@@ -19,8 +19,12 @@ List<Json> fixtureUnits() => List.generate(
           'title': 'Artículo ${i + 1}',
           'versions': [
             {
-              'text':
-                  'Artículo ${i + 1}\nLa ciudadanía conserva derechos fundamentales mediante garantías constitucionales específicas. Documento de estudio ${i + 1}.',
+              'text': 'Artículo ${i + 1}\n${[
+                'El Gobierno tramitará el procedimiento administrativo en el plazo de treinta días.',
+                'El Senado garantizará la seguridad jurídica en el plazo de veinte días.',
+                'El Tribunal Supremo comprobará la prescripción en el plazo de quince días.',
+                'El Ministerio Fiscal garantizará la imparcialidad en el plazo de diez días.'
+              ][i]}',
               'hash': 'hash-${i + 1}',
               'effectiveFrom': '20260101'
             },
@@ -101,15 +105,9 @@ void main() {
       'units': [german.first],
       'format': 'cloze'
     });
-    expect(cards, hasLength(1));
-    final answers = RegExp(r'\{\{c\d+::(.+?)\}\}')
-        .allMatches(cards.single['front'])
-        .map((m) => m.group(1))
-        .toList();
-    expect(answers.length, greaterThanOrEqualTo(2));
-    for (final answer in answers) {
-      expect(german.first['versions'].last['text'], contains(answer));
-    }
+    expect(cards, isEmpty,
+        reason:
+            'Unknown foreign words must not become arbitrary learning targets.');
   });
   test(
       'public packs verify, persist separately and reopen offline without bloating user backup',

@@ -1,0 +1,25 @@
+{
+  "baselineCommit": "73f6fe8",
+  "before": {
+    "startupMicroseconds": 1013840,
+    "reopenFourSavedLawsMicroseconds": 1717777,
+    "lawsDecompressedBeforeHome": 4,
+    "catalogueColdMicroseconds": 105960,
+    "catalogue100ReadsMicroseconds": 6858357,
+    "cards20ReadsMicroseconds": 1400820,
+    "norms": 12451,
+    "cards": 20000
+  },
+  "after": {
+    "startupMicroseconds": 1008833,
+    "reopenFourSavedLawsMicroseconds": 891268,
+    "lawsDecompressedBeforeHome": 0,
+    "catalogueColdMicroseconds": 110935,
+    "catalogue100ReadsMicroseconds": 29468,
+    "cards20ReadsMicroseconds": 146584,
+    "norms": 12451,
+    "cards": 20000
+  },
+  "environment": "Flutter host tests; concurrent corpus validators; not a physical phone benchmark",
+  "timingAssertions": false
+}

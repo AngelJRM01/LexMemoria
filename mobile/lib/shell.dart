@@ -237,8 +237,10 @@ class HomePage extends StatelessWidget {
             icon: const Icon(Icons.cloud_outlined),
             label: const Text('Conservar mi progreso al cambiar de móvil')),
       if (store.data['remoteUserId'] != null)
-        TextButton.icon(onPressed: () => push(context, CollaborationPage(store: store)),
-            icon: const Icon(Icons.folder_shared_outlined), label: const Text('Materiales compartidos')),
+        TextButton.icon(
+            onPressed: () => push(context, CollaborationPage(store: store)),
+            icon: const Icon(Icons.folder_shared_outlined),
+            label: const Text('Materiales compartidos')),
     ]);
   }
 }
