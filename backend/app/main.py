@@ -420,30 +420,41 @@ def create_app(database_url=None):
             validate_exercise(body.model_dump())
         except ValueError as exc:
             raise HTTPException(422, str(exc))
+        pending = False
         for citation in body.citations:
+            # A private backup retains client provenance even when this server
+            # has not imported that immutable source version. Never import or
+            # certify a legal source from user-supplied citation identifiers.
+            for key in ('normId', 'versionId', 'unitId'):
+                value = citation.get(key)
+                if not isinstance(value, str) or not value.strip() or len(value) > 512:
+                    raise HTTPException(422, 'Referencia normativa incompleta o no válida')
+            digest = citation.get('unitVersionHash', '')
+            if not isinstance(digest, str) or len(digest) > 512:
+                raise HTTPException(422, 'Huella de referencia no válida')
             version = s.get(Record, citation.get('versionId', ''))
-            if not version or version.kind != 'norm_version' or version.data.get('normId') != citation.get('normId') or not any(b['id'] == citation.get('unitId') for b in version.data['blocks']):
+            if version is None:
+                pending = True
+                continue
+            if version.kind != 'norm_version' or version.data.get('normId') != citation.get('normId') or not any(b['id'] == citation.get('unitId') for b in version.data['blocks']):
                 raise HTTPException(422, 'Referencia normativa inexistente')
             if citation.get('unitVersionHash'):
                 block = next(b for b in version.data['blocks'] if b['id'] == citation['unitId'])
                 if not any(v.get('hash') == citation['unitVersionHash'] for v in block.get('versions', [])):
                     raise HTTPException(422, 'Redacción histórica inexistente')
+        return 'pending_source' if pending else ('matched_source' if body.citations else 'uncited')
 
     @app.post('/v1/cards', status_code=201)
     def card(body: CardInput, user=Depends(identity), s=Depends(db)):
         own(s, body.deckId, user, 'deck')
-        validate_card(s, body)
-        for c in body.citations:
-            v = s.get(Record, c.get('versionId', ''))
-            if not v or v.kind != 'norm_version' or v.data.get('normId') != c.get('normId') or not any(b['id'] == c.get('unitId') for b in v.data['blocks']):
-                raise HTTPException(422, 'Referencia normativa inexistente')
+        citation_state = validate_card(s, body)
         id_ = user.id + ':card:' + body.clientId if body.clientId else uid()
         old = s.get(Record, id_)
         if old:
             if old.owner != user.id or old.kind != 'card' or any(old.data.get(k) != v for k, v in body.model_dump().items()):
                 raise HTTPException(409, 'Identificador de tarjeta en conflicto')
             return pack(old)
-        r = Record(id=id_, kind='card', owner=user.id, data={**body.model_dump(), 'editorialState': 'user', 'authorId': user.id})
+        r = Record(id=id_, kind='card', owner=user.id, data={**body.model_dump(), 'citationState': citation_state, 'editorialState': 'user', 'authorId': user.id})
         s.add(r)
         s.commit()
         return pack(r)
@@ -461,14 +472,14 @@ def create_app(database_url=None):
         own(s, body.deckId, user, 'deck')
         if if_match.strip('"') != str(card.revision):
             raise HTTPException(409, 'Conflicto de edición; conserva ambas versiones')
-        validate_card(s, body)
+        citation_state = validate_card(s, body)
         if body.clientId != card.data.get('clientId'):
             raise HTTPException(422, 'El identificador estable no puede cambiar')
         if all(card.data.get(k) == v for k, v in body.model_dump().items()):
             return JSONResponse(pack(card), headers={'ETag': str(card.revision)})
         s.add(Record(kind='card_revision', owner=user.id, data={
             'cardId': id, 'cardRevision': card.revision, 'content': card.data, 'archivedAt': now()}))
-        card.data = {**body.model_dump(), 'editorialState': 'user', 'authorId': user.id,
+        card.data = {**body.model_dump(), 'citationState': citation_state, 'editorialState': 'user', 'authorId': user.id,
                      'blocked': bool(card.data.get('blocked')), 'updatedAt': now()}
         s.commit()
         return JSONResponse(pack(card), headers={'ETag': str(card.revision)})

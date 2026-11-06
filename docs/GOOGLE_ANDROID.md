@@ -42,7 +42,7 @@ La firma de runners temporales GitHub puede diferir. **No se considera Google ha
 
 Ejecutado durante preparación: **89 pruebas Flutter y 144 backend**, incluyendo cancelación, sesión segura sin subir notas, vinculación conservando invitado, conflicto entre cuentas, cambio de servidor/cuenta durante acceso, botón condicionado y rechazo de configuración incorrecta o administrativa. Son pruebas locales con proveedor/HTTP simulados y firmas RSA de fixture existentes; **no prueban una cuenta Google real**.
 
-Pendiente: APK Android configurado y prueba física en OPPO, cancelar/reintentar, primer acceso, vincular invitado, cerrar/reabrir sesión, segundo dispositivo y conservación de datos. Firebase Google debe permitir la firma real, usuario/consentimiento del proyecto y API Render debe tener FIREBASE_PROJECT_ID correcto. La respuesta `/health` solo acredita salud puntual de API/consulta; no valida OAuth ni la sincronización de todo el corpus citado. Los paquetes/versiones jurídicos usados por las tarjetas deben estar disponibles en el servidor antes de aceptar su subida.
+Pendiente: APK Android configurado y prueba física en OPPO, cancelar/reintentar, primer acceso, vincular invitado, cerrar/reabrir sesión, segundo dispositivo y conservación de datos. Firebase Google debe permitir la firma real, usuario/consentimiento del proyecto y API Render debe tener FIREBASE_PROJECT_ID correcto. La respuesta `/health` solo acredita salud puntual de API/consulta; no valida OAuth ni la sincronización de todo el corpus citado. Las copias privadas conservan las referencias a versiones aún no importadas en el servidor como `citationState=pending_source`. No se crean normas a partir de esas referencias ni se consideran contenido verificado. Las referencias a versiones ya disponibles siguen validándose contra norma, artículo y huella; la aprobación editorial exige la fuente disponible.
 
 La prueba debe empezar con datos de prueba y copia local exportada. Si Android rechaza una actualización por firma, no desinstalar ni borrar la app que contiene progreso para forzarla.
 
@@ -65,3 +65,21 @@ Las sesiones propias del backend conservan su caducidad y revocación por cierre
 ## Descarga accesible desde el móvil
 
 [APK configurado con Google](https://raw.githubusercontent.com/AngelJRM01/LexMemoria/751f44440c2f0e993c6f723bf73c3bb0ddeb21db/LexMemoria-0.5.0-google-prueba.apk). Alojado en la rama de distribución `android-google-preview-0.5.0`, con commit inmutable en el enlace. Descarga completa verificada por HTTP (87.102.881 bytes) y SHA-256 idéntico al informe del APK. No es el artefacto genérico de Actions. Código fuente y configuración pública del SDK documentados en el README de esa rama; no hay keystore ni claves privadas de servidor en el paquete.
+
+
+## Corrección de sincronización 422
+
+El APK 0.5.0 configurado envía referencias normativas de las tarjetas descargadas.
+Antes, POST/PUT de tarjetas exigían que esas versiones existiesen también en la
+base del servidor: un servidor nuevo rechazaba la copia privada con 422.
+Ahora conserva las referencias completas pendientes de fuente, sin modificar
+el catálogo público, borrar citas o darles aprobación editorial. Las referencias
+incompletas y los ejercicios inválidos siguen rechazándose. No requiere cambiar
+el APK ni migrar/borrar PostgreSQL; requiere desplegar el backend actualizado.
+
+Validación: 146 pruebas backend aprobadas. La regresión comprueba creación,
+reintento idempotente, edición, historial, repaso anterior, exportación, aislamiento
+entre cuentas y rechazo editorial de referencias sin fuente. Se mantienen pruebas
+de norma y huella incorrectas contra versiones existentes. No se ha reproducido
+la petición privada del teléfono ni verificado el despliegue Render desde este
+entorno: su dominio no está autorizado en la política de red.
