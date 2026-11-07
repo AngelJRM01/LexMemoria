@@ -1,8 +1,8 @@
 {
-  "verified_at": "2026-11-05T19:03:06.818209+00:00",
-  "norms": 12451,
-  "literal_fragments": 684375,
-  "block_versions": 695207,
+  "verified_at": "2026-11-07T09:12:25.614610+00:00",
+  "norms": 12457,
+  "literal_fragments": 1940836,
+  "block_versions": 695727,
   "largest_uncompressed_pack": 135962855,
   "verification_passed": true,
   "scope": "Observed BOE consolidated catalogue, not universal legal coverage",

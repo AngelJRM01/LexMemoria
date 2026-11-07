@@ -1,11 +1,11 @@
-# LexMemoria · corpus BOE
+# LexMemoria · corpus BOE observado el 7 de noviembre de 2026
 
-12.451 normas del catálogo consolidado archivado. Se conservan los paquetes oficiales estructurados y sus versiones; no se han borrado los originales.
+12.457 normas consolidadas, con respuestas oficiales, versiones y hashes conservados. Esta rama fechada mantiene independiente la versión anterior del 5 de noviembre.
 
-El catálogo de la aplicación 0.7.0 solo contabiliza ejercicios sobre artículos. Preámbulos, firmas, notas editoriales, disposiciones y encabezados no se presentan como artículos ni se usan como relleno de ejercicios.
+Se han incorporado 6 normas nuevas y 31 registros actualizados; 12 tienen cambios en el cuerpo de bloques y 19 mantienen ese contenido. No se invalida la identidad educativa cuando los bloques completos permanecen idénticos.
 
-Los formatos se derivan de fragmentos completos de hasta 320 caracteres, excluyendo notas editoriales del BOE. Huecos con conceptos jurídicos, instituciones o plazos seleccionados; los test requieren tres alternativas del mismo tipo. Los fragmentos que no permiten un ejercicio válido se omiten.
+Se separa el cuerpo actual de los contenedores editoriales, incluidas sus redacciones anteriores. Las notas se conservan para consulta. Los artículos con notas judiciales o de aplicación que requieren comprobar su alcance no generan ejercicios automáticos: esto no los declara inválidos.
 
-La validación automática del corpus completo está en `exercises-verification.json`. No constituye revisión jurídica o pedagógica humana. Los archivos `/boe` mantienen sus hashes originales; los cambios del catálogo corresponden a la clasificación y generación educativa.
+`verification.json` comprueba todos los paquetes y versiones contra el archivo oficial. `exercises-verification.json` comprueba los cuatro formatos para todas las normas. Son validaciones automáticas, no certificación jurídica o pedagógica humana.
 
 Fuente y condiciones: https://www.boe.es/informacion/aviso_legal/index.php#reutilizacion
