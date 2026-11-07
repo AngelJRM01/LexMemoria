@@ -1,0 +1,36 @@
+{
+  "baselineCommit": "46ae32f",
+  "before": {
+    "startupMicroseconds": 344118,
+    "reopenFourSavedLawsMicroseconds": 295265,
+    "lawsDecompressedBeforeHome": 0,
+    "catalogueColdMicroseconds": 41998,
+    "catalogue100ReadsMicroseconds": 3172,
+    "cards20ReadsMicroseconds": 55282,
+    "progressFingerprint20ReadsMicroseconds": 3091165,
+    "fingerprintDigest": "fef87cd3e64ab6755bc14a3e39053693dfc599a29b5e8207285c693540150f5d",
+    "profileCommitMicroseconds": 188387,
+    "cards20ReadsAfterProfileCommitMicroseconds": 34472,
+    "studyQueue10ReadsMicroseconds": 1949915,
+    "norms": 12457,
+    "cards": 20000
+  },
+  "after": {
+    "startupMicroseconds": 445576,
+    "reopenFourSavedLawsMicroseconds": 303336,
+    "lawsDecompressedBeforeHome": 0,
+    "catalogueColdMicroseconds": 32411,
+    "catalogue100ReadsMicroseconds": 2808,
+    "cards20ReadsMicroseconds": 57186,
+    "progressFingerprint20ReadsMicroseconds": 163312,
+    "fingerprintDigest": "fef87cd3e64ab6755bc14a3e39053693dfc599a29b5e8207285c693540150f5d",
+    "profileCommitMicroseconds": 171926,
+    "cards20ReadsAfterProfileCommitMicroseconds": 82,
+    "studyQueue10ReadsMicroseconds": 46099,
+    "norms": 12457,
+    "cards": 20000
+  },
+  "identicalAssets": true,
+  "fingerprintCompatible": true,
+  "environment": "Flutter host tests, same machine; not a physical Oppo measurement"
+}

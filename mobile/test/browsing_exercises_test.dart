@@ -68,7 +68,8 @@ void main() {
     final regional = store.catalogue
         .where((n) => normalize(n['jurisdiction'] ?? '').startsWith('autonom'))
         .toList();
-    expect(regional.length, 3620);
+    expect(store.corpusNorms.length, 12457);
+    expect(regional.length, 3623);
     expect(regional.every((n) => normCommunity(n) != null), isTrue);
     expect(catalogueCommunities(store.catalogue).length, 17);
     expect(store.availableSubjects, isNot(contains('Criminología')));

@@ -6,6 +6,7 @@ import 'package:lexmemoria/store.dart';
 import 'package:lexmemoria/library.dart';
 import 'package:lexmemoria/legal_units.dart';
 import 'package:lexmemoria/prepared.dart';
+import 'package:lexmemoria/study.dart' show CardEditor;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -145,6 +146,77 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Preámbulo'), findsOneWidget);
     expect(find.text('Artículo 1'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+    s.dispose();
+  });
+  test(
+      'historical wording inside an editorial block never becomes current learning text',
+      () {
+    final version = {
+      'text': 'Mixed source text',
+      'bodyText': 'Unsafe old cached extraction',
+      'bodyParser': 'boe-editorial-1',
+      'xml':
+          '<version><p class="articulo">Artículo 1</p><p class="parrafo">El Gobierno resolverá en treinta días.</p><blockquote><p class="nota_pie">Se modifica con efectos desde 2024.</p><p>Redacción anterior:</p><p>Antes no existía recurso contra el decreto.</p></blockquote><blockquote><p class="parrafo">La norma citada protege la seguridad jurídica.</p></blockquote></version>'
+    };
+    final body = legalBodyText(version);
+    expect(body, contains('resolverá en treinta días'));
+    expect(body, contains('norma citada protege'));
+    expect(body, isNot(contains('Antes no existía')));
+    expect(body, isNot(contains('Unsafe')));
+    expect(legalEditorialNotes(version).single, contains('Antes no existía'));
+    expect(requiresLegalContextReview(version), false);
+  });
+  test(
+      'judicial notes require context review without claiming the current article is invalid',
+      () {
+    final version = {
+      'text': 'Artículo 1\nEl Gobierno resolverá en treinta días.',
+      'xml':
+          '<version><p class="parrafo">El Gobierno resolverá en treinta días.</p><blockquote><p class="nota_pie">Se declara que no es inconstitucional siempre que se interprete en los términos de la Sentencia.</p></blockquote></version>'
+    };
+    expect(requiresLegalContextReview(version), true);
+    for (final format in ['qa', 'cloze', 'test', 'reference']) {
+      expect(
+          buildLiteralCards({
+            'norm': norm,
+            'units': [
+              {
+                'id': 'a1',
+                'title': 'Artículo 1',
+                'versions': [version]
+              }
+            ],
+            'format': format
+          }),
+          isEmpty);
+    }
+  });
+  testWidgets(
+      'personal card editor starts with current body, not historical editorial quotations',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final s = AppStore(await SharedPreferences.getInstance(), {});
+    final version = {
+      'text': 'Mixed source text',
+      'hash': 'h',
+      'xml':
+          '<version><p class="parrafo">El Gobierno resolverá en treinta días.</p><blockquote><p class="nota_pie">Se modifica.</p><p>Redacción anterior:</p><p>Texto antiguo que no debe copiarse.</p></blockquote></version>'
+    };
+    final article = {
+      'id': 'a1',
+      'title': 'Artículo 1',
+      'versions': [version]
+    };
+    await tester.pumpWidget(MaterialApp(
+        home: CardEditor(
+            store: s, norm: norm, unit: article, sourceVersion: version)));
+    final values = tester
+        .widgetList<EditableText>(find.byType(EditableText))
+        .map((w) => w.controller.text)
+        .toList();
+    expect(values.any((s) => s.contains('resolverá en treinta días')), true);
+    expect(values.any((s) => s.contains('Texto antiguo')), false);
     await tester.pumpWidget(const SizedBox());
     s.dispose();
   });

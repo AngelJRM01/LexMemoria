@@ -5,7 +5,7 @@ from pathlib import Path
 from collections import Counter
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'backend'))
-from app.prepared import unit_kind,study_units,count_cards
+from app.prepared import unit_kind,study_units,count_cards,requires_legal_context_review
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--distribution',type=Path,default=Path('/workspace/lexmemoria-distribution'));p.add_argument('--report',type=Path,default=ROOT/'docs/validation/boe-structure-0.7.0.json');p.add_argument('--refresh-catalogue',action='store_true');args=p.parse_args()
@@ -17,7 +17,7 @@ def main():
         pack=json.loads(gzip.decompress(raw));units=pack['items'];counts=Counter(unit_kind(u) for u in units);kinds.update(counts)
         articles=study_units(units);ids=[u['id'] for u in units]
         if len(ids)!=len(set(ids)):issues.append({'normId':norm['id'],'issue':'duplicate_unit_id'})
-        rows.append({'normId':norm['id'],'units':len(units),'classification':dict(counts),'eligibleArticles':len(articles),'qaBefore':norm['count'],'qaArticlesOnly':count_cards(units)})
+        rows.append({'normId':norm['id'],'units':len(units),'classification':dict(counts),'eligibleArticles':len(articles),'legalContextExcludedUnits':[u['id'] for u in units if unit_kind(u)=='article' and u.get('versions') and requires_legal_context_review(u['versions'][-1])],'qaBefore':norm['count'],'qaArticlesOnly':count_cards(units)})
         if (i+1)%250==0:print(json.dumps({'checked':i+1,'total':len(manifest['items']),'elapsedSeconds':round(time.monotonic()-started,1)}),flush=True)
     report={'normsChecked':len(rows),'allNormsChecked':len(rows)==manifest['norms'],'source':'BOE consolidated archive','packHashesVerified':True,'originalsModified':False,'classification':dict(kinds),'issues':issues,'norms':rows,'elapsedSeconds':round(time.monotonic()-started,2),'legalReview':'not_performed'}
     if args.refresh_catalogue:

@@ -1,0 +1,15 @@
+{
+  "normsChecked": 12457,
+  "allNormsChecked": true,
+  "exercises": {
+    "qa": 1940836,
+    "cloze": 26017,
+    "test": 172366,
+    "reference": 1745301
+  },
+  "validationPassed": true,
+  "legalReview": "not_performed",
+  "catalogueSha256": "e32a0a42653339f04392d76af3b108c4880bddad77b0ea5bdf7025a0829e8e57",
+  "independentProcesses": 6,
+  "elapsedSeconds": 319.43
+}

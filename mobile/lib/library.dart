@@ -906,6 +906,18 @@ class _ReaderPageState extends State<ReaderPage> {
               const SizedBox(height: 4),
               Text('BOE · redacción de ${displayDate(v['effectiveFrom'])}',
                   style: Theme.of(context).textTheme.bodySmall),
+              if (requiresLegalContextReview(v))
+                const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text(
+                        'Hay una nota jurídica que requiere comprobar su alcance. Este artículo no genera ejercicios automáticos.')),
+              if (legalEditorialNotes(v).isNotEmpty)
+                Details('Notas de redacción y aplicación del BOE', children: [
+                  for (final note in legalEditorialNotes(v))
+                    Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(note)),
+                ]),
               const SizedBox(height: 12),
               TextField(
                   controller: searchController,

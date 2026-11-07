@@ -38,7 +38,7 @@ def unit_kind(unit):
 
 
 def study_units(units):
-    return [u for u in units if unit_kind(u)=='article' and u.get('versions') and
+    return [u for u in units if unit_kind(u)=='article' and u.get('versions') and not requires_legal_context_review(u['versions'][-1]) and
             u['versions'][-1].get('text','').strip() and not re.fullmatch(
                 r'\(?\s*(?:derogad[oa]|suprimid[oa]|sin contenido)\s*[.)]*',
                 u['versions'][-1].get('text','').strip(),re.I)]
@@ -64,12 +64,31 @@ def passages(title,text):
     return result
 
 
-def body_text(version):
-    original=version.get('text','');markup=version.get('xml','')
-    if 'nota_pie' not in markup:return original
+from functools import lru_cache
+
+@lru_cache(maxsize=64)
+def _legal_content(markup,original):
+    if 'nota_pie' not in markup:return original,()
     from defusedxml import ElementTree as ET
-    root=ET.fromstring(markup)
-    for parent in root.iter():
+    root=ET.fromstring(markup);notes=[]
+    def note_paragraph(node):return node.tag=='p' and 'nota_pie' in node.get('class','').split()
+    def clean(parent):
         for child in list(parent):
-            if child.tag=='p' and child.get('class')=='nota_pie':parent.remove(child)
-    return '\n'.join(value for child in root if (value:=''.join(child.itertext()).strip()))
+            first=next(child.iter('p'),None)
+            if note_paragraph(child) or (child.tag=='blockquote' and first is not None and note_paragraph(first)):
+                notes.append(''.join(child.itertext()).strip());parent.remove(child)
+            else:clean(child)
+    clean(root)
+    return '\n'.join(value for child in root if (value:=''.join(child.itertext()).strip())),tuple(notes)
+
+
+def body_text(version):return _legal_content(version.get('xml',''),version.get('text',''))[0]
+
+
+def editorial_notes(version):return list(_legal_content(version.get('xml',''),version.get('text',''))[1])
+
+
+def requires_legal_context_review(version):
+    import unicodedata
+    pattern=r'inconstitucional|constitucionalidad|nulidad|suspendid|suspension|sentencia.*interpret|interpret.*sentencia|inaplicab'
+    return bool(re.search(r'redacci[oó]n anterior\s*:',body_text(version),re.I)) or any(re.search(pattern,''.join(c for c in unicodedata.normalize('NFD',note.lower()) if unicodedata.category(c)!='Mn')) for note in editorial_notes(version))

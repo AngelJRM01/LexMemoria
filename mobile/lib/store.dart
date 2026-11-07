@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:collection/collection.dart';
 import 'package:flutter/services.dart';
 import 'package:archive/archive.dart';
 import 'package:crypto/crypto.dart';
@@ -34,6 +35,10 @@ class AppStore extends ChangeNotifier {
   bool syncing = false;
   Future<void> _write = Future.value();
   int _writeGeneration = 0;
+  int _progressGeneration = 0;
+  int _legacyDataGeneration = 0;
+  int get legacyDataGeneration => _legacyDataGeneration;
+  int get progressGeneration => _progressGeneration;
   AppStore(this.prefs, this.data,
       {http.Client? client,
       LocalPersistence? persistence,
@@ -207,12 +212,66 @@ class AppStore extends ChangeNotifier {
   bool get dark =>
       profile['theme'] == 'dark' ||
       (profile['theme'] == null && data['dark'] == true);
+  Object? _policyCorpus, _policyBundled;
+  Map<String, Json> _publishedSources = {};
+  Map<String, Set<String>> _sourceReviewUnits = {};
+  Map<String, Json> get publishedSources {
+    if (!identical(_policyCorpus, corpusNorms) ||
+        !identical(_policyBundled, bundledNorms)) {
+      _publishedSources = {};
+      for (final n in [...corpusNorms, ...bundledNorms]) {
+        _publishedSources[n['id']] = {...?_publishedSources[n['id']], ...n};
+      }
+      _sourceReviewUnits = {
+        for (final n in _publishedSources.values)
+          n['id']: Set<String>.from(n['studyReviewUnitIds'] ?? [])
+      };
+      _policyCorpus = corpusNorms;
+      _policyBundled = bundledNorms;
+      _cardCache = null;
+    }
+    return _publishedSources;
+  }
+
   List<StudyCard> get cards {
-    if (_cardCache == null || !identical(_cardSource, data['cards'])) {
+    final published = publishedSources;
+    if (_cardCache == null ||
+        !identical(_cardSource, data['cards']) ||
+        !identical(_cardSourceNorms, data['norms'])) {
       _cardSource = data['cards'];
-      _cardCache = (data['cards'] as List? ?? [])
-          .map((v) => StudyCard.fromJson(Json.from(v)))
-          .toList();
+      _cardSourceNorms = data['norms'];
+      final localSources = {for (final n in list('norms')) n['id']: n};
+      _cardCache = (data['cards'] as List? ?? []).map((v) {
+        final card = StudyCard.fromJson(Json.from(v));
+        final source = published[card.normId];
+        if (source != null &&
+            !card.blocked &&
+            card.revision == 1 &&
+            card.editorialState == 'source_literal') {
+          final local = localSources[card.normId];
+          String stamp(dynamic v) =>
+              v is String ? v.replaceAll(RegExp(r'[^0-9]'), '') : '';
+          final newerLocal = local != null &&
+              stamp(local['sourceUpdatedAt'])
+                      .compareTo(stamp(source['sourceUpdatedAt'])) >
+                  0;
+          final currentSource = newerLocal ? local : source;
+          final changed = card.versionId.isNotEmpty &&
+              card.versionId != currentSource['latestVersion'] &&
+              currentSource['sourceUpdatedAt'] != null;
+          final contextual = card.versionId == source['latestVersion'] &&
+              (_sourceReviewUnits[card.normId]?.contains(card.unitId) ?? false);
+          if (changed || contextual) {
+            return StudyCard.fromJson({
+              ...card.toJson(),
+              'blocked': true,
+              'editorialState':
+                  changed ? 'pending_source_update' : 'pending_legal_context'
+            });
+          }
+        }
+        return card;
+      }).toList();
     }
     return _cardCache!;
   }
@@ -224,6 +283,7 @@ class AppStore extends ChangeNotifier {
   int _packGeneration = 0, _cataloguePackGeneration = -1;
   List<StudyCard>? _cardCache;
   Object? _cardSource;
+  Object? _cardSourceNorms;
   List<Json> get catalogue {
     if (_catalogueCache == null ||
         !identical(_catalogueLocal, data['norms']) ||
@@ -241,12 +301,32 @@ class AppStore extends ChangeNotifier {
 
   List<Json> _buildCatalogue() {
     final norms = {for (final n in initialCatalogue()) n['id']: n};
-    for (final n in [...corpusNorms, ...bundledNorms, ...list('norms')]) {
+    for (final n in [...corpusNorms, ...bundledNorms]) {
       norms[n['id']] = {...?norms[n['id']], ...n};
     }
+    for (final local in list('norms')) {
+      final source = publishedSources[local['id']];
+      String stamp(dynamic value) =>
+          value is String ? value.replaceAll(RegExp(r'[^0-9]'), '') : '';
+      final adopt = source != null &&
+          source['latestVersion'] != local['latestVersion'] &&
+          stamp(source['sourceUpdatedAt']).isNotEmpty &&
+          stamp(source['sourceUpdatedAt'])
+                  .compareTo(stamp(local['sourceUpdatedAt'])) >=
+              0;
+      if (adopt) {
+        norms[local['id']] = {
+          ...local,
+          ...source,
+          'packReady': false,
+          'coverage': 'pending_download_after_change'
+        }..remove('units');
+      } else {
+        norms[local['id']] = {...?norms[local['id']], ...local};
+      }
+    }
     for (final n in norms.values) {
-      if ((n['bundledVersion'] == n['latestVersion'] ||
-              loadedPackVersions[n['id']] == n['latestVersion']) &&
+      if (loadedPackVersions[n['id']] == n['latestVersion'] &&
           bundledPacks[n['id']] != null) {
         n['units'] = bundledPacks[n['id']];
       }
@@ -284,21 +364,20 @@ class AppStore extends ChangeNotifier {
   List<StudyCard> due({String? deck, DateTime? at, bool includeRest = false}) {
     final now = at ?? DateTime.now();
     if (!includeRest && !isStudyDay(now, profile)) return [];
-    final queue = cards.where((c) {
-      final when = DateTime.tryParse(state(c.id)['dueAt'] ?? '');
-      return !c.blocked &&
-          (deck == null || c.deck == deck) &&
-          (when == null || !when.isAfter(now));
-    }).toList();
-    queue.sort((a, b) {
-      final sa = state(a.id), sb = state(b.id);
+    final settings = profile;
+    final allStates = data['states'] as Map? ?? const {};
+    Map stateFor(String id) =>
+        allStates[id] is Map ? allStates[id] as Map : const {};
+    final priorities = settings['deckPriorities'] as Map? ?? const {};
+    final preferred =
+        (settings['preferredExerciseTypes'] as List? ?? const []).toSet();
+    int compare(StudyCard a, StudyCard b) {
+      final sa = stateFor(a.id), sb = stateFor(b.id);
       if (sa.isEmpty != sb.isEmpty) return sa.isEmpty ? 1 : -1;
       if (sa.isEmpty && sb.isEmpty) {
-        final priorities = profile['deckPriorities'] as Map? ?? {};
         final priority = ((priorities[b.deck] as num?) ?? 0)
             .compareTo((priorities[a.deck] as num?) ?? 0);
         if (priority != 0) return priority;
-        final preferred = profile['preferredExerciseTypes'] as List? ?? [];
         if (preferred.contains(a.type) != preferred.contains(b.type)) {
           return preferred.contains(a.type) ? -1 : 1;
         }
@@ -309,13 +388,34 @@ class AppStore extends ChangeNotifier {
       final lapses =
           (sb['lapses'] as num? ?? 0).compareTo(sa['lapses'] as num? ?? 0);
       return lapses == 0 ? a.id.compareTo(b.id) : lapses;
-    });
-    return queue.take(studyCapacity(profile)).toList();
+    }
+
+    final capacity = studyCapacity(settings);
+    // Keep only the next session instead of sorting the entire collection.
+    final selected = HeapPriorityQueue<StudyCard>((a, b) => compare(b, a));
+    for (final card in cards) {
+      if (card.blocked || (deck != null && card.deck != deck)) continue;
+      final dueAt = stateFor(card.id)['dueAt'];
+      final when =
+          dueAt == null || dueAt == '' ? null : DateTime.tryParse(dueAt);
+      if (when != null && when.isAfter(now)) continue;
+      if (selected.length < capacity) {
+        selected.add(card);
+      } else if (compare(card, selected.first) < 0) {
+        selected.removeFirst();
+        selected.add(card);
+      }
+    }
+    return selected.toList()..sort(compare);
   }
 
   Future<void> save() {
     final snapshot = jsonEncode(data);
     _writeGeneration++;
+    _progressGeneration++;
+    _legacyDataGeneration++;
+    _cardCache = null;
+    _catalogueCache = null;
     _write = _write.catchError((_) {}).then((_) async {
       await persistence.write(snapshot);
     });
@@ -766,17 +866,40 @@ class AppStore extends ChangeNotifier {
 
   Future<void> _commitMutation(Json Function() mutate) {
     final operation = _write.catchError((_) {}).then((_) async {
+      final previousData = data;
       final before = jsonEncode(data);
       final expected = _writeGeneration;
       // Compute against the latest committed state, not the state from when a
       // second click queued the operation. Sequential edits must not lose data.
-      final encoded = jsonEncode(mutate());
+      final candidate = mutate();
+      final encoded = jsonEncode(candidate);
       await persistence.write(encoded);
       if (_writeGeneration != expected || jsonEncode(data) != before) {
         await persistence.write(jsonEncode(data));
         throw StateError('Tus datos han cambiado. La sustitución se canceló.');
       }
-      data = Json.from(jsonDecode(encoded));
+      final committed = Json.from(jsonDecode(encoded));
+      // Retain only unchanged educational sections after the disk write and
+      // full concurrent-mutation check. A profile/queue save must not rebuild
+      // tens of thousands of immutable card objects and search indexes.
+      for (final key in [
+        'cards',
+        'norms',
+        'cardHistory',
+        'reviews',
+        'profile',
+        'states'
+      ]) {
+        if (candidate.containsKey(key) &&
+            identical(candidate[key], previousData[key])) {
+          committed[key] = previousData[key];
+        }
+      }
+      if (['cards', 'cardHistory', 'reviews']
+          .any((key) => !identical(candidate[key], previousData[key]))) {
+        _progressGeneration++;
+      }
+      data = committed;
       _writeGeneration++;
       notifyListeners();
     });
@@ -1098,6 +1221,8 @@ Json decodeBundledPack(Json input) {
   for (final unit in pack['items'] as List) {
     for (final version in unit['versions'] as List) {
       version['bodyText'] = legalBodyText(version);
+      version['editorialNotes'] = legalEditorialNotes(version);
+      version['bodyParser'] = 'boe-editorial-2';
     }
   }
   return pack;

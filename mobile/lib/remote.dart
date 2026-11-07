@@ -29,20 +29,26 @@ StudyCard remoteStudyCard(Json record, String id, String deck,
       correct: record['correct']);
 }
 
+dynamic _progressSection(String key, Json data) {
+  if (key == 'cards') {
+    return (data['cards'] as List? ?? [])
+        .map((c) => StudyCard.fromJson(Json.from(c)).toJson())
+        .toList();
+  }
+  if (key == 'history') return data['cardHistory'] ?? [];
+  return (data['reviews'] as List? ?? [])
+      .map((r) => Json.from(r))
+      .map((r) => {
+            for (final e in r.entries)
+              if (!['synced', 'syncedUserId'].contains(e.key)) e.key: e.value
+          })
+      .toList();
+}
+
 String progressFingerprintOf(Json data) => sha256
     .convert(utf8.encode(jsonEncode({
-      'cards': (data['cards'] as List? ?? [])
-          .map((c) => StudyCard.fromJson(Json.from(c)).toJson())
-          .toList(),
-      'history': data['cardHistory'] ?? [],
-      'reviews': (data['reviews'] as List? ?? [])
-          .map((r) => Json.from(r))
-          .map((r) => {
-                for (final entry in r.entries)
-                  if (!['synced', 'syncedUserId'].contains(entry.key))
-                    entry.key: entry.value
-              })
-          .toList(),
+      for (final key in ['cards', 'history', 'reviews'])
+        key: _progressSection(key, data)
     })))
     .toString();
 
@@ -73,6 +79,66 @@ class RecoveryPersistenceFailure implements Exception {
       'No se pudo guardar la sesión recuperada. Conserva el código nuevo.';
 }
 
+class _FingerprintCache {
+  final int generation;
+  final Object? cards, history, reviews;
+  final String value;
+  _FingerprintCache(AppStore store, this.value)
+      : generation = store.progressGeneration,
+        cards = store.data['cards'],
+        history = store.data['cardHistory'],
+        reviews = store.data['reviews'];
+  bool matches(AppStore store) =>
+      generation == store.progressGeneration &&
+      identical(cards, store.data['cards']) &&
+      identical(history, store.data['cardHistory']) &&
+      identical(reviews, store.data['reviews']);
+}
+
+final _fingerprintCache = Expando<_FingerprintCache>();
+
+class _DigestResult implements Sink<Digest> {
+  Digest? value;
+  @override
+  void add(Digest digest) {
+    value = digest;
+  }
+
+  @override
+  void close() {}
+}
+
+class _EncodedProgressPart {
+  final Object? source;
+  final int legacyGeneration;
+  final List<int> bytes;
+  _EncodedProgressPart(this.source, this.legacyGeneration, this.bytes);
+}
+
+final _encodedProgressParts = Expando<Map<String, _EncodedProgressPart>>();
+String _cachedProgressFingerprint(AppStore store) {
+  final parts = _encodedProgressParts[store] ??= {};
+  final output = _DigestResult();
+  final digest = sha256.startChunkedConversion(output);
+  digest.add(utf8.encode('{'));
+  for (final key in ['cards', 'history', 'reviews']) {
+    final source = store.data[key == 'history' ? 'cardHistory' : key];
+    var cached = parts[key];
+    if (cached == null ||
+        !identical(cached.source, source) ||
+        cached.legacyGeneration != store.legacyDataGeneration) {
+      cached = _EncodedProgressPart(source, store.legacyDataGeneration,
+          utf8.encode(jsonEncode(_progressSection(key, store.data))));
+      parts[key] = cached;
+    }
+    digest.add(utf8.encode('${key == 'cards' ? '' : ','}"$key":'));
+    digest.add(cached.bytes);
+  }
+  digest.add(utf8.encode('}'));
+  digest.close();
+  return output.value!.toString();
+}
+
 class RemoteSyncFailure extends StateError {
   final int status;
   RemoteSyncFailure(this.status, String message) : super(message);
@@ -96,7 +162,13 @@ class RemoteSync {
 
   String get prefix => 'lexmemoria:$base';
 
-  String get progressFingerprint => progressFingerprintOf(store.data);
+  String get progressFingerprint {
+    final cached = _fingerprintCache[store];
+    if (cached != null && cached.matches(store)) return cached.value;
+    final value = _cachedProgressFingerprint(store);
+    _fingerprintCache[store] = _FingerprintCache(store, value);
+    return value;
+  }
 
   String get progressStatus {
     if (_uploads[store] != null || _pulls[store] != null) {

@@ -1,0 +1,10 @@
+{
+  "verified_at": "2026-11-07T09:12:25.614610+00:00",
+  "norms": 12457,
+  "literal_fragments": 1940836,
+  "block_versions": 695727,
+  "largest_uncompressed_pack": 135962855,
+  "verification_passed": true,
+  "scope": "Observed BOE consolidated catalogue, not universal legal coverage",
+  "legal_review": "not_performed"
+}

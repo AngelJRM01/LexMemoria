@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lexmemoria/models.dart';
 import 'package:lexmemoria/store.dart';
 import 'package:lexmemoria/persistence.dart';
+import 'package:lexmemoria/remote.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +34,25 @@ void main() {
       expect(s.cards.length, 20000);
     }
     final cardReads = clock.elapsedMicroseconds;
+    final sync = RemoteSync(s);
+    clock.reset();
+    for (var i = 0; i < 20; i++) {
+      expect(sync.progressFingerprint.length, 64);
+    }
+    final fingerprintReads = clock.elapsedMicroseconds;
+    clock.reset();
+    await s.setProfile({'dailyGoal': 20});
+    final metadataCommit = clock.elapsedMicroseconds;
+    clock.reset();
+    for (var i = 0; i < 20; i++) {
+      expect(s.cards.length, 20000);
+    }
+    final afterMetadataCardReads = clock.elapsedMicroseconds;
+    clock.reset();
+    for (var i = 0; i < 10; i++) {
+      expect(s.due(includeRest: true).length, 20);
+    }
+    final studyQueueReads = clock.elapsedMicroseconds;
     for (final norm in s.bundledNorms.take(4)) {
       await s.downloadNorm(norm);
     }
@@ -49,6 +69,11 @@ void main() {
       'catalogueColdMicroseconds': coldCatalogue,
       'catalogue100ReadsMicroseconds': catalogueReads,
       'cards20ReadsMicroseconds': cardReads,
+      'progressFingerprint20ReadsMicroseconds': fingerprintReads,
+      'fingerprintDigest': sync.progressFingerprint,
+      'profileCommitMicroseconds': metadataCommit,
+      'cards20ReadsAfterProfileCommitMicroseconds': afterMetadataCardReads,
+      'studyQueue10ReadsMicroseconds': studyQueueReads,
       'norms': initial.length,
       'cards': 20000
     };

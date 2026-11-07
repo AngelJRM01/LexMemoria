@@ -1,0 +1,7 @@
+{"validatedNorms": 2077, "exercises": {"qa": 321481, "cloze": 4414, "test": 29803, "reference": 292228}}
+{"validatedNorms": 4153, "exercises": {"qa": 669341, "cloze": 9272, "test": 61848, "reference": 600852}}
+{"validatedNorms": 6229, "exercises": {"qa": 988896, "cloze": 13470, "test": 89265, "reference": 890817}}
+{"validatedNorms": 8305, "exercises": {"qa": 1308385, "cloze": 17720, "test": 117791, "reference": 1180370}}
+{"validatedNorms": 10381, "exercises": {"qa": 1642397, "cloze": 22256, "test": 146895, "reference": 1477416}}
+{"validatedNorms": 12457, "exercises": {"qa": 1940836, "cloze": 26017, "test": 172366, "reference": 1745301}}
+{"normsChecked": 12457, "allNormsChecked": true, "exercises": {"qa": 1940836, "cloze": 26017, "test": 172366, "reference": 1745301}, "validationPassed": true, "legalReview": "not_performed", "catalogueSha256": "e32a0a42653339f04392d76af3b108c4880bddad77b0ea5bdf7025a0829e8e57", "independentProcesses": 6, "elapsedSeconds": 319.43}

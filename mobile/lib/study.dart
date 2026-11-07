@@ -9,6 +9,7 @@ import 'widgets.dart';
 import 'catalogue.dart';
 import 'browsing_widgets.dart';
 import 'exercises.dart';
+import 'legal_units.dart';
 import 'collaboration.dart';
 
 class StudyPage extends StatefulWidget {
@@ -253,7 +254,7 @@ class _CardEditorState extends State<CardEditor> {
     if (widget.unit != null && widget.sourceVersion != null) {
       front.text =
           '¿Qué establece ${widget.unit!['title']} de ${widget.norm!['short'] ?? widget.norm!['title']}?';
-      final literal = widget.sourceVersion!['text'] as String? ?? '';
+      final literal = legalBodyText(widget.sourceVersion!);
       if (literal.length <= 8000) back.text = literal;
       explanation.text =
           'Lectura literal de la fuente; tarjeta personal sin revisión jurídica. Fecha de efecto según fuente: ${displayDate(widget.sourceVersion!['effectiveFrom'])}.';

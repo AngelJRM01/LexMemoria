@@ -15,3 +15,15 @@ def test_only_articles_are_eligible_and_long_unbroken_rules_are_not_truncated():
       ('TÍTULO I','encabezado'),('Preámbulo','preambulo'),('Disposición final','precepto'),('Art 1','precepto'),('Artículo 2','precepto')])]
     assert [u['title'] for u in study_units(source)]==['Art 1','Artículo 2']
     assert passages('Artículo 1','El Gobierno '+('resolverá '*100)+'este procedimiento.')==[]
+
+
+def test_historical_wording_is_editorial_but_current_normative_quotes_remain():
+    from app.prepared import editorial_notes,requires_legal_context_review
+    version={'text':'Mixed','xml':'<version><p class="parrafo">Regla actual suficientemente larga para estudiar.</p><blockquote><p class="nota_pie">Se modifica.</p><p>Redacción anterior:</p><p>Texto anterior que no está vigente.</p></blockquote><blockquote><p class="parrafo">Texto normativo citado en la regla actual.</p></blockquote></version>'}
+    body=body_text(version)
+    assert 'Texto anterior' not in body and 'Texto normativo citado' in body
+    assert 'Texto anterior' in editorial_notes(version)[0]
+    assert not requires_legal_context_review(version)
+    version={'text':'Regla actual.','xml':'<version><p class="parrafo">Regla actual.</p><blockquote><p class="nota_pie">No es inconstitucional siempre que se interprete conforme a la Sentencia.</p></blockquote></version>'}
+    assert requires_legal_context_review(version)
+    assert study_units([{'title':'Artículo 1','versions':[version]}])==[]

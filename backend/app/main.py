@@ -32,7 +32,7 @@ def create_app(database_url=None):
     engine, factory = connect(database_url)
     with factory() as session:
         rebuild_index(session)
-    app = FastAPI(title='LexMemoria', version='0.7.0')
+    app = FastAPI(title='LexMemoria', version='0.7.1')
     origins = [v.strip() for v in os.getenv('CORS_ORIGINS', '').split(',') if v.strip()]
     if origins:
         app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=False,

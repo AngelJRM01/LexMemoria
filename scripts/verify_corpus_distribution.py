@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check every published reading pack against the retained official source."""
 import gzip
+import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -13,8 +14,10 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'backend'))
 from app.prepared import count_cards
 
-output=Path('/workspace/lexmemoria-distribution')
-source=Path('/workspace/lexmemoria-corpus')
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--distribution',type=Path,default=Path('/workspace/lexmemoria-distribution-20261107'))
+parser.add_argument('--archive',type=Path,default=Path('/workspace/lexmemoria-corpus-20261107'))
+args=parser.parse_args();output=args.distribution;source=args.archive
 catalogue=json.loads(gzip.decompress((output/'catalogue.json.gz').read_bytes()))
 db=sqlite3.connect(source/'archive.sqlite3')
 rows={r[0]:r[1:] for r in db.execute('SELECT i.id,i.hash,o.path FROM inventory i JOIN objects o ON o.hash=i.hash')}
