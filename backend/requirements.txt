@@ -36,3 +36,5 @@ cryptography==50.0.2
 pycparser==3.12
 
 Pillow==12.0.0
+
+ijson==3.4.0.post0

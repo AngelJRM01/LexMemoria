@@ -1,0 +1,48 @@
+[
+  {
+    "celex": "31991R3864",
+    "paragraphs": 205,
+    "articles": 5,
+    "warnings": [],
+    "sourceHash": "3edc9e5401116e360e8e8f2a8c8cd76b35a36d0cf84945e1f75ed9f144cf66eb"
+  },
+  {
+    "celex": "31987D0132",
+    "paragraphs": 40,
+    "articles": 3,
+    "warnings": [],
+    "sourceHash": "8fb1a9f4fb14a68ab7cd72be095cb4c9e21764f39c9386cef91e3ff0dc16bbc9"
+  },
+  {
+    "celex": "32017D2105",
+    "paragraphs": 64,
+    "articles": 6,
+    "warnings": [
+      "duplicate_article_number:1",
+      "duplicate_article_number:2",
+      "duplicate_article_number:3"
+    ],
+    "sourceHash": "861679f060335b55468de75b8b359f2876dd4696cc9fb0c072159956c7b841b5"
+  },
+  {
+    "celex": "32016R0679",
+    "paragraphs": 1795,
+    "articles": 99,
+    "warnings": [],
+    "sourceHash": "7e6f4309e448e2532be3fd9464f3de7929a0e25b5c4c53239b320669b9bce33b"
+  },
+  {
+    "celex": "32019L1152",
+    "paragraphs": 339,
+    "articles": 26,
+    "warnings": [],
+    "sourceHash": "df945b9ae38ed9854445807b2b555828c2ec32ebb218b304a315ee07e1e46def"
+  },
+  {
+    "celex": "32021D0914",
+    "paragraphs": 702,
+    "articles": 4,
+    "warnings": [],
+    "sourceHash": "58f77d46815fed2bc442021aa83e245f5ef422c586f42b76fe6de8a3361efc98"
+  }
+]

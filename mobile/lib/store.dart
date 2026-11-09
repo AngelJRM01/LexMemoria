@@ -701,6 +701,57 @@ class AppStore extends ChangeNotifier {
     await save();
   }
 
+  Json _europeanSourceChange(Json norm) {
+    if (norm['id'] is! String || !(norm['id'] as String).startsWith('EU-')) {
+      throw StateError('Identificador europeo incompatible.');
+    }
+    final old = list('norms').where((n) => n['id'] == norm['id']).firstOrNull;
+    final merged = <String, dynamic>{...?old, ...norm};
+    final changed =
+        old != null && old['latestVersion'] != norm['latestVersion'];
+    if (changed) {
+      for (final key in [
+        'units',
+        'bundledReady',
+        'packReady',
+        'europeanOffline'
+      ]) {
+        merged.remove(key);
+      }
+      if (!norm.containsKey('downloadedAt')) merged.remove('downloadedAt');
+    }
+    return {
+      ...data,
+      'norms': [...list('norms').where((n) => n['id'] != norm['id']), merged],
+      if (changed && old['units'] is List)
+        'archivedPacks': [...list('archivedPacks'), old]
+    };
+  }
+
+  Future<void> rememberEuropeanReading(
+          Json norm, String unitId, String hash, int offset) =>
+      _commitMutation(() => {
+            ..._europeanSourceChange(norm),
+            'readerPositions': {
+              if (data['readerPositions'] is Map) ...data['readerPositions'],
+              jsonEncode([norm['id'], unitId]): {
+                'normId': norm['id'],
+                'unitId': unitId,
+                'normVersion': norm['latestVersion'],
+                'unitVersionHash': hash,
+                'fragment': offset,
+                'updatedAt': DateTime.now().toUtc().toIso8601String()
+              },
+            },
+            'lastReadUnits': {
+              if (data['lastReadUnits'] is Map) ...data['lastReadUnits'],
+              norm['id']: unitId
+            },
+          });
+
+  Future<void> saveEuropeanNorm(Json norm) =>
+      _commitMutation(() => _europeanSourceChange(norm));
+
   Future<void> addCard(StudyCard c) async {
     await _commitMutation(() => {
           ...data,

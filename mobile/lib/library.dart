@@ -10,6 +10,7 @@ import 'remote.dart';
 import 'reading.dart';
 import 'legal_units.dart';
 import 'catalogue.dart';
+import 'european_library.dart';
 import 'browsing_widgets.dart';
 import 'account_pages.dart' show PersonalProfilePage;
 
@@ -86,6 +87,11 @@ class _LibraryPageState extends State<LibraryPage> {
               pageChanged(0);
             }),
         header: [
+          TextButton.icon(
+              onPressed: () =>
+                  push(context, FullEuropeanLibraryPage(store: widget.store)),
+              icon: const Icon(Icons.public),
+              label: const Text('Biblioteca europea completa')),
           Text('Tu biblioteca jurídica',
               style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 12),
@@ -164,10 +170,6 @@ class _LibraryPageState extends State<LibraryPage> {
                             const SizedBox(height: 8),
                             Text(n['id'],
                                 style: Theme.of(context).textTheme.bodySmall),
-                            if (n['readingNotice'] is String)
-                              Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: Text(n['readingNotice'])),
                             if (n['exhausted'] == true)
                               const Padding(
                                   padding: EdgeInsets.only(top: 8),
@@ -301,6 +303,7 @@ class _NormPageState extends State<NormPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final norm =
           widget.store.catalogue.firstWhere((n) => n['id'] == widget.id);
+      if (norm['europeanManifest'] is Map) return;
       if (norm['units'] == null &&
           (norm['packReady'] == true || norm['bundledReady'] == true) &&
           mounted) {
@@ -320,6 +323,11 @@ class _NormPageState extends State<NormPage> {
   @override
   Widget build(BuildContext context) {
     final n = widget.store.catalogue.firstWhere((n) => n['id'] == widget.id);
+    if (n['europeanManifest'] is Map) {
+      return FullEuropeanNormPage(
+          store: widget.store,
+          summary: {...n, 'manifest': n['europeanManifest']});
+    }
     final all = readUnits(n);
     final needle = normalize(query.trim());
     final units = all

@@ -1,0 +1,20 @@
+{"celex": "02016R2070-20180607", "state": "candidate", "articles": 8, "paragraphs": 2271201, "pages": 126}
+{"celex": "32019R0439", "state": "candidate", "articles": 2, "paragraphs": 1865198, "pages": 104}
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/workspace/LexMemoria/backend/app/eu_paged_structure.py", line 105, in <module>
+    if source==output or source in output.parents or output in source.parents:parser.error('Separate source and output')
+                        ^^^^^^
+  File "/workspace/LexMemoria/backend/app/eu_paged_structure.py", line 99, in main
+    
+  File "/workspace/LexMemoria/backend/app/eu_paged_structure.py", line 46, in prepare
+    # Some legacy JSON has a single enormous escaped NUL padding string.
+                              ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/LexMemoria/backend/app/eu_paged_structure.py", line 16, in read
+    def read(self,size=-1):
+
+KeyboardInterrupt
+{"celex": "02005R0396-20100607", "state": "candidate", "articles": 50, "paragraphs": 64923, "pages": 4}
+{"celex": "02016R2070-20190418", "state": "candidate", "articles": 7, "paragraphs": 1865125, "pages": 104}
+{"celex": "32018R0688", "state": "candidate", "articles": 3, "paragraphs": 2271085, "pages": 125}

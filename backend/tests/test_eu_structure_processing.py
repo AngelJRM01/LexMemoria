@@ -62,3 +62,30 @@ def test_recovered_source_is_revisited_without_new_rowid(tmp_path):
     assert p.status()['states']=={'candidate':1}
     assert p.batch()==0
     p.close()
+
+
+def test_memory_limit_uses_verified_pages_instead_of_failing(tmp_path):
+    root=source(tmp_path);out=tmp_path/'out';p=Processor(root,out)
+    p.memory_limit=8
+    assert p.batch()==1
+    assert p.status()['states']=={'candidate':1}
+    relative=p.db.execute('SELECT path FROM results').fetchone()[0]
+    manifest=json.loads(gzip.decompress((out/relative).read_bytes()))
+    assert manifest['storageLayout']=='paged-paragraphs'
+    assert manifest['paragraphs']==2
+    p.close()
+
+
+def test_changed_derived_source_replaces_old_structure_without_duplicate_url(tmp_path):
+    root=source(tmp_path);p=Processor(root,tmp_path/'out');p.batch()
+    old=p.db.execute('SELECT path FROM results').fetchone()[0]
+    document=json.loads(gzip.decompress((root/'source.gz').read_bytes()))
+    document['paragraphs'][1]['text']='Una regla corregida en la extracción.'
+    encoded=json.dumps(document).encode();(root/'corrected.gz').write_bytes(gzip.compress(encoded))
+    with sqlite3.connect(root/'processing.sqlite3') as db:
+        db.execute('UPDATE processed SET output_path=?,output_hash=?',('corrected.gz',hashlib.sha256(encoded).hexdigest()))
+    assert p.batch()==1
+    assert p.db.execute('SELECT COUNT(*) FROM results').fetchone()[0]==1
+    assert p.db.execute('SELECT path FROM results').fetchone()[0]!=old
+    assert p.db.execute('SELECT source_output_hash FROM results').fetchone()[0]==hashlib.sha256(encoded).hexdigest()
+    p.close()

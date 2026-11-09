@@ -41,22 +41,22 @@ class StreamingParagraphs(Paragraphs):
             else:self.loose.append(value)
 
 
-def extract_stream(source,sink,content_type,expected_hash,chunk_size=65536):
+def extract_stream(source,sink,content_type,expected_hash,chunk_size=65536,parser_class=StreamingParagraphs,parser_version=PARSER,clean_nuls=False):
     if 'html' not in content_type.lower():raise ExtractionError('deferred_format')
     match=re.search(r'charset\s*=\s*["\']?([\w-]+)',content_type,re.I)
     encoding=match.group(1).lower() if match else 'utf-8-sig'
     if encoding not in ('utf-8','utf8','utf-8-sig','iso-8859-1','windows-1252'):
         raise ExtractionError('unsupported_encoding')
     decoder=codecs.getincrementaldecoder(encoding)(errors='strict')
-    parser=StreamingParagraphs();raw_digest=hashlib.sha256();derived_digest=hashlib.sha256()
-    metadata={'schemaVersion':1,'parser':PARSER,'contentKind':'automatic_source_extraction',
+    parser=parser_class();raw_digest=hashlib.sha256();derived_digest=hashlib.sha256()
+    metadata={'schemaVersion':1,'parser':parser_version,'contentKind':'automatic_source_extraction',
               'reviewState':'pending','legalReview':'not_performed','language':'es',
               'informative':True,'unitsAreLegalArticles':False,'rawSha256':expected_hash,
               'attribution':'Fuente: Oficina de Publicaciones de la Unión Europea',
               'licenceUrl':'https://op.europa.eu/en/web/about-us/legal-notices/publications-office-reuse-policy'}
     def write(data):sink.write(data);derived_digest.update(data)
     write(json.dumps(metadata,ensure_ascii=False).encode()[:-1]+b',"paragraphs":[')
-    count=0;characters=0;total=0
+    count=0;characters=0;total=0;removed_nuls=0
     def flush():
         nonlocal count,characters
         for row in parser.rows:
@@ -68,13 +68,18 @@ def extract_stream(source,sink,content_type,expected_hash,chunk_size=65536):
     while chunk:=source.read(chunk_size):
         total+=len(chunk)
         if total>1024**3:raise ExtractionError('stream_source_size_limit')
-        raw_digest.update(chunk);parser.feed(decoder.decode(chunk));flush()
+        raw_digest.update(chunk);decoded=decoder.decode(chunk)
+        if clean_nuls:
+            removed_nuls+=decoded.count('\x00');decoded=decoded.replace('\x00','')
+        parser.feed(decoded);flush()
         if sum(map(len,parser.parts))+sum(map(len,parser.loose))>4*1024**2:raise ExtractionError('paragraph_size_limit')
     parser.feed(decoder.decode(b'',final=True));parser.close();parser.flush_loose();parser.flush();flush()
     if raw_digest.hexdigest()!=expected_hash:raise ExtractionError('source_hash_mismatch')
     if not parser.html_seen or not parser.body_seen:raise ExtractionError('invalid_html_document')
     if characters<40:raise ExtractionError('insufficient_text')
-    write(b']}')
+    write(b']')
+    if removed_nuls:write(b',"sourceCleaning":'+json.dumps({'nulPaddingCharactersRemoved':removed_nuls}).encode())
+    write(b'}')
     return derived_digest.hexdigest(),count
 
 

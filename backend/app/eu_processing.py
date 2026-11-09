@@ -82,6 +82,7 @@ def extract_html(raw,content_type):
         'paragraphs':[{'id':f'source-paragraph-{i+1}',**row} for i,row in enumerate(rows)]}
 
 class Processor:
+    parser=PARSER
     def __init__(self,archive,output):
         self.archive=Path(archive).resolve(); self.output=Path(output).resolve()
         if self.output==self.archive or self.archive in self.output.parents:
@@ -137,7 +138,7 @@ class Processor:
         return len(rows)
     def status(self):
         states=dict(self.db.execute('SELECT state,count(*) FROM processed GROUP BY state').fetchall())
-        report={'parser':PARSER,'observedAt':datetime.now(timezone.utc).isoformat(),
+        report={'parser':self.parser,'observedAt':datetime.now(timezone.utc).isoformat(),
             'states':states,'clientIntegrated':False,'legalReview':'not_performed',
             'scope':'Derived HTML paragraphs only; non-HTML files deferred; original archive unchanged'}
         target=self.output/'status.json';temporary=target.with_suffix('.tmp')

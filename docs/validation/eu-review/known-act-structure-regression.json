@@ -1,0 +1,53 @@
+[
+  {
+    "celex": "32016R0679",
+    "expectedArticles": 99,
+    "actualArticles": 99,
+    "parts": {
+      "preamble": 1,
+      "recitals": 1,
+      "adoption": 1,
+      "heading": 26,
+      "article_candidate": 99,
+      "signature": 1
+    },
+    "sourceHashes": [
+      "41b755cb14e15fb04e7591585685389348526c3163b68f9abe0edb7bfae4d68c"
+    ],
+    "legalReview": "not_performed"
+  },
+  {
+    "celex": "32019L1152",
+    "expectedArticles": 26,
+    "actualArticles": 26,
+    "parts": {
+      "preamble": 1,
+      "recitals": 1,
+      "adoption": 1,
+      "heading": 5,
+      "article_candidate": 26,
+      "signature": 1
+    },
+    "sourceHashes": [
+      "3b8a384cccdcb1ac0074af3008fbcddd46b54b0335d6bc842b1b387bfd34f70c"
+    ],
+    "legalReview": "not_performed"
+  },
+  {
+    "celex": "32021D0914",
+    "expectedArticles": 4,
+    "actualArticles": 4,
+    "parts": {
+      "preamble": 1,
+      "recitals": 1,
+      "adoption": 1,
+      "article_candidate": 4,
+      "signature": 1,
+      "annex": 4
+    },
+    "sourceHashes": [
+      "0cf48a14aa0f645ef87eb77a3edb4589d3133ec7cc751c4a0eb373f82d083805"
+    ],
+    "legalReview": "not_performed"
+  }
+]
