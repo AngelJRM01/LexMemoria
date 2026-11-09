@@ -2,11 +2,19 @@
 
 Aplicación Flutter para estudiar Derecho español en Universidad y Oposiciones, con backend FastAPI. Implementación en desarrollo a partir de la especificación maestra V2 aportada por el usuario. **No es todavía el producto completo ni está lista para publicación.**
 
+## Versión 0.8.0 de pruebas
+
+[Descargar APK 0.8.0 con Google](https://raw.githubusercontent.com/AngelJRM01/LexMemoria/android-google-preview-0.8.0/LexMemoria-0.8.0-google-prueba.apk) · [Funciones y límites](docs/MEJORAS_0_8_0.md) · [Verificaciones](docs/validation/0.8.0/)
+
+La biblioteca europea completa se abre desde Biblioteca. Incorpora todos los **184.737 registros del inventario observado** (CELEX sectores 0 y 3 con expresión española), agrupados en **149.352 actos**, con sus consolidaciones y correcciones contrastadas contra el acto base oficial. Permite buscar, elegir edición, leer por páginas, guardar textos sin conexión y preparar mazos literales cuando pasan los controles técnicos. Las fichas sin texto recuperable conservan su fuente. La extracción automática no acredita vigencia ni revisión jurídica manual de cada registro.
+
+El catálogo europeo se descarga al entrar en esa biblioteca; los textos se descargan por páginas y no se cargan todos al arrancar. El APK es una compilación **release** con Google, firmada para pruebas; no es una publicación en Google Play. No desinstales la aplicación anterior para actualizarla.
+
 ## Qué contiene
 
 - Cliente móvil Android/iOS y proyecto web adaptable, interfaz en español, cinco destinos, modo oscuro y tipografía del sistema.
 - Onboarding Universidad/Oposiciones/Ambos, acceso local sin registro, cambio de itinerario conservando datos.
-- Catálogo de 12.451 normas del BOE consolidado observado, veinte incluidas y el resto descargable por norma sin servidor privado. Búsqueda tolerante a tildes, materias, marcadores y seguimiento local. Los textos son consolidaciones informativas; **no incluyen material educativo certificado**.
+- Catálogo de 12.457 normas del BOE consolidado observado, veinte incluidas y el resto descargable por norma sin servidor privado. Búsqueda tolerante a tildes, materias, marcadores y seguimiento local. Los textos son consolidaciones informativas; **no incluyen material educativo certificado**.
 - Descarga de normas importadas desde una API configurable, lectura offline, notas privadas, copia de referencias, voz mediante plataforma, selector histórico, consulta por fecha efectiva que rechaza metadatos ambiguos y comparación textual de párrafos.
 - Tarjetas personales QA, cloze, verdadero/falso, ordenación, caso y test; creación desde artículo; importación CSV con previsualización, límites y validación completa antes de guardar.
 - Almacén SQLCipher en Android/iOS con clave separada en Keychain/Keystore; migración verificada desde preferencias. La versión web conserva preferencias locales sin este cifrado. La integración nativa está pendiente de ejecución.
@@ -34,6 +42,8 @@ El script instala las versiones fijadas del backend y cliente, ejecuta análisis
 La aplicación incluye el índice de **12.451 normas oficiales del BOE** y veinte textos locales con 11.777 bloques. El resto dispone de paquetes públicos con versiones, hashes, fechas y atribución. En Biblioteca abre una norma y pulsa Descargar texto para guardarla para lectura; no necesita servidor. Es texto consolidado informativo, sin certificación jurídica ni material educativo verificado. La actualización remota es opcional y debe configurarse en Perfil.
 
 [Avance V2 y límites](docs/AVANCE_V2_2026-11-05.md) · [Evidencia de validación](docs/VALIDACION.md) · [Despliegue propuesto en Render](docs/DESPLIEGUE.md)
+
+Para un checkout nuevo de desarrollo usa `git clone --single-branch --branch main https://github.com/AngelJRM01/LexMemoria.git`; las ramas de corpus y APK contienen archivos de distribución grandes.
 
 El checkout ya está aislado; usa `/workspace/LexMemoria` y no crees otro worktree.
 
@@ -139,6 +149,6 @@ Acceso Google mediante Firebase y vinculación a una cuenta invitada conservando
 
 ## Descargar APK configurado con Google
 
-[Descargar LexMemoria 0.5.0 Google · APK de pruebas](https://raw.githubusercontent.com/AngelJRM01/LexMemoria/751f44440c2f0e993c6f723bf73c3bb0ddeb21db/LexMemoria-0.5.0-google-prueba.apk). Descarga HTTP y SHA-256 verificados frente al APK configurado. [Datos de la descarga](docs/validation/google-apk-download-0.5.0.json).
+[Descargar LexMemoria 0.8.0 Google · APK de pruebas](https://raw.githubusercontent.com/AngelJRM01/LexMemoria/android-google-preview-0.8.0/LexMemoria-0.8.0-google-prueba.apk). [Firma, tamaño, SHA-256 y comprobación pública](docs/validation/0.8.0/android-build.json).
 
-La rama `android-google-preview-0.5.0` distribuye el APK ya compilado con la firma y configuración registradas; los artefactos genéricos de Actions no incorporan por sí solos esa configuración. Ambos pueden mostrar 0.5.0: para esta prueba debe usarse el enlace anterior. Guardar una copia antes de actualizar y conservar la app instalada si Android rechaza una firma distinta.
+La rama `android-google-preview-0.8.0` contiene el APK compilado con la configuración Google registrada. Los APK genéricos de Actions pueden carecer de ella. Conserva una copia de seguridad antes de actualizar; no desinstales si Android rechaza la firma.

@@ -1,0 +1,11 @@
+{
+  "attempts": {
+    "manual_review": 3,
+    "recovered": 62
+  },
+  "remainingDeferred": {
+    "pdf_conversion_failed": 3,
+    "xml_manifest_metadata_only": 15
+  },
+  "legalReview": "not_performed"
+}

@@ -1,0 +1,22 @@
+{
+  "version": "0.8.0+13",
+  "coreSourceCommit": "8216989c1d57329cfbd436669b7c46e5d0e952e6",
+  "dataCommit": "1321d6556f865529487e7762c51d026b9518ee8d",
+  "apkBranchCommit": "7789ec22959e0630ff76908bfe14731f46925052",
+  "apkSha256": "e9520445b9673e17be9d2ebe792c4a96ae474d2af1fddeb1b0c117fb4f8bbf42",
+  "publicApkDownloadVerified": true,
+  "records": 184737,
+  "groupedActs": 149352,
+  "baseActRelationsChecked": 28905,
+  "unresolvedBaseActRelations": 0,
+  "backendTestsPassed": 214,
+  "flutterTestsPassed": 136,
+  "flutterAnalyzer": "no_issues",
+  "webBuild": "passed",
+  "androidReleaseBuild": "passed",
+  "googleConfigured": true,
+  "physicalGoogleSignIn": "pending",
+  "renderLive": "not_verified_from_this_environment",
+  "storePublication": false,
+  "legalReview": "not_performed"
+}

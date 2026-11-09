@@ -1,0 +1,11 @@
+{
+  "parser": "eu-html-leaf-paragraphs-2",
+  "observedAt": "2026-11-09T12:13:42.303709+00:00",
+  "states": {
+    "deferred": 145155,
+    "extracted": 135806
+  },
+  "clientIntegrated": false,
+  "legalReview": "not_performed",
+  "scope": "Derived HTML paragraphs only; non-HTML files deferred; original archive unchanged"
+}

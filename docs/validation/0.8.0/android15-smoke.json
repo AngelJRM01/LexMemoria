@@ -1,0 +1,20 @@
+{
+  "version": "0.8.0+13",
+  "android": "15",
+  "mode": "release",
+  "package": "es.lexmemoria.app.preview",
+  "installation": "update_without_data_reset",
+  "startupUiDisplayed": true,
+  "localOnboardingAndProfileSurvivedForceStop": true,
+  "bundledConstitutionOpenedOffline": true,
+  "constitutionIndexArticlesSeparated": true,
+  "article1Fragments": 3,
+  "fullEuropeanLibraryEntryDisplayed": true,
+  "googleProviderSignIn": "not_tested",
+  "physicalOppo": "not_tested",
+  "performance": "Not representative: software emulator without KVM; system UI ANR during emulator boot before application launch.",
+  "launcherColdStartMs": 15208,
+  "applicationFatalErrorsObserved": false,
+  "testedApkSha256": "24b2ee30d5177bbe35d90f35e86d17dd2bd3460e963b84ae4ca0d2c95dd06e01",
+  "scope": "Native startup, persistence and reading UI before final pure-Dart semantic target expansion. Platform configuration unchanged; final generator validated separately on full corpus."
+}

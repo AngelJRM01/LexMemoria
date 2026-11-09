@@ -12,126 +12,129 @@
 00:00 +10: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: real catalogue has populated subjects and all 17 autonomous communities
 00:00 +11: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: real catalogue has populated subjects and all 17 autonomous communities
 00:00 +12: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: real catalogue has populated subjects and all 17 autonomous communities
-00:01 +13: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: library paginates, jumps to a page and resets on search
+00:00 +13: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: library paginates, jumps to a page and resets on search
 00:01 +14: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: library paginates, jumps to a page and resets on search
 00:01 +15: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: library paginates, jumps to a page and resets on search
 00:01 +16: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: library paginates, jumps to a page and resets on search
 00:01 +17: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: library paginates, jumps to a page and resets on search
 00:01 +18: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: library paginates, jumps to a page and resets on search
 00:01 +19: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: library paginates, jumps to a page and resets on search
-00:02 +20: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: library paginates, jumps to a page and resets on search
+00:01 +20: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: library paginates, jumps to a page and resets on search
 00:02 +21: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
-00:03 +22: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
-00:03 +23: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
-00:03 +24: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
-00:03 +25: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
-00:04 +26: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
-00:04 +27: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
-00:04 +28: /workspace/LexMemoria/mobile/test/network_store_test.dart: legal feed deduplicates id and keeps editorial uncertainty
-00:04 +29: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: long articles produce brief multi-target clozes and source-based expression tests
-00:04 +30: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: long articles produce brief multi-target clozes and source-based expression tests
-00:04 +31: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: each numbered cloze accepts an answer and reveals individual feedback
-00:04 +32: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:04 +33: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:05 +34: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:05 +35: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:06 +36: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:06 +37: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:06 +38: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:07 +39: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:07 +40: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:08 +41: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:08 +42: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:08 +43: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:10 +44: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:11 +45: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:11 +46: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:12 +47: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +48: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +49: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +50: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +51: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +52: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +53: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +54: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +55: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +56: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +57: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +58: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +59: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +60: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +61: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +62: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +63: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +64: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +65: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +66: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:13 +67: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
-00:14 +68: /workspace/LexMemoria/mobile/test/startup_test.dart: startup failure exposes a safe code and retry can recover
-00:14 +69: /workspace/LexMemoria/mobile/test/startup_test.dart: startup failure exposes a safe code and retry can recover
-00:15 +70: /workspace/LexMemoria/mobile/test/startup_test.dart: native exception messages are not exposed in diagnostics
-00:15 +71: /workspace/LexMemoria/mobile/test/store_test.dart: review survives reload and can be undone without losing card
-00:16 +72: /workspace/LexMemoria/mobile/test/store_test.dart: review survives reload and can be undone without losing card
-00:16 +73: /workspace/LexMemoria/mobile/test/store_test.dart: review survives reload and can be undone without losing card
-00:16 +74: /workspace/LexMemoria/mobile/test/store_test.dart: review survives reload and can be undone without losing card
-00:16 +75: /workspace/LexMemoria/mobile/test/store_test.dart: review survives reload and can be undone without losing card
-00:16 +76: /workspace/LexMemoria/mobile/test/store_test.dart: blocked cards cannot enter queue or be graded
-00:17 +77: /workspace/LexMemoria/mobile/test/usability_test.dart: starter installs once; full deck preserves edited cards and reviews
-00:18 +78: /workspace/LexMemoria/mobile/test/usability_test.dart: starter installs once; full deck preserves edited cards and reviews
-00:18 +79: /workspace/LexMemoria/mobile/test/store_test.dart: new metadata quarantines stale offline pack and blocks linked card
-00:18 +80: /workspace/LexMemoria/mobile/test/store_test.dart: new metadata quarantines stale offline pack and blocks linked card
-00:18 +81: /workspace/LexMemoria/mobile/test/store_test.dart: new metadata quarantines stale offline pack and blocks linked card
-00:18 +82: /workspace/LexMemoria/mobile/test/store_test.dart: new metadata quarantines stale offline pack and blocks linked card
-00:18 +83: /workspace/LexMemoria/mobile/test/usability_test.dart: library filter stays visible after scrolling results
-00:18 +84: /workspace/LexMemoria/mobile/test/usability_test.dart: library filter stays visible after scrolling results
-00:20 +85: /workspace/LexMemoria/mobile/test/widget_test.dart: guest can open library without signing in
-00:20 +86: /workspace/LexMemoria/mobile/test/widget_test.dart: guest can open library without signing in
-00:21 +87: /workspace/LexMemoria/mobile/test/widget_test.dart: guest can open library without signing in
-00:21 +88: /workspace/LexMemoria/mobile/test/widget_test.dart: guest can open library without signing in
-00:22 +89: /workspace/LexMemoria/mobile/test/widget_test.dart: guest can open library without signing in
-00:22 +90: /workspace/LexMemoria/mobile/test/widget_test.dart: guest can open library without signing in
-00:22 +91: /workspace/LexMemoria/mobile/test/widget_test.dart: guest can open library without signing in
-00:23 +92: /workspace/LexMemoria/mobile/test/widget_test.dart: guest can open library without signing in
-00:23 +93: /workspace/LexMemoria/mobile/test/widget_test.dart: guest can open library without signing in
-00:23 +94: /workspace/LexMemoria/mobile/test/widget_test.dart: guest can open library without signing in
-00:23 +95: /workspace/LexMemoria/mobile/test/loading_performance_test.dart: profile real catalogue and repeated card access
-00:25 +96: /workspace/LexMemoria/mobile/test/loading_performance_test.dart: profile real catalogue and repeated card access
-00:26 +97: /workspace/LexMemoria/mobile/test/loading_performance_test.dart: profile real catalogue and repeated card access
-00:26 +98: /workspace/LexMemoria/mobile/test/loading_performance_test.dart: profile real catalogue and repeated card access
-Shell: {"startupMicroseconds":540053,"reopenFourSavedLawsMicroseconds":499381,"lawsDecompressedBeforeHome":0,"catalogueColdMicroseconds":54335,"catalogue100ReadsMicroseconds":3101,"cards20ReadsMicroseconds":115517,"progressFingerprint20ReadsMicroseconds":331286,"fingerprintDigest":"fef87cd3e64ab6755bc14a3e39053693dfc599a29b5e8207285c693540150f5d","profileCommitMicroseconds":356188,"cards20ReadsAfterProfileCommitMicroseconds":90,"studyQueue10ReadsMicroseconds":110907,"norms":12460,"cards":20000}
-00:28 +99: /workspace/LexMemoria/mobile/test/european_library_test.dart: European original acts load offline and never create unreviewed exercises
-00:28 +100: /workspace/LexMemoria/mobile/test/european_library_test.dart: European index separates recitals and labels the original edition
-00:29 +101: /workspace/LexMemoria/mobile/test/european_library_test.dart: European index separates recitals and labels the original edition
-00:29 +102: /workspace/LexMemoria/mobile/test/european_library_test.dart: European index separates recitals and labels the original edition
-00:29 +103: /workspace/LexMemoria/mobile/test/european_library_test.dart: European index separates recitals and labels the original edition
-00:29 +104: /workspace/LexMemoria/mobile/test/european_library_test.dart: European index separates recitals and labels the original edition
-00:29 +105: /workspace/LexMemoria/mobile/test/european_library_test.dart: European index separates recitals and labels the original edition
-00:30 +106: /workspace/LexMemoria/mobile/test/legal_learning_quality_test.dart: article index hides preamble and titles while retaining a separate preamble view
-00:31 +107: /workspace/LexMemoria/mobile/test/legal_learning_quality_test.dart: historical wording inside an editorial block never becomes current learning text
-00:31 +108: /workspace/LexMemoria/mobile/test/legal_learning_quality_test.dart: judicial notes require context review without claiming the current article is invalid
-00:31 +109: /workspace/LexMemoria/mobile/test/legal_learning_quality_test.dart: personal card editor starts with current body, not historical editorial quotations
-00:31 +110: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: local profile remains optional and never contacts backend
-00:32 +111: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: local profile remains optional and never contacts backend
-00:32 +112: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: local profile remains optional and never contacts backend
-00:32 +113: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: local profile remains optional and never contacts backend
-00:32 +114: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: local profile remains optional and never contacts backend
-00:32 +115: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: local profile remains optional and never contacts backend
-00:32 +116: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: local profile remains optional and never contacts backend
-00:33 +117: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: collaboration does not require guest to connect or expose social feed
-00:33 +118: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: workspace includes reading, favorites and exam history, with scoped atomic commit
-00:33 +119: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: backup strips automatic consent and pending outbound authority
-00:33 +120: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: no backup success before server identity acknowledgement; dirty state follows edits
-00:33 +121: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: automatic queue requires scoped consent and persists confirmation
-00:33 +122: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: divergent content and pending reviews survive as independent local fork
-00:33 +123: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: recovery retries a lost response using a vault-persisted attempt
-00:33 +124: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: failed remote download write leaves every local field unchanged
-00:33 +125: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: lost aliases recover matching server revision without duplicates or moving a copied deck
-00:33 +126: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: calendar honors available time while keeping overdue reviews before preferences
-00:33 +127: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: workspace merges separate device changes and keeps account authority outside academic data
-00:33 +128: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: workspace simultaneous edits stop before upload and preserve local notes
-00:33 +129: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: a remote-only card edit downloads without manufacturing a conflict
-00:33 +130: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: notes and finished exam commit atomically and reject stale device edits
-00:33 +131: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: course editing uses stable identity and preserves another device changes
-00:33 +132: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: workspace transport failure does not mark card progress as failed
-00:33 +133: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: group administrator can revoke a member from the interface
-00:33 +134: All tests passed!
+00:02 +22: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
+00:02 +23: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
+00:02 +24: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
+00:02 +25: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
+00:02 +26: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
+00:02 +27: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
+00:02 +28: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
+00:02 +29: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: community filtering applies to library and prepared decks
+00:02 +30: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: European clozes hide complete legal concepts and complete quantities
+00:02 +31: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: long articles produce brief multi-target clozes and source-based expression tests
+00:02 +32: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: each numbered cloze accepts an answer and reveals individual feedback
+00:03 +33: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:03 +34: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:04 +35: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:04 +36: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:04 +37: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:04 +38: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:05 +39: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:05 +40: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:05 +41: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:06 +42: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:06 +43: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:06 +44: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:08 +45: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:08 +46: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:08 +47: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:09 +48: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:09 +49: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:09 +50: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:09 +51: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:09 +52: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:09 +53: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:09 +54: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:09 +55: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:09 +56: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:09 +57: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:09 +58: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:09 +59: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:09 +60: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:09 +61: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:09 +62: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:09 +63: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:09 +64: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:09 +65: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:09 +66: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:10 +67: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:10 +68: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:11 +69: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:11 +70: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:12 +71: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:12 +72: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:13 +73: /workspace/LexMemoria/mobile/test/browsing_exercises_test.dart: prepared sheet creates interactive clozes without disposing an active field
+00:13 +74: /workspace/LexMemoria/mobile/test/store_test.dart: new metadata quarantines stale offline pack and blocks linked card
+00:13 +75: /workspace/LexMemoria/mobile/test/store_test.dart: new metadata quarantines stale offline pack and blocks linked card
+00:13 +76: /workspace/LexMemoria/mobile/test/store_test.dart: due queue obeys rest and vacation without deleting history
+00:13 +77: /workspace/LexMemoria/mobile/test/store_test.dart: due queue obeys rest and vacation without deleting history
+00:13 +78: /workspace/LexMemoria/mobile/test/store_test.dart: due queue obeys rest and vacation without deleting history
+00:13 +79: /workspace/LexMemoria/mobile/test/store_test.dart: due queue obeys rest and vacation without deleting history
+00:13 +80: /workspace/LexMemoria/mobile/test/store_test.dart: due queue obeys rest and vacation without deleting history
+00:14 +81: /workspace/LexMemoria/mobile/test/usability_test.dart: starter installs once; full deck preserves edited cards and reviews
+00:15 +82: /workspace/LexMemoria/mobile/test/widget_test.dart: guest can open library without signing in
+00:15 +83: /workspace/LexMemoria/mobile/test/widget_test.dart: guest can open library without signing in
+00:15 +84: /workspace/LexMemoria/mobile/test/widget_test.dart: guest can open library without signing in
+00:15 +85: /workspace/LexMemoria/mobile/test/widget_test.dart: guest can open library without signing in
+00:16 +86: /workspace/LexMemoria/mobile/test/usability_test.dart: library filter stays visible after scrolling results
+00:16 +87: /workspace/LexMemoria/mobile/test/usability_test.dart: reader separates fragments, searches and keeps navigation above system inset
+00:16 +88: /workspace/LexMemoria/mobile/test/usability_test.dart: main pages fit large text at Size(390.0, 844.0)
+00:16 +89: /workspace/LexMemoria/mobile/test/usability_test.dart: main pages fit large text at Size(390.0, 844.0)
+00:16 +90: /workspace/LexMemoria/mobile/test/usability_test.dart: main pages fit large text at Size(390.0, 844.0)
+00:16 +91: /workspace/LexMemoria/mobile/test/usability_test.dart: main pages fit large text at Size(390.0, 844.0)
+00:16 +92: /workspace/LexMemoria/mobile/test/usability_test.dart: main pages fit large text at Size(390.0, 844.0)
+00:16 +93: /workspace/LexMemoria/mobile/test/usability_test.dart: main pages fit large text at Size(390.0, 844.0)
+00:16 +94: /workspace/LexMemoria/mobile/test/usability_test.dart: main pages fit large text at Size(390.0, 844.0)
+00:16 +95: /workspace/LexMemoria/mobile/test/usability_test.dart: main pages fit large text at Size(700.0, 360.0)
+00:17 +96: /workspace/LexMemoria/mobile/test/loading_performance_test.dart: profile real catalogue and repeated card access
+00:18 +97: /workspace/LexMemoria/mobile/test/loading_performance_test.dart: profile real catalogue and repeated card access
+00:18 +98: /workspace/LexMemoria/mobile/test/loading_performance_test.dart: profile real catalogue and repeated card access
+00:18 +99: /workspace/LexMemoria/mobile/test/loading_performance_test.dart: profile real catalogue and repeated card access
+Shell: {"startupMicroseconds":476995,"reopenFourSavedLawsMicroseconds":344020,"lawsDecompressedBeforeHome":0,"catalogueColdMicroseconds":24534,"catalogue100ReadsMicroseconds":3373,"cards20ReadsMicroseconds":87872,"progressFingerprint20ReadsMicroseconds":180297,"fingerprintDigest":"fef87cd3e64ab6755bc14a3e39053693dfc599a29b5e8207285c693540150f5d","profileCommitMicroseconds":170029,"cards20ReadsAfterProfileCommitMicroseconds":81,"studyQueue10ReadsMicroseconds":47281,"norms":12460,"cards":20000}
+00:19 +100: /workspace/LexMemoria/mobile/test/european_distribution_integration_test.dart: complete distribution opens through the real mobile decoder and produces cited RGPD cards
+00:21 +101: /workspace/LexMemoria/mobile/test/european_distribution_integration_test.dart: complete distribution opens through the real mobile decoder and produces cited RGPD cards
+00:22 +102: /workspace/LexMemoria/mobile/test/european_distribution_integration_test.dart: complete distribution opens through the real mobile decoder and produces cited RGPD cards
+00:23 +103: /workspace/LexMemoria/mobile/test/european_distribution_integration_test.dart: complete distribution opens through the real mobile decoder and produces cited RGPD cards
+00:23 +104: /workspace/LexMemoria/mobile/test/european_distribution_integration_test.dart: complete distribution opens through the real mobile decoder and produces cited RGPD cards
+00:23 +105: /workspace/LexMemoria/mobile/test/european_distribution_integration_test.dart: complete distribution opens through the real mobile decoder and produces cited RGPD cards
+00:23 +106: /workspace/LexMemoria/mobile/test/european_distribution_integration_test.dart: complete distribution opens through the real mobile decoder and produces cited RGPD cards
+00:23 +107: /workspace/LexMemoria/mobile/test/european_distribution_integration_test.dart: complete distribution opens through the real mobile decoder and produces cited RGPD cards
+{"norms":149352,"records":184737,"catalogueDecodeMs":3205,"catalogueReopenMicroseconds":353,"rgpdStudyArticles":99,"rgpdCards":{"qa":796,"cloze":169,"test":498,"reference":696},"sourceOnlyFiche":"31953D0038"}
+00:23 +108: /workspace/LexMemoria/mobile/test/legal_learning_quality_test.dart: article index hides preamble and titles while retaining a separate preamble view
+00:24 +109: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: local profile remains optional and never contacts backend
+00:24 +110: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: local profile remains optional and never contacts backend
+00:24 +111: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: local profile remains optional and never contacts backend
+00:24 +112: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: local profile remains optional and never contacts backend
+00:25 +113: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: local profile remains optional and never contacts backend
+00:25 +114: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: local profile remains optional and never contacts backend
+00:25 +115: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: local profile remains optional and never contacts backend
+00:25 +116: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: local profile remains optional and never contacts backend
+00:25 +117: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: local profile remains optional and never contacts backend
+00:25 +118: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: local profile remains optional and never contacts backend
+00:25 +119: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: collaboration does not require guest to connect or expose social feed
+00:25 +120: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: workspace includes reading, favorites and exam history, with scoped atomic commit
+00:25 +121: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: backup strips automatic consent and pending outbound authority
+00:25 +122: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: no backup success before server identity acknowledgement; dirty state follows edits
+00:25 +123: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: automatic queue requires scoped consent and persists confirmation
+00:25 +124: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: divergent content and pending reviews survive as independent local fork
+00:25 +125: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: recovery retries a lost response using a vault-persisted attempt
+00:25 +126: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: failed remote download write leaves every local field unchanged
+00:25 +127: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: lost aliases recover matching server revision without duplicates or moving a copied deck
+00:25 +128: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: calendar honors available time while keeping overdue reviews before preferences
+00:25 +129: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: workspace merges separate device changes and keeps account authority outside academic data
+00:25 +130: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: workspace simultaneous edits stop before upload and preserve local notes
+00:25 +131: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: a remote-only card edit downloads without manufacturing a conflict
+00:25 +132: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: notes and finished exam commit atomically and reject stale device edits
+00:25 +133: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: course editing uses stable identity and preserves another device changes
+00:25 +134: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: workspace transport failure does not mark card progress as failed
+00:25 +135: /workspace/LexMemoria/mobile/test/accounts_collaboration_test.dart: group administrator can revoke a member from the interface
+00:25 +136: All tests passed!

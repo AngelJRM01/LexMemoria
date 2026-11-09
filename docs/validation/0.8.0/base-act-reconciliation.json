@@ -1,0 +1,15 @@
+{
+  "recordsChecked": 28905,
+  "relationsWithOneOfficialIdentifier": 28905,
+  "originalSectors": {
+    "3": 28289,
+    "2": 466,
+    "5": 47,
+    "1": 41,
+    "4": 61,
+    "C": 1
+  },
+  "previousFormulaCorrections": 645,
+  "sourcePredicate": "http://publications.europa.eu/ontology/cdm#act_consolidated_based_on_resource_legal",
+  "legalReview": "not_performed"
+}

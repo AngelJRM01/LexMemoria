@@ -1,0 +1,37 @@
+{
+  "scope": {
+    "celexSectors": [
+      "0",
+      "3"
+    ],
+    "expressionLanguage": "es",
+    "inventoryRecords": 184737
+  },
+  "groupedActs": 149352,
+  "editions": 184737,
+  "readableEditions": 177200,
+  "actsWithReadableText": 142803,
+  "sourceOnlyActs": 6549,
+  "actsWithLiteralStudyCandidates": 70196,
+  "documentFamilies": {
+    "Tratado": 9,
+    "Acuerdo internacional": 176,
+    "Otros actos": 3801,
+    "Decisión": 32878,
+    "Reglamento": 92251,
+    "Directiva": 4247,
+    "Recomendación": 1509,
+    "Resolución": 141,
+    "Dictamen": 559,
+    "Presupuesto": 4211,
+    "Concentraciones": 9495,
+    "Legislación complementaria": 50,
+    "Documento institucional": 24,
+    "Anuncio": 1
+  },
+  "originalFilesReferenced": 280961,
+  "originalSourceFilesModified": false,
+  "officialMetadataQueriesAppended": true,
+  "legalReview": "not_performed",
+  "studyCandidateMeaning": "Technical eligibility; per-article checks still apply. Not manual legal review."
+}

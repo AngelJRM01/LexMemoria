@@ -35,7 +35,9 @@ def main():
     def flush():
         nonlocal batch,batch_bytes,published
         if not batch:return
-        git('add','--',*batch)
+        # Stage the generated tree once: thousands of individual pathspecs
+        # otherwise repeat comparisons against half a million index entries.
+        git('add','--','objects')
         changed=subprocess.run(['git','-C',str(checkout),'diff','--cached','--quiet']).returncode
         if changed not in (0,1):raise RuntimeError('Cannot inspect staged files')
         if changed:
@@ -60,7 +62,7 @@ def main():
     (checkout/'README.md').write_text(
         '# LexMemoria — biblioteca europea completa\n\n'
         f"{manifest['records']:,} registros agrupados en {manifest['norms']:,} actos, con todas sus ediciones y {manifest['sourceFiles']:,} referencias de archivos originales.\n\n"
-        'Fuente: Oficina de Publicaciones de la Unión Europea. Extracción automática, sin revisión jurídica manual. Las fichas sin texto recuperable conservan su fuente oficial.\n\n'
+        'Inventario observado: sectores CELEX 0 y 3 con expresión española. Las bases de las 28.905 consolidaciones se contrastan con la relación oficial CDM; los tratados y acuerdos conservan su identificador y familia.\n\nFuente: Oficina de Publicaciones de la Unión Europea. Extracción automática, sin revisión jurídica manual. Las fichas sin texto recuperable conservan su fuente oficial.\n\n'
         'Cada objeto declara SHA-256 de bytes comprimidos, tamaño comprimido y expandido; páginas JSONL. El índice se publica después de todos sus objetos.\n')
     git('add','README.md','validation-report.json','catalogue-manifest.json')
     if subprocess.run(['git','-C',str(checkout),'diff','--cached','--quiet']).returncode:

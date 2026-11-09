@@ -1,0 +1,13 @@
+{
+  "parser": "eu-pdf-formex-source-2",
+  "observedAt": "2026-11-09T12:14:01.037377+00:00",
+  "states": {
+    "deferred": 18,
+    "extracted": 41737,
+    "handled_by_html_pipeline": 135806,
+    "source_asset": 103400
+  },
+  "clientIntegrated": false,
+  "legalReview": "not_performed",
+  "scope": "PDF/Formex source extraction; image assets retained; OCR and Word conversions remain explicit"
+}

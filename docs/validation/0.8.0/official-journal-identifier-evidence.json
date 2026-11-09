@@ -1,0 +1,83 @@
+{
+  "parentResource": "http://publications.europa.eu/resource/cellar/bca37e9c-c5b1-11f0-8da2-01aa75ed71a1",
+  "queryHash": "fb9aad6122ae706347c70f3c2320ead0395e5e9c8c8722418543f4ad799a7ea3",
+  "status": 200,
+  "response": {
+    "head": {
+      "link": [],
+      "vars": [
+        "p",
+        "o"
+      ]
+    },
+    "results": {
+      "distinct": false,
+      "ordered": true,
+      "bindings": [
+        {
+          "p": {
+            "type": "uri",
+            "value": "http://www.w3.org/2002/07/owl#sameAs"
+          },
+          "o": {
+            "type": "uri",
+            "value": "http://publications.europa.eu/resource/celex/C%2F2025%2F06345"
+          }
+        },
+        {
+          "p": {
+            "type": "uri",
+            "value": "http://www.w3.org/2002/07/owl#sameAs"
+          },
+          "o": {
+            "type": "uri",
+            "value": "http://publications.europa.eu/resource/eli/C/2025/6345/oj"
+          }
+        },
+        {
+          "p": {
+            "type": "uri",
+            "value": "http://www.w3.org/2002/07/owl#sameAs"
+          },
+          "o": {
+            "type": "uri",
+            "value": "http://publications.europa.eu/resource/oj/C_202506345"
+          }
+        },
+        {
+          "p": {
+            "type": "uri",
+            "value": "http://publications.europa.eu/ontology/cdm#resource_legal_id_celex"
+          },
+          "o": {
+            "type": "literal",
+            "datatype": "http://www.w3.org/2001/XMLSchema#string",
+            "value": "C/2025/06345"
+          }
+        },
+        {
+          "p": {
+            "type": "uri",
+            "value": "http://publications.europa.eu/ontology/cdm#work_title"
+          },
+          "o": {
+            "type": "literal",
+            "xml:lang": "en",
+            "value": "NOTICE PURSUANT TO ARTICLE 29(2) OF THE STAFF REGULATIONS - Publication of a vacancy for the function of Deputy Director-General responsible for the Coordination of Euratom Policies (Grade AD 15) Directorate-General for Energy"
+          }
+        },
+        {
+          "p": {
+            "type": "uri",
+            "value": "http://publications.europa.eu/ontology/cdm#work_title"
+          },
+          "o": {
+            "type": "literal",
+            "xml:lang": "fr",
+            "value": "NOTICE PURSUANT TO ARTICLE 29(2) OF THE STAFF REGULATIONS - Publication of a vacancy for the function of Deputy Director-General responsible for the Coordination of Euratom Policies (Grade AD 15) Directorate-General for Energy"
+          }
+        }
+      ]
+    }
+  }
+}

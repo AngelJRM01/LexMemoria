@@ -1,0 +1,14 @@
+{
+  "parser": "eu-structure-reviewed-2",
+  "observedAt": "2026-11-09T12:14:04.830941+00:00",
+  "states": {
+    "candidate": 41737,
+    "skipped": 239224
+  },
+  "articleCandidates": 119253,
+  "paragraphsPreserved": 3079267,
+  "documentsWithWarnings": 23150,
+  "clientIntegrated": false,
+  "legalReview": "not_performed",
+  "pausedLowDisk": false
+}

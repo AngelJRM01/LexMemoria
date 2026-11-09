@@ -1,0 +1,15 @@
+{
+  "norms": 149352,
+  "records": 184737,
+  "catalogueDecodeMs": 3205,
+  "catalogueReopenMicroseconds": 353,
+  "rgpdStudyArticles": 99,
+  "rgpdCards": {
+    "qa": 796,
+    "cloze": 169,
+    "test": 498,
+    "reference": 696
+  },
+  "sourceOnlyFiche": "31953D0038",
+  "measurementEnvironment": "Flutter tests on cloud host, not a physical OPPO device"
+}

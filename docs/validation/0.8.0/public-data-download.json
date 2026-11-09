@@ -1,0 +1,53 @@
+{
+  "dataCommit": "1321d6556f865529487e7762c51d026b9518ee8d",
+  "manifestSha256": "c0f2787e30b1ed3777e17e2d3534994396c72101bef07e7b21d10607cc0457f3",
+  "norms": 149352,
+  "records": 184737,
+  "indexSha256": "a29aed13cb24eea34df81f4ca0d42115063bca163dcf084344597bbc43c3bc51",
+  "sampledObjects": [
+    {
+      "path": "objects/a2/a29aed13cb24eea34df81f4ca0d42115063bca163dcf084344597bbc43c3bc51.gz",
+      "sha256": "a29aed13cb24eea34df81f4ca0d42115063bca163dcf084344597bbc43c3bc51",
+      "bytes": 16438749,
+      "httpStatus": 200
+    },
+    {
+      "path": "objects/a9/a9eb02f319cb2b2255b20edccaabae27609e4130c1ad3e1f8b6178f5331ca0ec.gz",
+      "sha256": "a9eb02f319cb2b2255b20edccaabae27609e4130c1ad3e1f8b6178f5331ca0ec",
+      "bytes": 1532,
+      "httpStatus": 200
+    },
+    {
+      "path": "objects/7e/7e1bcbe3edb4fef37574cac658daa89398972fc2588fffadeee8b588bddf2222.gz",
+      "sha256": "7e1bcbe3edb4fef37574cac658daa89398972fc2588fffadeee8b588bddf2222",
+      "bytes": 2050,
+      "httpStatus": 200
+    },
+    {
+      "path": "objects/77/77482b39e7265a361c056aa0be09743c628a0db5761b49dc4da16dc0e794d8a5.gz",
+      "sha256": "77482b39e7265a361c056aa0be09743c628a0db5761b49dc4da16dc0e794d8a5",
+      "bytes": 94050,
+      "httpStatus": 200
+    },
+    {
+      "path": "objects/9e/9e4691ee2ab2be690afdc0b52652b036c5d5a18520ca4e6ace18d5222913d97b.gz",
+      "sha256": "9e4691ee2ab2be690afdc0b52652b036c5d5a18520ca4e6ace18d5222913d97b",
+      "bytes": 1897,
+      "httpStatus": 200
+    },
+    {
+      "path": "objects/28/284f73bd6f304c2ad7c0c2db62ebbf61f4cc51b2373088e29e20dfe49bef928d.gz",
+      "sha256": "284f73bd6f304c2ad7c0c2db62ebbf61f4cc51b2373088e29e20dfe49bef928d",
+      "bytes": 913,
+      "httpStatus": 200
+    },
+    {
+      "path": "objects/a6/a6a7c36bde81a8f693e9763bdb29c6037550bbf5d11b84d966fded7bc3c93104.gz",
+      "sha256": "a6a7c36bde81a8f693e9763bdb29c6037550bbf5d11b84d966fded7bc3c93104",
+      "bytes": 452,
+      "httpStatus": 200
+    }
+  ],
+  "scope": "Public manifest/index and sampled norm/document/page downloads; all objects independently verified before Git publication.",
+  "verifiedAt": "2026-11-09T12:28:13.328833+00:00"
+}
