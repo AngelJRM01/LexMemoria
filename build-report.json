@@ -10,6 +10,9 @@
   "sourceCommit": "8216989c1d57329cfbd436669b7c46e5d0e952e6",
   "verifiedAt": "2026-11-09T12:12:58.626046+00:00",
   "downloadUrl": "https://raw.githubusercontent.com/AngelJRM01/LexMemoria/android-google-preview-0.8.0/LexMemoria-0.8.0-google-prueba.apk",
-  "publicDownloadVerified": false,
-  "physicalGoogleSignIn": "pending"
+  "publicDownloadVerified": true,
+  "physicalGoogleSignIn": "pending",
+  "publicDownloadedBytes": 89775309,
+  "publicDownloadVerifiedAt": "2026-11-09T12:28:23.775677+00:00",
+  "binaryCommit": "4d6c787e0b4407e734e26f5c3f0b1fb900bb82ed"
 }
