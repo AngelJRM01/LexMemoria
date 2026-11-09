@@ -361,13 +361,7 @@ class _FullEuropeanNormPageState extends State<FullEuropeanNormPage> {
             if (count > 5000) continue;
             final paragraphs =
                 await repository.unitParagraphs(document, unit, limit: count);
-            final hiddenHeading = RegExp(
-                r'^(?:art[íi]culo\s+\d+|anexo(?:\s+[ivxlcdm\d]+)?$)',
-                caseSensitive: false);
-            if (paragraphs.skip(1).any(
-                (p) => hiddenHeading.hasMatch(p['text'].toString().trim()))) {
-              continue;
-            }
+            if (!europeanArticleParagraphsAllowed(paragraphs)) continue;
             final text = paragraphs.map((p) => p['text']).join('\n');
             if (text.length > 1000000) continue;
             final hash = sha256.convert(utf8.encode(text)).toString();

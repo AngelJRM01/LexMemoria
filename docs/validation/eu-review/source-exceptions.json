@@ -1,0 +1,24 @@
+{
+  "legalReview": "not_performed",
+  "corruptPdfs": [
+    {
+      "celex": "01996R2223-20011228",
+      "reason": "Original PDF cannot be read by Poppler; independent MuPDF diagnostic did not recover a reliable document. No replacement edition substituted."
+    },
+    {
+      "celex": "01998L0098-20000608",
+      "reason": "Original PDF cannot be read by Poppler; independent MuPDF diagnostic did not recover a reliable document. No replacement edition substituted."
+    },
+    {
+      "celex": "01970L0156-20011109",
+      "reason": "Original PDF cannot be read by Poppler; independent MuPDF diagnostic did not recover a reliable document. No replacement edition substituted."
+    }
+  ],
+  "formexCorrectionRecovered": {
+    "celex": "02006D0861-20130124",
+    "container": "ZIP with CORR XML and TIFF inclusions",
+    "classification": "correction text preserved; images retained as source resources; no automatic questions"
+  },
+  "packageIndexXmlDocuments": 15,
+  "originalArchiveChanged": false
+}

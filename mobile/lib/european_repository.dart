@@ -250,3 +250,14 @@ bool europeanLiteralStudyAllowed(
       (d['warnings'] as List).isEmpty &&
       (d['units'] as List).any((u) => u['kind'] == 'article_candidate'));
 }
+
+/// A missed heading must never merge a second article or annex into a card.
+bool europeanArticleParagraphsAllowed(List<Json> paragraphs) {
+  final heading = RegExp(
+      r'^(?:(?:art[íi]culo|article|art\.?)\s+|anexo(?:\s|$)|(?:t[íi]tulo|cap[íi]tulo|secci[óo]n|parte)\s+[ivxlcdm\d]+(?:\s|$))',
+      caseSensitive: false,
+      multiLine: true);
+  return paragraphs
+      .skip(1)
+      .every((p) => !heading.hasMatch(p['text'].toString().trim()));
+}

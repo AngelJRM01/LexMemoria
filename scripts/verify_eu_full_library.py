@@ -13,6 +13,8 @@ def verify(root):
     root=Path(root).resolve();seen={};counts=Counter();celexes=set()
     def load(ref):
         relative=ref['path']
+        if not 0<ref['bytes']<=64000000 or not 0<ref['expandedBytes']<=256000000:raise ValueError('Object exceeds client limits')
+        if ref['encoding'] not in ('json','jsonl') or (ref['encoding']=='jsonl' and ref['expandedBytes']>5000000):raise ValueError('Unsupported client page')
         if not re.fullmatch(r'objects/[0-9a-f]{2}/[0-9a-f]{64}\.gz',relative):raise ValueError('Invalid object path')
         if relative in seen:
             if seen[relative]!=ref['sha256']:raise ValueError('Conflicting reference')

@@ -14,6 +14,33 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
   test(
+      'missed ordinal articles and chapter headings cannot leak into exercises',
+      () {
+    final header = {'id': '1', 'text': 'Artículo 1'};
+    expect(
+        europeanArticleParagraphsAllowed([
+          header,
+          {'id': '2', 'text': 'La presente norma establece las condiciones.'}
+        ]),
+        isTrue);
+    for (final text in [
+      'Artículo décimo primero',
+      'Artículo 2 bis',
+      'ANEXO II',
+      'CAPÍTULO II Disposiciones generales',
+      'Artículo único'
+    ]) {
+      expect(
+          europeanArticleParagraphsAllowed([
+            header,
+            {'id': '2', 'text': text}
+          ]),
+          isFalse,
+          reason: text);
+    }
+  });
+
+  test(
       'literal study excludes OCR corrections and structurally ambiguous texts',
       () {
     final norm = {

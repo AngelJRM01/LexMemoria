@@ -7,7 +7,7 @@ Traceback (most recent call last):
     if source==output or source in output.parents or output in source.parents:parser.error('Separate source and output')
                         ^^^^^^
   File "/workspace/LexMemoria/backend/app/eu_paged_structure.py", line 99, in main
-    
+
   File "/workspace/LexMemoria/backend/app/eu_paged_structure.py", line 46, in prepare
     # Some legacy JSON has a single enormous escaped NUL padding string.
                               ^^^^^^^^^^^^^^^^^^^
