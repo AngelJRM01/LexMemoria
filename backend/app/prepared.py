@@ -38,7 +38,7 @@ def unit_kind(unit):
 
 
 def study_units(units):
-    return [u for u in units if unit_kind(u)=='article' and u.get('versions') and not requires_legal_context_review(u['versions'][-1]) and
+    return [u for u in units if u.get('automaticStudyEligible') is not False and unit_kind(u)=='article' and u.get('versions') and not requires_legal_context_review(u['versions'][-1]) and
             u['versions'][-1].get('text','').strip() and not re.fullmatch(
                 r'\(?\s*(?:derogad[oa]|suprimid[oa]|sin contenido)\s*[.)]*',
                 u['versions'][-1].get('text','').strip(),re.I)]

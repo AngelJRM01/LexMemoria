@@ -164,6 +164,10 @@ class _LibraryPageState extends State<LibraryPage> {
                             const SizedBox(height: 8),
                             Text(n['id'],
                                 style: Theme.of(context).textTheme.bodySmall),
+                            if (n['readingNotice'] is String)
+                              Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Text(n['readingNotice'])),
                             if (n['exhausted'] == true)
                               const Padding(
                                   padding: EdgeInsets.only(top: 8),
@@ -346,20 +350,26 @@ class _NormPageState extends State<NormPage> {
                     query = '';
                     resetIndex();
                   }),
-              itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'article', child: Text('Artículos')),
-                    PopupMenuItem(
+              itemBuilder: (_) => [
+                    const PopupMenuItem(
+                        value: 'article', child: Text('Artículos')),
+                    const PopupMenuItem(
                         value: 'provision', child: Text('Disposiciones')),
-                    PopupMenuItem(value: 'preamble', child: Text('Preámbulo')),
-                    PopupMenuItem(value: 'annex', child: Text('Anexos')),
+                    const PopupMenuItem(
+                        value: 'preamble', child: Text('Preámbulo')),
+                    if (n['source'] == 'EUR-Lex')
+                      const PopupMenuItem(
+                          value: 'recitals', child: Text('Considerandos')),
+                    const PopupMenuItem(value: 'annex', child: Text('Anexos')),
                   ]),
-          IconButton(
-              tooltip: 'Tarjetas de esta norma',
-              onPressed: () => push(
-                  context,
-                  PreparedDecksPage(
-                      store: widget.store, initialQuery: widget.id)),
-              icon: const Icon(Icons.style_outlined)),
+          if (n['automaticStudyEligible'] != false)
+            IconButton(
+                tooltip: 'Tarjetas de esta norma',
+                onPressed: () => push(
+                    context,
+                    PreparedDecksPage(
+                        store: widget.store, initialQuery: widget.id)),
+                icon: const Icon(Icons.style_outlined)),
           IconButton(
               tooltip: 'Fuente oficial',
               onPressed: () => openSource(context, n['sourceUrl']),
@@ -394,6 +404,10 @@ class _NormPageState extends State<NormPage> {
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 12),
+              if (n['readingNotice'] is String)
+                Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(n['readingNotice'])),
               if (n['exhausted'] == true)
                 const Padding(
                     padding: EdgeInsets.only(bottom: 12),
@@ -471,8 +485,9 @@ class _NormPageState extends State<NormPage> {
                 Text('Publicación: ${displayDate(n['publicationDate'])}'),
                 Text('Actualización: ${displayDate(n['sourceUpdatedAt'])}'),
                 Text('Guardado: ${displayDate(n['downloadedAt'], time: true)}'),
-                const Text(
-                    'Fuente: Agencia Estatal Boletín Oficial del Estado. Texto consolidado informativo; comprueba la publicación oficial y las disposiciones transitorias.'),
+                Text(n['source'] == 'EUR-Lex'
+                    ? 'Fuente: Oficina de Publicaciones de la Unión Europea. Texto original publicado; comprueba las modificaciones posteriores en la fuente oficial.'
+                    : 'Fuente: Agencia Estatal Boletín Oficial del Estado. Texto consolidado informativo; comprueba la publicación oficial y las disposiciones transitorias.'),
                 TextButton.icon(
                     onPressed: () => perform(context,
                         () => widget.store.toggle('follows', widget.id),
@@ -692,15 +707,18 @@ class _ReaderPageState extends State<ReaderPage> {
                             DropdownButtonFormField<int>(
                                 initialValue: selectedIndex,
                                 isExpanded: true,
-                                decoration: const InputDecoration(
-                                    labelText:
-                                        'Redacción histórica · fecha de efecto'),
+                                decoration: InputDecoration(
+                                    labelText: widget.norm['source'] ==
+                                            'EUR-Lex'
+                                        ? 'Edición publicada'
+                                        : 'Redacción histórica · fecha de efecto'),
                                 items: List.generate(
                                     versions.length,
                                     (i) => DropdownMenuItem(
                                         value: i,
-                                        child: Text(displayDate(
-                                            versions[i]['effectiveFrom'])))),
+                                        child: Text(displayDate(versions[i]
+                                                ['effectiveFrom'] ??
+                                            versions[i]['publicationDate'])))),
                                 onChanged: (i) {
                                   setState(() {
                                     version = i!;
@@ -713,29 +731,32 @@ class _ReaderPageState extends State<ReaderPage> {
                                   Navigator.pop(sheet);
                                 }),
                             const SizedBox(height: 12),
-                            OutlinedButton.icon(
-                                onPressed: () async {
-                                  final date = await showDatePicker(
-                                      context: sheet,
-                                      initialDate: studyDate ?? DateTime.now(),
-                                      firstDate: DateTime(1800),
-                                      lastDate: DateTime.now()
-                                          .add(const Duration(days: 3650)));
-                                  if (date != null && mounted) {
-                                    setState(() {
-                                      studyDate = date;
-                                      paragraph = 0;
-                                    });
-                                    resetScroll();
-                                    if (sheet.mounted) Navigator.pop(sheet);
-                                  }
-                                },
-                                icon: const Icon(Icons.history),
-                                label: const Text(
-                                    'Consultar una fecha de estudio')),
+                            if (widget.norm['source'] != 'EUR-Lex')
+                              OutlinedButton.icon(
+                                  onPressed: () async {
+                                    final date = await showDatePicker(
+                                        context: sheet,
+                                        initialDate:
+                                            studyDate ?? DateTime.now(),
+                                        firstDate: DateTime(1800),
+                                        lastDate: DateTime.now()
+                                            .add(const Duration(days: 3650)));
+                                    if (date != null && mounted) {
+                                      setState(() {
+                                        studyDate = date;
+                                        paragraph = 0;
+                                      });
+                                      resetScroll();
+                                      if (sheet.mounted) Navigator.pop(sheet);
+                                    }
+                                  },
+                                  icon: const Icon(Icons.history),
+                                  label: const Text(
+                                      'Consultar una fecha de estudio')),
                             const SizedBox(height: 16),
-                            const Text(
-                                'Texto consolidado informativo del BOE, sin revisión editorial. La selección por fechas no sustituye comprobar vigencias parciales y disposiciones transitorias.'),
+                            Text(widget.norm['source'] == 'EUR-Lex'
+                                ? widget.norm['readingNotice'].toString()
+                                : 'Texto consolidado informativo del BOE, sin revisión editorial. La selección por fechas no sustituye comprobar vigencias parciales y disposiciones transitorias.'),
                             Text(
                                 'Fuente actualizada: ${displayDate(widget.norm['sourceUpdatedAt'])}'),
                             TextButton(
@@ -904,8 +925,13 @@ class _ReaderPageState extends State<ReaderPage> {
               Text(widget.unit['title'],
                   style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 4),
-              Text('BOE · redacción de ${displayDate(v['effectiveFrom'])}',
+              Text(
+                  widget.norm['source'] == 'EUR-Lex'
+                      ? 'Unión Europea · edición de ${displayDate(v['publicationDate'])}'
+                      : 'BOE · redacción de ${displayDate(v['effectiveFrom'])}',
                   style: Theme.of(context).textTheme.bodySmall),
+              if (widget.norm['readingNotice'] is String)
+                Text(widget.norm['readingNotice']),
               if (requiresLegalContextReview(v))
                 const Padding(
                     padding: EdgeInsets.only(top: 8),
@@ -1008,7 +1034,8 @@ class _ComparePageState extends State<ComparePage> {
                 versions.length,
                 (i) => DropdownMenuItem(
                     value: i,
-                    child: Text(displayDate(versions[i]['effectiveFrom'])))),
+                    child: Text(displayDate(versions[i]['effectiveFrom'] ??
+                        versions[i]['publicationDate'])))),
             onChanged: (v) => change(v!));
     return Scaffold(
         appBar: AppBar(title: const Text('Comparar versiones')),

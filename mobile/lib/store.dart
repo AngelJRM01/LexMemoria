@@ -97,6 +97,13 @@ class AppStore extends ChangeNotifier {
         store.error =
             'No se ha podido cargar el catálogo incluido (LEGAL_CATALOGUE). Tus tarjetas y notas se conservan.';
       }
+      final european = Json.from(
+          jsonDecode(await rootBundle.loadString('assets/europe/index.json')));
+      store.bundledNorms.addAll((european['items'] as List).map((v) =>
+          <String, dynamic>{
+            ...Json.from(v),
+            'bundledVersion': v['latestVersion']
+          }));
       // Reading packs open on demand; never decompress several laws before the home screen.
       await store.loadPreparedCards();
       return store;

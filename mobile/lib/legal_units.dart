@@ -6,6 +6,9 @@ final articleLabel =
 String legalUnitKind(Json unit) {
   final title = unit['title'].toString().trim();
   final type = normalize(unit['type'] ?? '');
+  if (type == 'recitals') return 'recitals';
+  if (type == 'annex') return 'annex';
+  if (type == 'editorial_note') return 'editorial_note';
   if (type == 'encabezado') return 'heading';
   if (type == 'firma') return 'signature';
   if (type == 'nota inicial' || type == 'nota_inicial') return 'editorial_note';
@@ -24,6 +27,7 @@ String legalUnitKind(Json unit) {
 }
 
 bool studyArticle(Json unit) {
+  if (unit['automaticStudyEligible'] == false) return false;
   if (legalUnitKind(unit) != 'article') return false;
   final versions = unit['versions'] as List? ?? [];
   if (versions.isEmpty || requiresLegalContextReview(versions.last)) {

@@ -1,0 +1,11 @@
+{
+  "states": {
+    "deferred": 145155,
+    "extracted": 135806
+  },
+  "parsers": {
+    "eu-html-paragraphs-1": 135750,
+    "eu-html-paragraphs-stream-1": 56
+  },
+  "clientIntegratedEntireCorpus": false
+}

@@ -124,7 +124,7 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     final store =
         await AppStore.load(persistence: PreferencesPersistence(prefs));
-    expect(store.bundledNorms.length, 20);
+    expect(store.bundledNorms.where((n) => n['source'] == 'BOE').length, 20);
     final constitution =
         store.catalogue.firstWhere((n) => n['id'] == 'BOE-A-1978-31229');
     expect(constitution['units'], isNull);

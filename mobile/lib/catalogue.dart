@@ -55,7 +55,11 @@ class CatalogueFilters {
       (scope == 'Todos' ||
           (scope == 'Estatal'
               ? normalize(norm['jurisdiction'] ?? '').startsWith('esta')
-              : normalize(norm['jurisdiction'] ?? '').startsWith('autonom'))) &&
+              : scope == 'Europeo'
+                  ? norm['jurisdiction'] == 'Unión Europea'
+                  : scope == 'Autonómico' &&
+                      normalize(norm['jurisdiction'] ?? '')
+                          .startsWith('autonom'))) &&
       (community == 'Todas' || normCommunity(norm) == community);
 }
 

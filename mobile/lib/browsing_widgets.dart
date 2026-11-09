@@ -40,13 +40,18 @@ Future<CatalogueFilters?> showCatalogueFilters(
                                 isExpanded: true,
                                 decoration:
                                     const InputDecoration(labelText: 'Ámbito'),
-                                items: ['Todos', 'Estatal', 'Autonómico']
+                                items: [
+                                  'Todos',
+                                  'Estatal',
+                                  'Autonómico',
+                                  'Europeo'
+                                ]
                                     .map((v) => DropdownMenuItem(
                                         value: v, child: Text(v)))
                                     .toList(),
                                 onChanged: (v) => update(() {
                                       scope = v!;
-                                      if (scope == 'Estatal') {
+                                      if (scope != 'Autonómico') {
                                         community = 'Todas';
                                       }
                                     })),

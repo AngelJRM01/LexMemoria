@@ -1,7 +1,7 @@
 name: lexmemoria
 description: Estudio jurídico con fuentes, versiones y memoria espaciada.
 publish_to: none
-version: 0.7.1+11
+version: 0.7.2+12
 environment:
   sdk: '>=3.6.0 <4.0.0'
 dependencies:
@@ -37,6 +37,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/legal-catalogue.json
+    - assets/europe/
     - assets/legal/
     - assets/ready/
     - assets/corpus-catalogue.json.gz
