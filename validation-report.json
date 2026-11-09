@@ -1,0 +1,17 @@
+{
+  "records": 184737,
+  "baseActRelationsChecked": 28905,
+  "unresolvedBaseActRelations": 0,
+  "sourceFiles": 280961,
+  "readingDocuments": 177543,
+  "documentsWithWarnings": 48639,
+  "structuralUnits": 1875986,
+  "articleCandidates": 1013421,
+  "paragraphs": 128675562,
+  "norms": 149352,
+  "objects": 525359,
+  "integrity": "passed",
+  "baseActRelationsVerified": true,
+  "legalReview": "not_performed",
+  "manifestSha256": "c0f2787e30b1ed3777e17e2d3534994396c72101bef07e7b21d10607cc0457f3"
+}

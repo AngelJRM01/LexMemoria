@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "pipelineRevision": "eu-full-reviewed-4",
+  "inputFingerprint": "3b162081f38c8a7ccb1673ce4fbf15f00c4bcf67138e0ce204602969b13dcf04",
+  "snapshot": "2026-11-09",
+  "baseUrl": "https://raw.githubusercontent.com/AngelJRM01/LexMemoria/european-corpus-20261109/",
+  "index": {
+    "path": "objects/a2/a29aed13cb24eea34df81f4ca0d42115063bca163dcf084344597bbc43c3bc51.gz",
+    "sha256": "a29aed13cb24eea34df81f4ca0d42115063bca163dcf084344597bbc43c3bc51",
+    "bytes": 16438749,
+    "expandedBytes": 95708547,
+    "encoding": "json"
+  },
+  "norms": 149352,
+  "records": 184737,
+  "sourceFiles": 280961,
+  "builtAt": "2026-11-09T12:04:39.768367+00:00",
+  "legalReview": "not_performed",
+  "attribution": "Fuente: Oficina de Publicaciones de la Unión Europea"
+}
