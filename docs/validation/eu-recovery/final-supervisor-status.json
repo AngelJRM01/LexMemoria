@@ -1,0 +1,8 @@
+{
+  "supervisor_pid": 617,
+  "state": "watching_source",
+  "observed_at": "2026-11-09T06:41:37.606510+00:00",
+  "worker_active": false,
+  "next_inventory_refresh": 1794292877.4871714,
+  "all_texts_archived": false
+}
