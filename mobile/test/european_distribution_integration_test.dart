@@ -38,6 +38,10 @@ void main() {
     final watch = Stopwatch()..start();
     final catalogue = await repository.catalogue();
     final decodingMs = watch.elapsedMilliseconds;
+    watch.reset();
+    final reopened = await EuropeanRepository(store).catalogue();
+    final warmMicroseconds = watch.elapsedMicroseconds;
+    expect(identical(catalogue, reopened), isTrue);
     expect(catalogue.length, header['norms']);
     expect(catalogue.map((n) => n['id']).toSet().length, catalogue.length);
     final summary = catalogue.singleWhere((n) => n['celex'] == '32016R0679');
@@ -105,6 +109,7 @@ void main() {
       'norms': catalogue.length,
       'records': header['records'],
       'catalogueDecodeMs': decodingMs,
+      'catalogueReopenMicroseconds': warmMicroseconds,
       'rgpdStudyArticles': articles.length,
       'rgpdCards': cardCounts,
       'sourceOnlyFiche': fiche['celex']

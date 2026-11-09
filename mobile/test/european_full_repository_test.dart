@@ -173,7 +173,12 @@ void main() {
         await SharedPreferences.getInstance(), {'cards': [], 'reviews': []},
         client: client);
     final repo = EuropeanRepository(store);
-    expect((await repo.catalogue()).single['_search'], contains('rgpd'));
+    final initialCatalogue = await repo.catalogue();
+    expect(initialCatalogue.single['_search'], contains('rgpd'));
+    expect(
+        identical(
+            initialCatalogue, await EuropeanRepository(store).catalogue()),
+        isTrue);
     final document = {
       'pages': [
         {...page, 'firstParagraph': 0, 'paragraphs': 1}

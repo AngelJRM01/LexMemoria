@@ -160,18 +160,33 @@ class EuropeanRepository {
     return bytes;
   }
 
+  static final _catalogues = Expando<_EuropeanCatalogueMemo>();
+
   Future<List<Json>> catalogue({bool refresh = false}) async {
     final header = await manifest(refresh: refresh);
     final index = Json.from(header['index']);
-    final rows = await compute(decodeEuropeanIndex, <String, dynamic>{
-      'bytes': await compressed(index),
-      'expandedBytes': index['expandedBytes']
-    });
-    if (rows.length != header['norms']) {
-      throw StateError('Catálogo incompleto.');
+    var memo = _catalogues[store];
+    if (memo == null || memo.hash != index['sha256']) {
+      memo = _EuropeanCatalogueMemo(index['sha256'], _decodeCatalogue(index));
+      _catalogues[store] = memo;
     }
-    return rows;
+    try {
+      final rows = await memo.value;
+      if (rows.length != header['norms']) {
+        throw StateError('Catálogo incompleto.');
+      }
+      return rows;
+    } catch (_) {
+      if (identical(_catalogues[store], memo)) _catalogues[store] = null;
+      rethrow;
+    }
   }
+
+  Future<List<Json>> _decodeCatalogue(Json index) async =>
+      compute(decodeEuropeanIndex, <String, dynamic>{
+        'bytes': await compressed(index),
+        'expandedBytes': index['expandedBytes']
+      });
 
   Future<dynamic> object(Json ref) async {
     objectUri(ref);
@@ -260,4 +275,10 @@ bool europeanArticleParagraphsAllowed(List<Json> paragraphs) {
   return paragraphs
       .skip(1)
       .every((p) => !heading.hasMatch(p['text'].toString().trim()));
+}
+
+class _EuropeanCatalogueMemo {
+  final String hash;
+  final Future<List<Json>> value;
+  _EuropeanCatalogueMemo(this.hash, this.value);
 }
