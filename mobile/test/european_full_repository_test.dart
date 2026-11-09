@@ -56,6 +56,15 @@ void main() {
       ]
     };
     expect(europeanLiteralStudyAllowed(norm, edition, [doc]), isTrue);
+    for (final kind in ['Tratado', 'Acuerdo internacional']) {
+      expect(
+          europeanLiteralStudyAllowed({...norm, 'kind': kind}, edition, [doc]),
+          isTrue);
+    }
+    expect(
+        europeanLiteralStudyAllowed(
+            {...norm, 'kind': 'Anuncio'}, edition, [doc]),
+        isFalse);
     expect(europeanLiteralStudyAllowed(norm, {'kind': 'correction'}, [doc]),
         isFalse);
     expect(

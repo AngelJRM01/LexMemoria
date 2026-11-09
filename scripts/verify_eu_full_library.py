@@ -7,9 +7,11 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import sqlite3
+from datetime import date
 
 
-def verify(root):
+def verify(root,parents=None):
     root=Path(root).resolve();seen={};counts=Counter();celexes=set()
     def load(ref):
         relative=ref['path']
@@ -34,6 +36,19 @@ def verify(root):
         for edition in norm['versions']:
             if edition['celex'] in celexes:raise ValueError('Duplicate edition')
             celexes.add(edition['celex']);counts['records']+=1
+            if edition['celex'].startswith('0'):
+                if parents is not None:
+                    relation=parents.get(edition['celex'])
+                    if relation is None:raise ValueError('Official base-act relation missing')
+                    candidates=relation['parents']
+                    expected=re.sub(r'R\(\d+\)$','',candidates[0]) if len(candidates)==1 else edition['celex']
+                    if norm['celex']!=expected:raise ValueError('Wrong consolidated base act')
+                    if edition.get('baseActCandidates')!=candidates or edition.get('baseRelationQueryHash')!=relation['queryHash']:raise ValueError('Base-act evidence mismatch')
+                    if edition.get('baseActCelex')!=(expected if len(candidates)==1 else None):raise ValueError('Base-act identifier mismatch')
+                    counts['baseActRelationsChecked']+=1;counts['unresolvedBaseActRelations']+=len(candidates)!=1
+            elif norm['celex']!=re.sub(r'R\(\d+\)$','',edition['celex']):raise ValueError('Original act mixed with another family')
+            sector_kind={'0':'Consolidación','1':'Tratado','2':'Acuerdo internacional','4':'Legislación complementaria','5':'Documento institucional','C':'Anuncio','L':'Anuncio'}.get(norm['celex'][0])
+            if parents is not None and sector_kind and norm.get('kind')!=sector_kind:raise ValueError('Wrong legal sector classification')
             for resource in edition['resources']:
                 if not resource['url'].startswith('https://') or not re.fullmatch('[0-9a-f]{64}',resource['sha256']):raise ValueError('Invalid source provenance')
                 counts['sourceFiles']+=1
@@ -65,11 +80,17 @@ def verify(root):
         if counts['norms']%1000==0:print(json.dumps(dict(counts)),flush=True)
     for key in ('norms','records','sourceFiles'):
         if counts[key]!=manifest[key]:raise ValueError('Incomplete '+key)
-    return {**dict(counts),'objects':len(seen),'integrity':'passed','legalReview':'not_performed','manifestSha256':hashlib.sha256((root/'catalogue-manifest.json').read_bytes()).hexdigest()}
+    return {**dict(counts),'objects':len(seen),'integrity':'passed','baseActRelationsVerified':parents is not None,'legalReview':'not_performed','manifestSha256':hashlib.sha256((root/'catalogue-manifest.json').read_bytes()).hexdigest()}
 
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('root',type=Path);parser.add_argument('--report',type=Path,required=True);args=parser.parse_args()
-    report=verify(args.root);args.report.parent.mkdir(parents=True,exist_ok=True);args.report.write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report),flush=True)
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('root',type=Path);parser.add_argument('--report',type=Path,required=True)
+    parser.add_argument('--parents',type=Path,default=Path('/workspace/lexmemoria-eu-parents/parents.sqlite3'))
+    args=parser.parse_args()
+    with sqlite3.connect(args.parents.resolve().as_uri()+'?mode=ro',uri=True) as db:
+        parents={r[0]:{'parents':json.loads(r[1]),'queryHash':r[2]} for r in db.execute('SELECT celex,parents,query_hash FROM parents')}
+    report=verify(args.root,parents=parents);args.report.parent.mkdir(parents=True,exist_ok=True)
+    args.report.write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report),flush=True)
 
 if __name__=='__main__':main()

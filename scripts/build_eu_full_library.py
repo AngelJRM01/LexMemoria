@@ -16,29 +16,50 @@ import unicodedata
 from urllib.parse import quote
 
 BASE=Path('/workspace')
-PIPELINE_REVISION='eu-full-reviewed-3'
+PIPELINE_REVISION='eu-full-reviewed-4'
 BRANCH='european-corpus-20261109'
 PUBLIC=f'https://raw.githubusercontent.com/AngelJRM01/LexMemoria/{BRANCH}/'
 KINDS={'R':'Reglamento','L':'Directiva','D':'Decisión','H':'Recomendación','A':'Dictamen',
        'B':'Presupuesto','M':'Concentraciones','Y':'Otros actos','G':'Resolución'}
 
 
-def group_celex(celex):
+def group_celex(celex,parents=None):
     code=celex;edition='original';asof=None
     if code.startswith('0'):
+        edition='consolidated'
         match=re.fullmatch(r'0(.+)-(\d{8})',code)
         if match:
-            code='3'+match[1];edition='consolidated'
+            candidates=(parents or {}).get(celex,[])
+            if len(candidates)==1:code=candidates[0]
             value=match[2]
             try:asof=date(int(value[:4]),int(value[4:6]),int(value[6:])).isoformat()
             except ValueError:asof=None
     correction=re.search(r'R\(\d+\)$',code)
-    if correction:code=code[:correction.start()];edition='correction'
+    if correction:
+        code=code[:correction.start()]
+        if edition!='consolidated':edition='correction'
     return code,edition,asof
 
 
+def kind_for_celex(code):
+    if re.fullmatch(r'[CL]/\d{4}/\d+',code):return 'Anuncio'
+    if code.startswith('0'):return 'Consolidación'
+    if code.startswith('1'):return 'Tratado'
+    if code.startswith('2'):return 'Acuerdo internacional'
+    if code.startswith('4'):return 'Legislación complementaria'
+    if code.startswith('5'):return 'Documento institucional'
+    return KINDS.get(code[5:6],'Otros actos')
+
+
+
+def year_for_celex(code):
+    if code[1:5].isdigit():return code[1:5]
+    match=re.match(r'[CL]/(\d{4})/',code)
+    return match[1] if match else ''
+
+
 def study_title_allowed(kind,title):
-    if kind not in ('Reglamento','Directiva','Decisión'):return False
+    if kind not in ('Reglamento','Directiva','Decisión','Tratado','Acuerdo internacional'):return False
     title=''.join(c for c in unicodedata.normalize('NFD',title.lower()) if unicodedata.category(c)!='Mn')
     change=re.search(r'por (?:el|la) que se (?:modifica|deroga|rectifica|corrige)',title)
     return change is None or bool(re.search(r'relativ[oa]|se establece',title[:change.start()]))
@@ -119,6 +140,32 @@ class Exporter:
         return ref
 
 
+def previous_versions(output,source_fingerprint):
+    """Reuse verified reading objects only when every source fingerprint matches."""
+    path=Path(output)/'derived-history/v3-manifest.json'
+    if not path.exists():return {}
+    header=json.loads(path.read_text())
+    if header.get('inputFingerprint')!=source_fingerprint:return {}
+    report=json.loads((path.parent/'v3-validation.json').read_text())
+    if report.get('integrity')!='passed' or report.get('manifestSha256')!=hashlib.sha256(path.read_bytes()).hexdigest():raise ValueError('Invalid prior reading validation')
+    def load(ref):
+        relative=ref['path']
+        if not re.fullmatch(r'objects/[0-9a-f]{2}/[0-9a-f]{64}\.gz',relative):raise ValueError('Invalid prior object path')
+        data=(Path(output)/relative).read_bytes()
+        if len(data)!=ref['bytes'] or hashlib.sha256(data).hexdigest()!=ref['sha256']:raise ValueError('Prior object integrity mismatch')
+        raw=gzip.decompress(data)
+        if len(raw)!=ref['expandedBytes']:raise ValueError('Prior expanded length mismatch')
+        return json.loads(raw)
+    result={};items=load(header['index'])['items']
+    for count,item in enumerate(items,1):
+        for version in load(item['manifest'])['versions']:
+            if version['celex'] in result:raise ValueError('Duplicate prior edition')
+            result[version['celex']]=version
+        if count%10000==0:print(json.dumps({'phase':'reuse_verified_readings','norms':count}),flush=True)
+    if len(result)!=header['records']:raise ValueError('Prior edition coverage incomplete')
+    return result
+
+
 def ready(source_count):
     paths=['lexmemoria-eu-leaf-processed/processing.sqlite3','lexmemoria-eu-other-processed/processing.sqlite3',
            'lexmemoria-eu-reviewed-structures/structure.sqlite3','lexmemoria-eu-other-structures/structure.sqlite3']
@@ -172,9 +219,14 @@ def main():
         if complete:break
         if not args.wait:raise SystemExit(2)
         time.sleep(30)
+    with sqlite3.connect((BASE/'lexmemoria-eu-parents/parents.sqlite3').as_uri()+'?mode=ro',uri=True) as db:
+        parent_rows=db.execute('SELECT celex,parents,query_hash FROM parents').fetchall()
+    parents={r[0]:json.loads(r[1]) for r in parent_rows}
+    parent_evidence={r[0]:r[2] for r in parent_rows}
+    if set(parents)!={w['celex'] for w in works if w['celex'].startswith('0')}:raise ValueError('Official base-act relation coverage incomplete')
     grouped=defaultdict(list);files=defaultdict(list)
     for work in works:
-        base,edition,asof=group_celex(work['celex']);grouped[base].append({**work,'editionKind':edition,'editionDate':asof})
+        base,edition,asof=group_celex(work['celex'],parents);grouped[base].append({**work,'editionKind':edition,'editionDate':asof})
     for document in documents:files[document['work']].append(document)
     structure_rows={}
     for folder in ['lexmemoria-eu-reviewed-structures','lexmemoria-eu-other-structures']:
@@ -184,9 +236,14 @@ def main():
             for row in db.execute("SELECT * FROM results WHERE state='candidate'"):
                 if row['url'] in structure_rows:raise ValueError('Duplicate derived source URL')
                 structure_rows[row['url']]=(root,dict(row))
-    fingerprint=hashlib.sha256(encoded({'pipeline':PIPELINE_REVISION,'works':works,'titles':titles}))
-    for url,(root,row) in sorted(structure_rows.items()):
-        fingerprint.update(encoded([url,str(root),row['path'],row['source_output_hash']]))
+    def source_fingerprint(revision):
+        digest=hashlib.sha256(encoded({'pipeline':revision,'works':works,'titles':titles}))
+        for url,(root,row) in sorted(structure_rows.items()):
+            digest.update(encoded([url,str(root),row['path'],row['source_output_hash']]))
+        return digest
+    fingerprint=source_fingerprint(PIPELINE_REVISION)
+    fingerprint.update(encoded(parent_rows))
+    cached_versions=previous_versions(args.output,source_fingerprint('eu-full-reviewed-3').hexdigest())
     export=Exporter(args.output,build_id=fingerprint.hexdigest())
     for base,editions in sorted(grouped.items()):
         if export.db.execute('SELECT 1 FROM completed WHERE base=?',(base,)).fetchone():continue
@@ -195,25 +252,31 @@ def main():
         for edition in sorted(editions,key=lambda e:(e['editionDate'] or '',e['celex'])):
             official=titles[edition['work']];title=official[0] if official else edition['celex']
             variants.extend(official)
+            cached=cached_versions.get(edition['celex'])
             refs=[];resources=[]
             for document in sorted(files[edition['work']],key=lambda d:tuple((0,int(p)) if p.isdigit() else (1,p) for p in re.split(r'(\d+)',d['url']))):
                 resources.append({'url':document['url'].replace('http://','https://',1),'mime':document['content_type'],'sha256':document['hash'],'bytes':document['bytes']})
                 structured=structure_rows.get(document['url'])
-                if structured:refs.append(export.reading(*structured))
+                if structured and cached is None:refs.append(export.reading(*structured))
+            if cached is not None:refs=cached['readingDocuments']
             version={'celex':edition['celex'],'title':title,'kind':edition['editionKind'],'date':edition['editionDate'],
                      'sourceUrl':'https://eur-lex.europa.eu/legal-content/ES/TXT/?uri=CELEX:'+quote(edition['celex'],safe=''),
                      'readingDocuments':refs,'resources':resources,'archiveState':edition['status'],'legalReview':'not_performed'}
+            if edition['celex'].startswith('0'):
+                version.update(baseActCelex=base if not base.startswith('0') else None,
+                    baseActCandidates=parents.get(edition['celex'],[]),
+                    baseRelationQueryHash=parent_evidence.get(edition['celex']))
             versions.append(version)
         primary=next((e for e in editions if e['celex']==base),editions[0])
         official=titles[primary['work']];title=official[0] if official else base
         norm={'schemaVersion':1,'id':'EU-'+base,'celex':base,'title':title,'versions':versions,
-              'kind':KINDS.get(base[5:6],'Otros actos'),'legalReview':'not_performed','titleVariants':sorted(set(variants)),
+              'kind':kind_for_celex(base),'legalReview':'not_performed','titleVariants':sorted(set(variants)),
               'attribution':'Fuente: Oficina de Publicaciones de la Unión Europea',
               'licenceUrl':'https://op.europa.eu/en/web/about-us/legal-notices/publications-office-reuse-policy'}
         ref=export.put(norm)
         summary={'id':norm['id'],'celex':base,'title':title,'kind':norm['kind'],
                  'editions':len(versions),'readableEditions':sum(bool(v['readingDocuments']) for v in versions),
-                 'year':base[1:5] if base[1:5].isdigit() else '', 'manifest':ref,
+                 'year':year_for_celex(base), 'manifest':ref,
                  'literalStudyEditions':sum(study_title_allowed(norm['kind'],title) and v['kind']!='correction' and any(d.get('literalStudyAvailable') for d in v['readingDocuments']) for v in versions)}
         with export.db:export.db.execute('INSERT INTO completed VALUES (?,?,?)',(base,json.dumps(summary,ensure_ascii=False),json.dumps(ref)))
         count=export.db.execute('SELECT COUNT(*) FROM completed').fetchone()[0]

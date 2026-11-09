@@ -20,6 +20,7 @@ def main():
     report=json.loads(args.report.read_text());manifest=json.loads((source/'catalogue-manifest.json').read_text())
     if report.get('integrity')!='passed' or any(report.get(k)!=manifest.get(k) for k in ('norms','records','sourceFiles')):
         raise ValueError('Complete successful validation report required')
+    if not report.get('baseActRelationsVerified'):raise ValueError('Official consolidated base-act verification required')
     digest=hashlib.sha256((source/'catalogue-manifest.json').read_bytes()).hexdigest()
     if report.get('manifestSha256')!=digest:raise ValueError('Validation report belongs to another snapshot')
     checkout.mkdir(parents=True,exist_ok=True)

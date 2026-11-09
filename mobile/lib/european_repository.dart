@@ -247,7 +247,13 @@ class EuropeanRepository {
 
 bool europeanLiteralStudyAllowed(
     Json norm, Json edition, List<Json> documents) {
-  if (!['Reglamento', 'Directiva', 'Decisión'].contains(norm['kind']) ||
+  if (![
+        'Reglamento',
+        'Directiva',
+        'Decisión',
+        'Tratado',
+        'Acuerdo internacional'
+      ].contains(norm['kind']) ||
       edition['kind'] == 'correction') {
     return false;
   }

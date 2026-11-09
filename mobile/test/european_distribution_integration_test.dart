@@ -44,6 +44,12 @@ void main() {
     expect(identical(catalogue, reopened), isTrue);
     expect(catalogue.length, header['norms']);
     expect(catalogue.map((n) => n['id']).toSet().length, catalogue.length);
+    expect(catalogue.singleWhere((n) => n['celex'] == '12016M/TXT')['kind'],
+        'Tratado');
+    expect(catalogue.any((n) => n['celex'] == '32016M/TXT'), isFalse);
+    final notice = catalogue.singleWhere((n) => n['celex'] == 'C/2025/06345');
+    expect(notice['kind'], 'Anuncio');
+    expect(notice['literalStudyEditions'], 0);
     final summary = catalogue.singleWhere((n) => n['celex'] == '32016R0679');
     final norm =
         Json.from(await repository.object(Json.from(summary['manifest'])));

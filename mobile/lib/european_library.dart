@@ -439,7 +439,7 @@ class _FullEuropeanNormPageState extends State<FullEuropeanNormPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-      appBar: AppBar(title: const Text('Norma europea'), actions: [
+      appBar: AppBar(title: const Text('Documento europeo'), actions: [
         if ((widget.summary['literalStudyEditions'] as num? ?? 0) > 0)
           IconButton(
               tooltip: 'Preparar mazo de esta edición',

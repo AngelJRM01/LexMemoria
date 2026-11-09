@@ -8,7 +8,7 @@ module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 
 
 def test_consolidation_and_correction_are_grouped_without_conflating_editions():
-    assert module.group_celex('02016R0679-20160504')==('32016R0679','consolidated','2016-05-04')
+    assert module.group_celex('02016R0679-20160504',{'02016R0679-20160504':['32016R0679']})==('32016R0679','consolidated','2016-05-04')
     assert module.group_celex('32016R0679R(01)')==('32016R0679','correction',None)
     assert module.group_celex('31960R0009(01)')==('31960R0009(01)','original',None)
 
@@ -70,3 +70,40 @@ def test_verified_gzip_page_is_copied_without_recompressing(tmp_path):
     assert ref['sha256']==hashlib.sha256(compressed).hexdigest()
     assert ref['expandedBytes']==len(raw) and ref['encoding']=='jsonl'
     export.db.close()
+
+
+def test_primary_law_and_international_agreements_use_official_base_not_sector_three():
+    parents={'02016M/TXT-20240901':['12016M/TXT'], '02013A1018(01)-20220101':['22013A1018(01)']}
+    assert module.group_celex('02016M/TXT-20240901',parents)==('12016M/TXT','consolidated','2024-09-01')
+    assert module.kind_for_celex('12016M/TXT')=='Tratado'
+    assert module.group_celex('02013A1018(01)-20220101',parents)[0]=='22013A1018(01)'
+    assert module.kind_for_celex('22013A1018(01)')=='Acuerdo internacional'
+    assert module.group_celex('02025C06345-20251120',parents)[0]=='02025C06345-20251120'
+    assert module.kind_for_celex('02025C06345-20251120')=='Consolidación'
+
+
+def test_independent_verifier_rejects_fictitious_sector_three_treaty_parent(tmp_path):
+    import pytest
+    spec=importlib.util.spec_from_file_location('eu_verify_parents',Path(__file__).resolve().parents[2]/'scripts/verify_eu_full_library.py')
+    verifier=importlib.util.module_from_spec(spec);spec.loader.exec_module(verifier)
+    export=module.Exporter(tmp_path)
+    version={'celex':'02016M/TXT-20240901','kind':'consolidated','date':'2024-09-01','resources':[],'readingDocuments':[],
+        'baseActCelex':'12016M/TXT','baseActCandidates':['12016M/TXT'],'baseRelationQueryHash':'query'}
+    parents={version['celex']:{'parents':['12016M/TXT'],'queryHash':'query'}}
+    def snapshot(code,kind):
+        norm=export.put({'id':'EU-'+code,'celex':code,'kind':kind,'versions':[version]})
+        index=export.put({'items':[{'id':'EU-'+code,'editions':1,'manifest':norm}]})
+        (tmp_path/'catalogue-manifest.json').write_text(json.dumps({'index':index,'norms':1,'records':1,'sourceFiles':0}))
+    snapshot('32016M/TXT','Concentraciones')
+    with pytest.raises(ValueError,match='Wrong consolidated base act'):verifier.verify(tmp_path,parents=parents)
+    snapshot('12016M/TXT','Tratado')
+    assert verifier.verify(tmp_path,parents=parents)['baseActRelationsChecked']==1
+    export.db.close()
+
+
+def test_official_journal_identifier_does_not_become_fictitious_legislation():
+    code='02025C06345-20251120'
+    assert module.group_celex(code,{code:['C/2025/06345']})[0]=='C/2025/06345'
+    assert module.kind_for_celex('C/2025/06345')=='Anuncio'
+    assert module.year_for_celex('C/2025/06345')=='2025'
+    assert not module.study_title_allowed('Anuncio','Convocatoria de vacante')
