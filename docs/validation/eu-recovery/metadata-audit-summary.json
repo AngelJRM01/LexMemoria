@@ -1,0 +1,12 @@
+{
+  "observedAt": "2026-11-09T06:20:57.962333+00:00",
+  "scope": "Current metadata-only records; CDM advertised Spanish expressions and items only",
+  "snapshotRecords": 7534,
+  "checkedRecords": 7534,
+  "states": {
+    "manifestation_without_item": 1119,
+    "no_spanish_manifestation_advertised": 6415
+  },
+  "globalUnavailabilityProven": false,
+  "legalReview": "not_performed"
+}

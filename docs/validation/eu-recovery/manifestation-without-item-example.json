@@ -1,0 +1,105 @@
+{
+  "hash": "94330546b418ebf2053b8d9f3fa43e580e8e9c44891aa86825d671e4cb755801",
+  "rows": [
+    {
+      "m": {
+        "type": "uri",
+        "value": "http://publications.europa.eu/resource/cellar/000ac53b-6f7e-4bba-9890-1b152aa1176c.0008.01"
+      },
+      "p": {
+        "type": "uri",
+        "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+      },
+      "v": {
+        "type": "uri",
+        "value": "http://publications.europa.eu/ontology/cdm#manifestation"
+      }
+    },
+    {
+      "m": {
+        "type": "uri",
+        "value": "http://publications.europa.eu/resource/cellar/000ac53b-6f7e-4bba-9890-1b152aa1176c.0008.01"
+      },
+      "p": {
+        "type": "uri",
+        "value": "http://www.w3.org/2002/07/owl#sameAs"
+      },
+      "v": {
+        "type": "uri",
+        "value": "http://publications.europa.eu/resource/celex/31977R1778.SPA.print"
+      }
+    },
+    {
+      "m": {
+        "type": "uri",
+        "value": "http://publications.europa.eu/resource/cellar/000ac53b-6f7e-4bba-9890-1b152aa1176c.0008.01"
+      },
+      "p": {
+        "type": "uri",
+        "value": "http://www.w3.org/2002/07/owl#sameAs"
+      },
+      "v": {
+        "type": "uri",
+        "value": "http://publications.europa.eu/resource/oj/JOL_1977_196_R_0001_003.SPA.print"
+      }
+    },
+    {
+      "m": {
+        "type": "uri",
+        "value": "http://publications.europa.eu/resource/cellar/000ac53b-6f7e-4bba-9890-1b152aa1176c.0008.01"
+      },
+      "p": {
+        "type": "uri",
+        "value": "http://publications.europa.eu/ontology/cdm#manifestation_manifests_expression"
+      },
+      "v": {
+        "type": "uri",
+        "value": "http://publications.europa.eu/resource/cellar/000ac53b-6f7e-4bba-9890-1b152aa1176c.0008"
+      }
+    },
+    {
+      "m": {
+        "type": "uri",
+        "value": "http://publications.europa.eu/resource/cellar/000ac53b-6f7e-4bba-9890-1b152aa1176c.0008.01"
+      },
+      "p": {
+        "type": "uri",
+        "value": "http://publications.europa.eu/ontology/cdm#manifestation_type"
+      },
+      "v": {
+        "type": "literal",
+        "datatype": "http://www.w3.org/2001/XMLSchema#string",
+        "value": "print"
+      }
+    },
+    {
+      "m": {
+        "type": "uri",
+        "value": "http://publications.europa.eu/resource/cellar/000ac53b-6f7e-4bba-9890-1b152aa1176c.0008.01"
+      },
+      "p": {
+        "type": "uri",
+        "value": "http://publications.europa.eu/ontology/annotation#build_info"
+      },
+      "v": {
+        "type": "literal",
+        "value": "cdm:CDM_2.1.7  tdm:1523  xslt:3945 saxon:9.0.0.1J JVM:1.6.0_29 metaconvJar:1.2.0 builddate:18/04/2014 08:15:06"
+      }
+    },
+    {
+      "m": {
+        "type": "uri",
+        "value": "http://publications.europa.eu/resource/cellar/000ac53b-6f7e-4bba-9890-1b152aa1176c.0008.01"
+      },
+      "p": {
+        "type": "uri",
+        "value": "http://publications.europa.eu/ontology/cdm/cmr#lastModificationDate"
+      },
+      "v": {
+        "type": "literal",
+        "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+        "value": "2014-04-19T03:12:15.211+02:00"
+      }
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "checkedRecords": 1119,
+  "typeCombinations": [
+    {
+      "types": [
+        "print"
+      ],
+      "records": 1117
+    },
+    {
+      "types": [
+        "pdf"
+      ],
+      "records": 2
+    }
+  ]
+}
