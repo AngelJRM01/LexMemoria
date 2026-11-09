@@ -40,8 +40,11 @@ def verify(root):
             for ref in edition['readingDocuments']:
                 document=load(ref);counts['readingDocuments']+=1
                 if document['celex']!=edition['celex']:raise ValueError('Document edition mismatch')
+                counts['documentsWithWarnings']+=bool(document.get('warnings'))
                 units=document['units'];cursor=0;expected=[]
                 for unit in units:
+                    counts['structuralUnits']+=1
+                    counts['articleCandidates']+=unit.get('kind')=='article_candidate'
                     if unit['firstParagraph']!=cursor:raise ValueError('Unit gap')
                     cursor+=unit['paragraphCount'];expected.append((cursor,unit['id']))
                 if cursor!=document['paragraphs']:raise ValueError('Unit coverage mismatch')

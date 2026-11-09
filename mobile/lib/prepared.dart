@@ -129,11 +129,25 @@ class _Target {
 }
 
 final _quantity = RegExp(
-    r'\b(?:\d+|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|quince|veinte|treinta|sesenta)[ \t\u00a0]+(?:días?|mes(?:es)?|años?|horas?|semanas?|euros?)\b',
+    r'\b(?:\d+|un|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|catorce|quince|veinte|veintiuno|veinticuatro|treinta|sesenta)[ \t\u00a0]+(?:días?|mes(?:es)?|años?|horas?|semanas?|euros?)\b',
     unicode: true,
     caseSensitive: false);
 
+final _money = RegExp(
+    r'\b\d+(?:[ \u00a0]\d{3})*(?:[.,]\d+)?[ \t\u00a0]+(?:EUR|euros?)\b',
+    unicode: true,
+    caseSensitive: false);
+final _percentage = RegExp(r'\b\d+(?:[.,]\d+)?[ \t\u00a0]*%', unicode: true);
+
 const _institutions = [
+  'Comisión Europea',
+  'Parlamento Europeo',
+  'Consejo Europeo',
+  'Consejo de la Unión Europea',
+  'Tribunal de Justicia de la Unión Europea',
+  'Comité Europeo de Protección de Datos',
+  'Supervisor Europeo de Protección de Datos',
+  'Banco Central Europeo',
   'Tribunal Constitucional',
   'Tribunal Supremo',
   'Congreso de los Diputados',
@@ -149,6 +163,49 @@ const _institutions = [
   'Tribunal'
 ];
 const _concepts = [
+  'protección de datos personales',
+  'datos personales',
+  'datos genéticos',
+  'datos biométricos',
+  'datos relativos a la salud',
+  'responsable del tratamiento',
+  'responsables del tratamiento',
+  'encargado del tratamiento',
+  'encargados del tratamiento',
+  'autoridad de control',
+  'autoridades de control',
+  'autoridad competente',
+  'autoridades competentes',
+  'consentimiento explícito',
+  'interesado',
+  'interesada',
+  'interesados',
+  'interesadas',
+  'seudonimización',
+  'derecho de acceso',
+  'derecho de rectificación',
+  'derecho de supresión',
+  'derecho de oposición',
+  'portabilidad de los datos',
+  'limitación del tratamiento',
+  'minimización de datos',
+  'limitación de la finalidad',
+  'limitación del plazo de conservación',
+  'integridad y confidencialidad',
+  'licitud, lealtad y transparencia',
+  'transferencias internacionales',
+  'interés público',
+  'intereses vitales',
+  'obligación legal',
+  'ejercicio de poderes públicos',
+  'Estado miembro',
+  'Estados miembros',
+  'Derecho de la Unión',
+  'Derecho nacional',
+  'derechos y libertades fundamentales',
+  'mercado interior',
+  'libre circulación',
+  'cooperación judicial',
   'derechos fundamentales',
   'garantías constitucionales',
   'procedimientos administrativos',
@@ -197,6 +254,8 @@ const _concepts = [
   'motivación'
 ];
 String targetCategory(String answer) {
+  if (_money.hasMatch(answer)) return 'amount';
+  if (_percentage.hasMatch(answer)) return 'percentage';
   if (_quantity.hasMatch(answer)) {
     return RegExp(r'euros?', caseSensitive: false).hasMatch(answer)
         ? 'amount'
@@ -218,8 +277,12 @@ final _legalTermPattern = (() {
 })();
 List<_Target> _targets(String text, {int limit = 100}) {
   final found = <_Target>[];
-  for (final m in _quantity.allMatches(text).take(limit)) {
-    found.add(_Target(m.start, m.end, m.group(0)!, 4));
+  for (final pattern in [_money, _quantity, _percentage]) {
+    for (final m in pattern.allMatches(text).take(limit)) {
+      if (found.any((t) => m.start < t.end && m.end > t.start)) continue;
+      found.add(_Target(m.start, m.end, m.group(0)!, 4));
+      if (found.length >= limit) return found;
+    }
   }
   for (final m in _legalTermPattern.allMatches(text)) {
     if (found.any((t) => m.start < t.end && m.end > t.start)) continue;

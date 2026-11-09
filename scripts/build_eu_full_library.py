@@ -74,10 +74,15 @@ class Exporter:
         return {'path':relative,'sha256':digest,'bytes':len(compressed),'expandedBytes':len(raw),'encoding':'jsonl' if lines else 'json'}
 
     def copy_page(self,path,expected):
-        # Export existing verified pages with the same bounded JSONL format.
-        raw=gzip.decompress(path.read_bytes())
+        # Preserve verified gzip pages rather than recompressing huge annexes.
+        compressed=path.read_bytes();raw=gzip.decompress(compressed)
         if hashlib.sha256(raw).hexdigest()!=expected:raise ValueError('Source page integrity mismatch')
-        return self.put(raw,lines=True)
+        digest=hashlib.sha256(compressed).hexdigest()
+        relative=f'objects/{digest[:2]}/{digest}.gz';target=self.output/relative;target.parent.mkdir(parents=True,exist_ok=True)
+        if not target.exists():
+            temporary=target.with_suffix('.tmp');temporary.write_bytes(compressed);temporary.replace(target)
+        if hashlib.sha256(target.read_bytes()).hexdigest()!=digest:raise ValueError('Export integrity mismatch')
+        return {'path':relative,'sha256':digest,'bytes':len(compressed),'expandedBytes':len(raw),'encoding':'jsonl'}
 
     def reading(self,root,row):
         path=(root/row['path']).resolve()

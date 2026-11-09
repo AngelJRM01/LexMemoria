@@ -157,6 +157,55 @@ void main() {
     store.dispose();
   });
 
+  test('European clozes hide complete legal concepts and complete quantities',
+      () {
+    final paragraphs = [
+      'El responsable del tratamiento aplicará las medidas necesarias para proteger los datos personales y garantizar los derechos y libertades fundamentales del interesado.',
+      'La autoridad de control velará por la aplicación del Derecho de la Unión y protegerá los derechos del interesado en el territorio de cada Estado miembro.',
+      'El responsable del tratamiento podrá ser sancionado con una multa de 20 000 000 EUR cuando concurran las condiciones previstas en la norma.',
+      'Las infracciones podrán ser sancionadas con una multa de hasta el 4 % del volumen de negocio total anual global, bajo la supervisión de la autoridad de control.',
+      'El responsable del tratamiento responderá en un mes a la solicitud del interesado en los términos previstos en el presente Reglamento.'
+    ];
+    final cards = buildLiteralCards({
+      'norm': {
+        'id': 'EU-example',
+        'title': 'Norma europea',
+        'latestVersion': 'original'
+      },
+      'units': [
+        {
+          'id': 'a',
+          'title': 'Artículo 1',
+          'versions': [
+            {'text': paragraphs.join('\n'), 'hash': 'source'}
+          ]
+        }
+      ],
+      'format': 'cloze'
+    });
+    expect(cards.length, paragraphs.length);
+    final answers = <String>[];
+    for (final card in cards) {
+      final holes =
+          RegExp(r'\{\{c\d+::(.+?)\}\}').allMatches(card['front']).toList();
+      expect(holes.length, inInclusiveRange(2, 3));
+      answers.addAll(holes.map((h) => h.group(1)!));
+    }
+    expect(
+        answers,
+        containsAll([
+          'datos personales',
+          'responsable del tratamiento',
+          '20 000 000 EUR',
+          '4 %',
+          'un mes'
+        ]));
+    expect(answers, isNot(contains('000 EUR')));
+    expect(targetCategory('20 000 000 EUR'), 'amount');
+    expect(targetCategory('4 %'), 'percentage');
+    expect(targetCategory('un mes'), 'duration');
+  });
+
   test(
       'long articles produce brief multi-target clozes and source-based expression tests',
       () {

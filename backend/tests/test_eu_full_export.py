@@ -58,3 +58,15 @@ def test_resume_archives_stale_derived_index_when_input_changes(tmp_path):
     table=export.db.execute("SELECT name FROM sqlite_master WHERE name LIKE 'completed_superseded_%'").fetchone()[0]
     assert export.db.execute('SELECT COUNT(*) FROM '+table).fetchone()[0]==1
     export.db.close()
+
+
+def test_verified_gzip_page_is_copied_without_recompressing(tmp_path):
+    import hashlib
+    raw=b'{"unitId":"a","paragraph":{"id":"p","text":"Una regla."}}\n'
+    compressed=gzip.compress(raw,mtime=123);source=tmp_path/'source.gz';source.write_bytes(compressed)
+    export=module.Exporter(tmp_path/'out')
+    ref=export.copy_page(source,hashlib.sha256(raw).hexdigest())
+    assert (export.output/ref['path']).read_bytes()==compressed
+    assert ref['sha256']==hashlib.sha256(compressed).hexdigest()
+    assert ref['expandedBytes']==len(raw) and ref['encoding']=='jsonl'
+    export.db.close()
