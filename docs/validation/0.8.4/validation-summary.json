@@ -1,0 +1,10 @@
+{
+  "version": "0.8.4+17",
+  "baselineCommit": "53e5e4a824d551acde566f62defaab5d97b10ff7",
+  "flutterTestsPassed": 159,
+  "flutterAnalyzer": "no_issues",
+  "backendChanged": false,
+  "nativePersistenceChanged": false,
+  "physicalLatencyAcceptance": "pending",
+  "responseTargetMs": 100
+}

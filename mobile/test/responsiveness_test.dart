@@ -157,8 +157,8 @@ void main() {
     SharedPreferences.setMockInitialValues(
         {'lexmemoria.v1': '{"starterInstalled":true,"onboarded":true}'});
     final prefs = await SharedPreferences.getInstance();
-    final store =
-        await AppStore.load(persistence: PreferencesPersistence(prefs));
+    final store = (await tester.runAsync(
+        () => AppStore.load(persistence: PreferencesPersistence(prefs))))!;
     await tester.pumpWidget(LexMemoria(store: store));
     await tester.pumpAndSettle();
     expect(find.byType(LibraryPage, skipOffstage: false), findsNothing);
@@ -170,7 +170,7 @@ void main() {
     final library = tester.widget(find.byType(LibraryPage));
     await tester.tap(find.text('Perfil').last);
     await tester.pumpAndSettle();
-    await store.setProfile({'dailyGoal': 30});
+    await tester.runAsync(() => store.setProfile({'dailyGoal': 30}));
     await tester.pumpAndSettle();
     expect(
         identical(tester.widget(find.byType(LibraryPage, skipOffstage: false)),

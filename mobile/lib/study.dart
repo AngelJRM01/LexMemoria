@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart' hide Badge;
 import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
@@ -234,7 +235,12 @@ class CardEditor extends StatefulWidget {
   State<CardEditor> createState() => _CardEditorState();
 }
 
-class _CardEditorState extends State<CardEditor> {
+class _CardEditorState extends State<CardEditor> with WidgetsBindingObserver {
+  Timer? _draftTimer;
+  Future<void>? _draftWrite;
+  int _draftRevision = 0, _draftSavedRevision = 0, _draftWriteRevision = -1;
+  static const _draftFailure =
+      'No se ha podido guardar el borrador. Conserva una copia del texto.';
   final form = GlobalKey<FormState>();
   late final TextEditingController deck;
   final front = TextEditingController(),
@@ -247,6 +253,7 @@ class _CardEditorState extends State<CardEditor> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     final draft = Json.from(widget.store.data['draftCard'] ?? {});
     deck = TextEditingController(
         text:
@@ -294,6 +301,7 @@ class _CardEditorState extends State<CardEditor> {
   }
 
   void saveDraft() {
+    if (saving) return;
     final draft = {
       'deck': deck.text,
       'front': front.text,
@@ -311,11 +319,50 @@ class _CardEditorState extends State<CardEditor> {
     } else {
       widget.store.data['draftCard'] = draft;
     }
-    widget.store.save();
+    _draftRevision++;
+    _draftTimer?.cancel();
+    _draftTimer = Timer(const Duration(milliseconds: 250), _flushDraftSafely);
+  }
+
+  Future<void> _flushDraft() async {
+    _draftTimer?.cancel();
+    _draftTimer = null;
+    if (_draftSavedRevision >= _draftRevision ||
+        (_draftWrite != null && _draftWriteRevision == _draftRevision)) {
+      await _draftWrite;
+      return;
+    }
+    final version = _draftRevision;
+    final store = widget.store;
+    final operation = store.save();
+    _draftWrite = operation;
+    _draftWriteRevision = version;
+    try {
+      await operation;
+      if (version > _draftSavedRevision) _draftSavedRevision = version;
+      if (store.error == _draftFailure) store.error = null;
+    } finally {
+      if (identical(_draftWrite, operation)) _draftWrite = null;
+    }
+  }
+
+  void _flushDraftSafely() {
+    final store = widget.store;
+    unawaited(_flushDraft().catchError((Object error) {
+      store.error = _draftFailure;
+      if (mounted) toast(context, store.error!);
+    }));
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) _flushDraftSafely();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _flushDraftSafely();
     for (final c in [deck, front, back, explanation, options]) {
       c.dispose();
     }
@@ -323,6 +370,7 @@ class _CardEditorState extends State<CardEditor> {
   }
 
   Future<void> save() async {
+    if (saving) return;
     if (!form.currentState!.validate()) return;
     if (type == 'cloze' && !RegExp(r'\{\{c\d+::.+?\}\}').hasMatch(front.text)) {
       toast(context, 'Añade al menos un hueco: {{c1::respuesta}}');
@@ -374,6 +422,7 @@ class _CardEditorState extends State<CardEditor> {
               : [],
           correct:
               ['test', 'case', 'truefalse'].contains(type) ? correct : null);
+      await _flushDraft();
       if (widget.onSaveShared != null) {
         await widget.onSaveShared!(card);
       } else if (widget.existing == null) {
@@ -401,7 +450,7 @@ class _CardEditorState extends State<CardEditor> {
             padding: const EdgeInsets.only(bottom: 16),
             child: TextFormField(
                 controller: c,
-                readOnly: widget.onSaveShared != null && c == deck,
+                readOnly: saving || (widget.onSaveShared != null && c == deck),
                 minLines: lines,
                 maxLines: lines + 3,
                 maxLength: max,
@@ -418,85 +467,88 @@ class _CardEditorState extends State<CardEditor> {
                 : widget.existing == null
                     ? 'Nueva tarjeta privada'
                     : 'Editar tarjeta privada')),
-        body: Form(
-            key: form,
-            child: PageBody(children: [
-              const Badge('Creada por el usuario · sin revisión jurídica',
-                  warning: true),
-              const SizedBox(height: 20),
-              field(deck, 'Mazo', max: 160),
-              DropdownButtonFormField<String>(
-                  initialValue: type,
-                  decoration:
-                      const InputDecoration(labelText: 'Tipo de ejercicio'),
-                  items: const [
-                    DropdownMenuItem(
-                        value: 'qa', child: Text('Pregunta y respuesta')),
-                    DropdownMenuItem(
-                        value: 'cloze', child: Text('Completar huecos')),
-                    DropdownMenuItem(
-                        value: 'truefalse', child: Text('Verdadero / falso')),
-                    DropdownMenuItem(
-                        value: 'order', child: Text('Ordenar una lista')),
-                    DropdownMenuItem(
-                        value: 'case', child: Text('Caso práctico')),
-                    DropdownMenuItem(
-                        value: 'test', child: Text('Pregunta tipo test'))
+        body: IgnorePointer(
+            ignoring: saving,
+            child: Form(
+                key: form,
+                child: PageBody(children: [
+                  const Badge('Creada por el usuario · sin revisión jurídica',
+                      warning: true),
+                  const SizedBox(height: 20),
+                  field(deck, 'Mazo', max: 160),
+                  DropdownButtonFormField<String>(
+                      initialValue: type,
+                      decoration:
+                          const InputDecoration(labelText: 'Tipo de ejercicio'),
+                      items: const [
+                        DropdownMenuItem(
+                            value: 'qa', child: Text('Pregunta y respuesta')),
+                        DropdownMenuItem(
+                            value: 'cloze', child: Text('Completar huecos')),
+                        DropdownMenuItem(
+                            value: 'truefalse',
+                            child: Text('Verdadero / falso')),
+                        DropdownMenuItem(
+                            value: 'order', child: Text('Ordenar una lista')),
+                        DropdownMenuItem(
+                            value: 'case', child: Text('Caso práctico')),
+                        DropdownMenuItem(
+                            value: 'test', child: Text('Pregunta tipo test'))
+                      ],
+                      onChanged: (v) {
+                        setState(() {
+                          type = v!;
+                          correct = 0;
+                        });
+                        saveDraft();
+                      }),
+                  const SizedBox(height: 20),
+                  field(
+                      front,
+                      type == 'cloze'
+                          ? 'Enunciado con {{c1::respuesta}}'
+                          : 'Pregunta / hechos del caso',
+                      lines: 3),
+                  field(back, 'Respuesta y excepciones relevantes',
+                      lines: 3, max: 8000),
+                  field(explanation, 'Explicación y contexto',
+                      lines: 3, required: false, max: 8000),
+                  if (['test', 'case', 'order'].contains(type))
+                    field(
+                        options,
+                        type == 'order'
+                            ? 'Elementos en orden correcto · uno por línea'
+                            : 'Opciones · una por línea',
+                        lines: 4),
+                  if (['test', 'case', 'truefalse'].contains(type)) ...[
+                    DropdownButtonFormField<int>(
+                        initialValue: correct,
+                        decoration: const InputDecoration(
+                            labelText: 'Respuesta correcta'),
+                        items: List.generate(
+                            type == 'truefalse' ? 2 : 6,
+                            (i) => DropdownMenuItem(
+                                value: i,
+                                child: Text(type == 'truefalse'
+                                    ? ['Verdadero', 'Falso'][i]
+                                    : 'Opción ${i + 1}'))),
+                        onChanged: (v) {
+                          correct = v!;
+                          saveDraft();
+                        }),
+                    const SizedBox(height: 20)
                   ],
-                  onChanged: (v) {
-                    setState(() {
-                      type = v!;
-                      correct = 0;
-                    });
-                    saveDraft();
-                  }),
-              const SizedBox(height: 20),
-              field(
-                  front,
-                  type == 'cloze'
-                      ? 'Enunciado con {{c1::respuesta}}'
-                      : 'Pregunta / hechos del caso',
-                  lines: 3),
-              field(back, 'Respuesta y excepciones relevantes',
-                  lines: 3, max: 8000),
-              field(explanation, 'Explicación y contexto',
-                  lines: 3, required: false, max: 8000),
-              if (['test', 'case', 'order'].contains(type))
-                field(
-                    options,
-                    type == 'order'
-                        ? 'Elementos en orden correcto · uno por línea'
-                        : 'Opciones · una por línea',
-                    lines: 4),
-              if (['test', 'case', 'truefalse'].contains(type)) ...[
-                DropdownButtonFormField<int>(
-                    initialValue: correct,
-                    decoration:
-                        const InputDecoration(labelText: 'Respuesta correcta'),
-                    items: List.generate(
-                        type == 'truefalse' ? 2 : 6,
-                        (i) => DropdownMenuItem(
-                            value: i,
-                            child: Text(type == 'truefalse'
-                                ? ['Verdadero', 'Falso'][i]
-                                : 'Opción ${i + 1}'))),
-                    onChanged: (v) {
-                      correct = v!;
-                      saveDraft();
-                    }),
-                const SizedBox(height: 20)
-              ],
-              Paper(
-                  child: Text(widget.existing?.normId.isNotEmpty == true
-                      ? 'Fuente: ${widget.existing!.normId} · ${widget.existing!.unitId}\nVersión: ${widget.existing!.versionId}'
-                      : widget.norm == null
-                          ? 'Sin fuente jurídica anclada. Puedes crear una tarjeta desde un artículo descargado para conservar norma, versión y bloque.'
-                          : 'Fuente: ${widget.norm!['id']} · ${widget.unit!['title']}\nVersión: ${widget.norm!['latestVersion']}')),
-              const SizedBox(height: 24),
-              FilledButton(
-                  onPressed: saving ? null : save,
-                  child: Text(saving ? 'Guardando…' : 'Guardar tarjeta')),
-            ])));
+                  Paper(
+                      child: Text(widget.existing?.normId.isNotEmpty == true
+                          ? 'Fuente: ${widget.existing!.normId} · ${widget.existing!.unitId}\nVersión: ${widget.existing!.versionId}'
+                          : widget.norm == null
+                              ? 'Sin fuente jurídica anclada. Puedes crear una tarjeta desde un artículo descargado para conservar norma, versión y bloque.'
+                              : 'Fuente: ${widget.norm!['id']} · ${widget.unit!['title']}\nVersión: ${widget.norm!['latestVersion']}')),
+                  const SizedBox(height: 24),
+                  FilledButton(
+                      onPressed: saving ? null : save,
+                      child: Text(saving ? 'Guardando…' : 'Guardar tarjeta')),
+                ]))));
   }
 }
 

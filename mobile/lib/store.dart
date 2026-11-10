@@ -19,6 +19,32 @@ import 'backup.dart';
 
 String encodeStudySnapshot(Json snapshot) => jsonEncode(snapshot);
 
+Json decodeStudyStartup(String? raw) {
+  final data = raw == null ? <String, dynamic>{} : Json.from(jsonDecode(raw));
+  final now = DateTime.now();
+  final day = civilDate(now);
+  var count = 0;
+  final reviews = data['reviews'];
+  for (final event in reviews is List ? reviews : const []) {
+    if (event is! Map) continue;
+    final stamp = DateTime.tryParse(event['occurredAt']?.toString() ?? '');
+    if (stamp != null && civilDate(stamp.toLocal()) == day) count++;
+  }
+  return {
+    'data': data,
+    'day': day,
+    'offset': now.timeZoneOffset.inMicroseconds,
+    'reviewsToday': count
+  };
+}
+
+Future<List<Json>> loadStartupCorpus() async {
+  final asset = await rootBundle.load('assets/corpus-catalogue.json.gz');
+  final bytes =
+      asset.buffer.asUint8List(asset.offsetInBytes, asset.lengthInBytes);
+  return compute(decodeCorpusCatalogue, bytes);
+}
+
 class AppStore extends ChangeNotifier {
   final SharedPreferences prefs;
   Json data;
@@ -55,15 +81,27 @@ class AppStore extends ChangeNotifier {
         await startupStep<LocalPersistence>(
             'SECURE_STORAGE', () => EncryptedPersistence.open(prefs));
     try {
-      final saved = await startupStep('READ_SNAPSHOT', storage.read);
       final legacy = prefs.getString('lexmemoria.v1');
-      final raw = saved ?? legacy;
-      Json data;
-      try {
-        data = raw == null ? {} : Json.from(jsonDecode(raw));
-      } catch (_) {
-        throw StartupFailure('SNAPSHOT_FORMAT');
-      }
+      // Join both futures so failures are observed and the store is not
+      // published while an independent startup task is still running.
+      final inputs = await Future.wait<dynamic>([
+        () async {
+          final saved = await startupStep('READ_SNAPSHOT', storage.read);
+          final raw = saved ?? legacy;
+          try {
+            final decoded = raw != null && raw.length > 512 * 1024
+                ? await compute(decodeStudyStartup, raw)
+                : decodeStudyStartup(raw);
+            return {'saved': saved, 'decoded': decoded};
+          } catch (_) {
+            throw StartupFailure('SNAPSHOT_FORMAT');
+          }
+        }(),
+        loadStartupCorpus()
+      ]);
+      final saved = inputs[0]['saved'] as String?;
+      final decoded = Json.from(inputs[0]['decoded']);
+      final data = Json.from(decoded['data']);
       if (saved == null &&
           legacy != null &&
           storage is! PreferencesPersistence) {
@@ -79,13 +117,7 @@ class AppStore extends ChangeNotifier {
           packCache: storage is EncryptedPersistence
               ? await startupStep('CORPUS_CACHE', openPackCache)
               : MemoryPackCache());
-      final catalogueAsset =
-          await rootBundle.load('assets/corpus-catalogue.json.gz');
-      final catalogueBytes = catalogueAsset.buffer.asUint8List(
-          catalogueAsset.offsetInBytes, catalogueAsset.lengthInBytes);
-      store.corpusNorms = storage is EncryptedPersistence
-          ? await compute(decodeCorpusCatalogue, catalogueBytes)
-          : decodeCorpusCatalogue(catalogueBytes);
+      store.corpusNorms = (inputs[1] as List).cast<Json>();
       try {
         final manifest = Json.from(jsonDecode(
             await rootBundle.loadString('assets/legal-catalogue.json')));
@@ -108,6 +140,13 @@ class AppStore extends ChangeNotifier {
           }));
       // Reading packs open on demand; never decompress several laws before the home screen.
       await store.loadPreparedCards();
+      if (identical(store.data['reviews'], data['reviews'])) {
+        store._todayReviewSource = store.data['reviews'];
+        store._todayReviewDate = decoded['day'];
+        store._todayReviewOffset = Duration(microseconds: decoded['offset']);
+        store._todayReviewLegacy = store._legacyDataGeneration;
+        store._todayReviewCount = decoded['reviewsToday'];
+      }
       return store;
     } catch (_) {
       try {

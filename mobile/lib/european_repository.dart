@@ -35,12 +35,58 @@ List<Json> decodeEuropeanIndex(Json input) {
   return rows;
 }
 
+dynamic decodeEuropeanObject(Json input) {
+  final raw = GZipDecoder().decodeBytes(input['bytes'] as Uint8List);
+  if (raw.length != input['expandedBytes']) {
+    throw StateError('Archivo incompleto.');
+  }
+  if (input['encoding'] == 'jsonl') {
+    if (raw.length > 5000000) throw StateError('Página demasiado grande.');
+    return const LineSplitter()
+        .convert(utf8.decode(raw))
+        .where((line) => line.isNotEmpty)
+        .map((line) => Json.from(jsonDecode(line)))
+        .toList();
+  }
+  return Json.from(jsonDecode(utf8.decode(raw)));
+}
+
+class _EuropeanObjects {
+  final decoded = <String, dynamic>{};
+  final weights = <String, int>{};
+  final loading = <String, Future<dynamic>>{};
+  final compressed = <String, Future<Uint8List>>{};
+  int expandedBytes = 0;
+  void keep(String key, dynamic value, int weight) {
+    if (weight > 16 * 1024 * 1024) return;
+    if (decoded.containsKey(key)) {
+      decoded.remove(key);
+      expandedBytes -= weights.remove(key)!;
+    }
+    decoded[key] = value;
+    weights[key] = weight;
+    expandedBytes += weight;
+    while (decoded.length > 4 || expandedBytes > 16 * 1024 * 1024) {
+      final first = decoded.keys.first;
+      decoded.remove(first);
+      expandedBytes -= weights.remove(first)!;
+    }
+  }
+}
+
 class EuropeanRepository {
   final AppStore store;
   EuropeanRepository(this.store);
   static const manifestKey = 'lexmemoria.public.european.manifest.v1';
-  final Map<String, dynamic> _decoded = {};
-  final List<String> _order = [];
+  static final _objects = Expando<_EuropeanObjects>();
+  _EuropeanObjects get _memo => _objects[store] ??= _EuropeanObjects();
+  String _refKey(Json ref) => jsonEncode([
+        ref['path'],
+        ref['sha256'],
+        ref['bytes'],
+        ref['expandedBytes'],
+        ref['encoding']
+      ]);
 
   Uri objectUri(Json ref) {
     if (!RegExp(r'^objects/[a-f0-9]{2}/[a-f0-9]{64}\.gz$')
@@ -113,21 +159,35 @@ class EuropeanRepository {
   }
 
   Future<Uint8List> compressed(Json ref) async {
-    final uri = objectUri(ref);
-    final hash = ref['sha256'] as String;
-    var bytes = await store.packCache.read(hash);
-    if (bytes != null &&
-        bytes.length == ref['bytes'] &&
-        sha256.convert(bytes).toString() == hash) {
+    final request = Json.from(ref);
+    objectUri(request);
+    final key = _refKey(request);
+    final memo = _memo;
+    return memo.compressed[key] ??= _loadCompressed(request, key, memo);
+  }
+
+  Future<Uint8List> _loadCompressed(
+      Json ref, String key, _EuropeanObjects memo) async {
+    try {
+      final uri = objectUri(ref);
+      final hash = ref['sha256'] as String;
+      var bytes = await store.packCache.read(hash);
+      if (bytes != null &&
+          bytes.length == ref['bytes'] &&
+          sha256.convert(bytes).toString() == hash) {
+        return bytes;
+      }
+      bytes = await _request(uri, (ref['bytes'] as num).toInt());
+      if (bytes.length != ref['bytes'] ||
+          sha256.convert(bytes).toString() != hash) {
+        throw StateError(
+            'El contenido no supera la comprobación de integridad.');
+      }
+      await store.packCache.write(hash, bytes);
       return bytes;
+    } finally {
+      memo.compressed.remove(key);
     }
-    bytes = await _request(uri, (ref['bytes'] as num).toInt());
-    if (bytes.length != ref['bytes'] ||
-        sha256.convert(bytes).toString() != hash) {
-      throw StateError('El contenido no supera la comprobación de integridad.');
-    }
-    await store.packCache.write(hash, bytes);
-    return bytes;
   }
 
   static final _catalogues = Expando<_EuropeanCatalogueMemo>();
@@ -159,30 +219,34 @@ class EuropeanRepository {
       });
 
   Future<dynamic> object(Json ref) async {
-    objectUri(ref);
-    final key = ref['sha256'] as String;
-    if (_decoded.containsKey(key)) return _decoded[key];
-    final raw = GZipDecoder().decodeBytes(await compressed(ref));
-    if (raw.length != ref['expandedBytes']) {
-      throw StateError('Archivo incompleto.');
+    final request = Json.from(ref);
+    objectUri(request);
+    final key = _refKey(request);
+    final memo = _memo;
+    if (memo.decoded.containsKey(key)) {
+      final value = memo.decoded.remove(key);
+      memo.decoded[key] = value;
+      return value;
     }
-    dynamic result;
-    if (ref['encoding'] == 'jsonl') {
-      if (raw.length > 5000000) throw StateError('Página demasiado grande.');
-      result = const LineSplitter()
-          .convert(utf8.decode(raw))
-          .where((line) => line.isNotEmpty)
-          .map((line) => Json.from(jsonDecode(line)))
-          .toList();
-    } else {
-      result = Json.from(jsonDecode(utf8.decode(raw)));
+    return memo.loading[key] ??= _loadObject(request, key, memo);
+  }
+
+  Future<dynamic> _loadObject(
+      Json ref, String key, _EuropeanObjects memo) async {
+    try {
+      final input = <String, dynamic>{
+        'bytes': await compressed(ref),
+        'expandedBytes': ref['expandedBytes'],
+        'encoding': ref['encoding']
+      };
+      final result = (ref['expandedBytes'] as num) > 128 * 1024
+          ? await compute(decodeEuropeanObject, input)
+          : decodeEuropeanObject(input);
+      memo.keep(key, result, (ref['expandedBytes'] as num).toInt());
+      return result;
+    } finally {
+      memo.loading.remove(key);
     }
-    _decoded[key] = result;
-    _order.add(key);
-    while (_order.length > 4) {
-      _decoded.remove(_order.removeAt(0));
-    }
-    return result;
   }
 
   Future<List<Json>> unitParagraphs(Json document, Json unit,
