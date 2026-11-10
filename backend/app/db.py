@@ -1,8 +1,12 @@
 import os
 from datetime import datetime, timezone
 from uuid import uuid4
-from sqlalchemy import create_engine, String, Text, JSON, UniqueConstraint, ForeignKey, event, text
+from sqlalchemy import create_engine, String, Text, JSON, UniqueConstraint, ForeignKey, Index, event, text
 from sqlalchemy.engine import make_url
+from sqlalchemy.schema import CreateIndex
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.sql.functions import FunctionElement
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 
@@ -18,6 +22,22 @@ class Base(DeclarativeBase):
     pass
 
 
+class ClientIdentifier(FunctionElement):
+    """Constant JSON path, so both dialects can use its expression index."""
+    type = String()
+    inherit_cache = True
+
+
+@compiles(ClientIdentifier, 'sqlite')
+def sqlite_client_identifier(element, compiler, **kw):
+    return "JSON_EXTRACT(%s, '$.\"clientId\"')" % compiler.process(list(element.clauses)[0], **kw)
+
+
+@compiles(ClientIdentifier, 'postgresql')
+def postgres_client_identifier(element, compiler, **kw):
+    return "CAST(%s ->> 'clientId' AS VARCHAR)" % compiler.process(list(element.clauses)[0], **kw)
+
+
 class Record(Base):
     """Versioned domain aggregate. Owner is always enforced by the API."""
     __tablename__ = 'records'
@@ -28,6 +48,20 @@ class Record(Base):
     data: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[str] = mapped_column(default=now)
     __mapper_args__ = {'version_id_col': revision}
+
+    @hybrid_property
+    def client_id(self):
+        return self.data.get('clientId')
+
+    @client_id.expression
+    def client_id(cls):
+        return ClientIdentifier(cls.data)
+
+
+RECORD_QUERY_INDEXES = (
+    Index('ix_records_owner_kind_id', Record.owner, Record.kind, Record.id),
+    Index('ix_records_owner_kind_client_id', Record.owner, Record.kind, Record.client_id),
+)
 
 
 class Account(Base):
@@ -100,4 +134,7 @@ def connect(url=None):
             # This does not replace versioned migrations for future ALTERs.
             connection.execute(text('SELECT pg_advisory_xact_lock(753309520061106)'))
         Base.metadata.create_all(connection)
+        # create_all skips indexes on existing tables: upgrade old installs too.
+        for index in RECORD_QUERY_INDEXES:
+            connection.execute(CreateIndex(index, if_not_exists=True))
     return engine, sessionmaker(engine, expire_on_commit=False)

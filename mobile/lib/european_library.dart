@@ -26,6 +26,7 @@ class _FullEuropeanLibraryPageState extends State<FullEuropeanLibraryPage> {
   bool saved = false, textOnly = false;
   int page = 0, size = 20;
   Timer? debounce;
+  final catalogueFilter = EuropeanCatalogueFilter();
   final scroll = ScrollController();
   void reset() {
     page = 0;
@@ -123,16 +124,15 @@ class _FullEuropeanLibraryPageState extends State<FullEuropeanLibraryPage> {
               return const Center(child: CircularProgressIndicator());
             }
             final all = snapshot.data!;
-            final needle = normalize(query.trim());
-            final rows = all
-                .where((n) =>
-                    (kind == 'Todos' || n['kind'] == kind) &&
-                    (year == 'Todos' || n['year'] == year) &&
-                    (!textOnly || (n['readableEditions'] as num) > 0) &&
-                    (!saved || widget.store.has('bookmarks', n['id'])) &&
-                    (needle.isEmpty ||
-                        (n['_search'] as String).contains(needle)))
-                .toList();
+            final rows = catalogueFilter.select(all,
+                query: query,
+                kind: kind,
+                year: year,
+                textOnly: textOnly,
+                saved: saved,
+                bookmarks: saved
+                    ? List<String>.from(widget.store.data['bookmarks'] ?? [])
+                    : const []);
             final result = ResultPage(rows, page, size);
             return SearchPageBody(
                 resultsController: scroll,
@@ -147,7 +147,7 @@ class _FullEuropeanLibraryPageState extends State<FullEuropeanLibraryPage> {
                               onPressed: () => filters(all))),
                       onChanged: (v) {
                         debounce?.cancel();
-                        debounce = Timer(const Duration(milliseconds: 300), () {
+                        debounce = Timer(const Duration(milliseconds: 100), () {
                           if (mounted) {
                             setState(() {
                               query = v;

@@ -97,7 +97,11 @@ class _StudyPageState extends State<StudyPage> {
             (needle.isEmpty || studyCardSearchText(c).contains(needle)))
         .toList();
     final eligibleIds = eligible.map((c) => c.id).toSet();
-    final decks = eligible.map((c) => c.deck).toSet().toList();
+    final byDeck = <String, List<StudyCard>>{};
+    for (final card in eligible) {
+      (byDeck[card.deck] ??= []).add(card);
+    }
+    final decks = byDeck.keys.toList();
     return SearchPageBody(header: [
       Text('Estudiar', style: Theme.of(context).textTheme.headlineMedium),
       const SizedBox(height: 8),
@@ -167,7 +171,7 @@ class _StudyPageState extends State<StudyPage> {
                 onPressed: () => push(context, PreparedDecksPage(store: s)),
                 child: const Text('Elegir mazo'))),
       ...decks.map((deck) {
-        final cards = eligible.where((c) => c.deck == deck).toList();
+        final cards = byDeck[deck]!;
         final due =
             s.due(deck: deck).where((c) => eligibleIds.contains(c.id)).toList();
         return Padding(
@@ -517,20 +521,25 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   Future<void> rate(int rating) async {
+    if (saving) return;
     setState(() => saving = true);
+    final store = widget.store;
+    final card = widget.queue[index];
+    final sessionIds = widget.queue.map((c) => c.id).toList();
+    final next = index + 1;
+    final latency = DateTime.now().difference(shown).inMilliseconds;
+    final answer = response;
     await perform(context, () async {
-      await widget.store.review(widget.queue[index], rating,
-          latencyMs: DateTime.now().difference(shown).inMilliseconds,
-          response: response);
-      index++;
+      await WidgetsBinding.instance.endOfFrame;
+      await store.review(card, rating,
+          latencyMs: latency,
+          response: answer,
+          sessionIds: sessionIds,
+          nextIndex: next);
+      index = next;
       revealed = false;
       response = null;
       shown = DateTime.now();
-      widget.store.data['session'] = {
-        'ids': widget.queue.map((c) => c.id).toList(),
-        'index': index
-      };
-      await widget.store.save();
     });
     if (mounted) setState(() => saving = false);
   }

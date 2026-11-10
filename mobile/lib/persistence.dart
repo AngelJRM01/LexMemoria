@@ -84,11 +84,17 @@ class EncryptedPersistence implements LocalPersistence {
   Future<void> write(String snapshot) async {
     await database.transaction((txn) async {
       final batch = txn.batch();
-      batch.delete('app_state_chunks');
       var index = 0;
       for (final chunk in snapshotChunks(snapshot)) {
-        batch.insert('app_state_chunks', {'id': index++, 'payload': chunk});
+        // Keep unchanged encrypted pages intact. Comparing inside SQLite also
+        // remains correct with another writer; no stale in-memory hash cache.
+        batch.rawInsert(
+            'INSERT INTO app_state_chunks (id, payload) VALUES (?, ?) '
+            'ON CONFLICT(id) DO UPDATE SET payload = excluded.payload '
+            'WHERE app_state_chunks.payload <> excluded.payload',
+            [index++, chunk]);
       }
+      batch.delete('app_state_chunks', where: 'id >= ?', whereArgs: [index]);
       // The old snapshot is removed in the same transaction only after the
       // replacement chunks are queued. Any failed write rolls all changes back.
       batch.delete('app_state');

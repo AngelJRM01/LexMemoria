@@ -17,6 +17,8 @@ import 'pack_cache.dart';
 import 'catalogue.dart';
 import 'backup.dart';
 
+String encodeStudySnapshot(Json snapshot) => jsonEncode(snapshot);
+
 class AppStore extends ChangeNotifier {
   final SharedPreferences prefs;
   Json data;
@@ -429,6 +431,22 @@ class AppStore extends ChangeNotifier {
   }
 
   Json state(String id) => Json.from((data['states'] as Map? ?? {})[id] ?? {});
+  List<StudyCard>? _deckIndexSource;
+  Map<String, List<StudyCard>> _deckIndex = {};
+  Iterable<StudyCard> _cardsInDeck(String? deck) {
+    final all = cards;
+    if (deck == null) return all;
+    if (!identical(all, _deckIndexSource)) {
+      final grouped = <String, List<StudyCard>>{};
+      for (final card in all) {
+        (grouped[card.deck] ??= []).add(card);
+      }
+      _deckIndex = grouped;
+      _deckIndexSource = all;
+    }
+    return _deckIndex[deck] ?? const <StudyCard>[];
+  }
+
   List<StudyCard> due({String? deck, DateTime? at, bool includeRest = false}) {
     final now = at ?? DateTime.now();
     if (!includeRest && !isStudyDay(now, profile)) return [];
@@ -461,8 +479,8 @@ class AppStore extends ChangeNotifier {
     final capacity = studyCapacity(settings);
     // Keep only the next session instead of sorting the entire collection.
     final selected = HeapPriorityQueue<StudyCard>((a, b) => compare(b, a));
-    for (final card in cards) {
-      if (card.blocked || (deck != null && card.deck != deck)) continue;
+    for (final card in _cardsInDeck(deck)) {
+      if (card.blocked) continue;
       final dueAt = stateFor(card.id)['dueAt'];
       final when =
           dueAt == null || dueAt == '' ? null : DateTime.tryParse(dueAt);
@@ -911,7 +929,17 @@ class AppStore extends ChangeNotifier {
 
   bool has(String key, String id) => (data[key] as List? ?? []).contains(id);
   Future<void> review(StudyCard card, int rating,
-      {int latencyMs = 0, dynamic response}) async {
+      {int latencyMs = 0,
+      dynamic response,
+      List<String>? sessionIds,
+      int? nextIndex}) async {
+    if ((sessionIds == null) != (nextIndex == null) ||
+        (sessionIds != null &&
+            (nextIndex! < 1 ||
+                nextIndex > sessionIds.length ||
+                sessionIds[nextIndex - 1] != card.id))) {
+      throw ArgumentError('Continuación de sesión incoherente');
+    }
     await _commitMutation(() {
       final current = cards.where((c) => c.id == card.id).firstOrNull;
       if (current == null || current.revision != card.revision) {
@@ -940,7 +968,9 @@ class AppStore extends ChangeNotifier {
           card.id: schedule(previous, rating, at)
         },
         'reviews': [...list('reviews'), event],
-        'session': null
+        'session': sessionIds == null
+            ? null
+            : {'ids': List<String>.of(sessionIds), 'index': nextIndex}
       };
     });
   }
@@ -991,28 +1021,27 @@ class AppStore extends ChangeNotifier {
       // Compute against the latest committed state, not the state from when a
       // second click queued the operation. Sequential edits must not lose data.
       final candidate = mutate();
-      final encoded = jsonEncode(candidate);
+      // Freeze changed fields before any async work, so caller-owned maps
+      // cannot diverge from the bytes eventually written to disk.
+      final changed = <String, dynamic>{
+        for (final entry in candidate.entries)
+          if (!previousData.containsKey(entry.key) ||
+              !identical(entry.value, previousData[entry.key]))
+            entry.key: entry.value
+      };
+      final committed = <String, dynamic>{
+        ...candidate,
+        ...Json.from(jsonDecode(jsonEncode(changed)))
+      };
+      // Large snapshots encode outside the native UI isolate. The synchronous
+      // final comparison remains necessary to catch legacy raw mutations.
+      final encoded = before.length > 512 * 1024
+          ? await compute(encodeStudySnapshot, committed)
+          : encodeStudySnapshot(committed);
       await persistence.write(encoded);
       if (_writeGeneration != expected || jsonEncode(data) != before) {
         await persistence.write(jsonEncode(data));
         throw StateError('Tus datos han cambiado. La sustitución se canceló.');
-      }
-      final committed = Json.from(jsonDecode(encoded));
-      // Retain only unchanged educational sections after the disk write and
-      // full concurrent-mutation check. A profile/queue save must not rebuild
-      // tens of thousands of immutable card objects and search indexes.
-      for (final key in [
-        'cards',
-        'norms',
-        'cardHistory',
-        'reviews',
-        'profile',
-        'states'
-      ]) {
-        if (candidate.containsKey(key) &&
-            identical(candidate[key], previousData[key])) {
-          committed[key] = previousData[key];
-        }
       }
       if (['cards', 'cardHistory', 'reviews']
           .any((key) => !identical(candidate[key], previousData[key]))) {

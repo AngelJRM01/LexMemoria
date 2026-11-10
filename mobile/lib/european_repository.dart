@@ -220,3 +220,42 @@ class _EuropeanCatalogueMemo {
   final Future<List<Json>> value;
   _EuropeanCatalogueMemo(this.hash, this.value);
 }
+
+/// Reuse a filtered view while paging; bookmark lookup must not scan a list
+/// for each of the 149k catalogue entries. Holds only the latest result.
+class EuropeanCatalogueFilter {
+  List<Json>? _source;
+  String? _key;
+  List<Json> _rows = const [];
+  List<Json> select(List<Json> source,
+      {String query = '',
+      String kind = 'Todos',
+      String year = 'Todos',
+      bool textOnly = false,
+      bool saved = false,
+      List<String> bookmarks = const []}) {
+    final needle = normalize(query.trim());
+    final key =
+        jsonEncode([needle, kind, year, textOnly, saved, if (saved) bookmarks]);
+    if (identical(source, _source) && key == _key) return _rows;
+    final savedIds = saved ? bookmarks.toSet() : const <String>{};
+    final rows = needle.isEmpty &&
+            kind == 'Todos' &&
+            year == 'Todos' &&
+            !textOnly &&
+            !saved
+        ? source
+        : source
+            .where((n) =>
+                (kind == 'Todos' || n['kind'] == kind) &&
+                (year == 'Todos' || n['year'] == year) &&
+                (!textOnly || (n['readableEditions'] as num) > 0) &&
+                (!saved || savedIds.contains(n['id'])) &&
+                (needle.isEmpty || (n['_search'] as String).contains(needle)))
+            .toList();
+    _source = source;
+    _key = key;
+    _rows = rows;
+    return rows;
+  }
+}

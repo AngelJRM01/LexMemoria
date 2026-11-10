@@ -37,10 +37,31 @@ void main() {
           (await db.rawQuery('SELECT count(*) AS n FROM app_state'))
               .single['n'],
           0);
+      final beforeChanges =
+          (await db.rawQuery('SELECT total_changes() AS n')).single['n'] as int;
+      await storage.write(updated);
+      final afterChanges =
+          (await db.rawQuery('SELECT total_changes() AS n')).single['n'] as int;
+      expect(afterChanges - beforeChanges, 0,
+          reason: 'Unchanged encrypted chunks must not be rewritten');
+      final changedTail = '$updated!';
+      await storage.write(changedTail);
+      final tailChanges =
+          (await db.rawQuery('SELECT total_changes() AS n')).single['n'] as int;
+      expect(tailChanges - afterChanges, 1,
+          reason: 'Only the final changed chunk should be updated');
+      await storage.write(updated);
       await db.execute(
           "CREATE TEMP TRIGGER fail_snapshot BEFORE INSERT ON app_state_chunks WHEN NEW.id=1 BEGIN SELECT RAISE(ABORT, 'integration simulated failure'); END");
       await expectLater(storage.write(original), throwsException);
       expect(await storage.read(), updated);
+      await db.execute('DROP TRIGGER fail_snapshot');
+      await storage.write('𝑥');
+      expect(await storage.read(), '𝑥');
+      expect(
+          (await db.rawQuery('SELECT count(*) AS n FROM app_state_chunks'))
+              .single['n'],
+          1);
     } finally {
       if (db?.isOpen == true) await db!.close();
       await sqlite.deleteDatabase(path);
@@ -61,7 +82,10 @@ void main() {
     final reopened = await AppStore.load();
     try {
       expect(reopened.data['startupIntegrationProbe'], largeProbe);
-      expect(reopened.bundledNorms, hasLength(20));
+      expect(reopened.bundledNorms.where((n) => n['source'] == 'BOE'),
+          hasLength(20));
+      expect(
+          reopened.bundledNorms.where((n) => n['celex'] != null), hasLength(3));
       await tester.pumpWidget(LexMemoria(store: reopened));
       await tester.pumpAndSettle();
       expect(find.textContaining('No se ha podido iniciar'), findsNothing);

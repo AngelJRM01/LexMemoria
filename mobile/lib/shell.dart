@@ -102,6 +102,15 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int index = 0;
+  final _visitedPages = List<Widget?>.filled(5, null);
+  @override
+  void didUpdateWidget(covariant AppShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.store, widget.store)) {
+      _visitedPages.fillRange(0, _visitedPages.length, null);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = widget.store;
@@ -112,6 +121,12 @@ class _AppShellState extends State<AppShell> {
       UpdatesPage(store: s),
       ProfilePage(store: s)
     ];
+    // Mount tabs only when visited. Freeze hidden tabs until they are selected;
+    // keep their State (filters/scroll), but don't rebuild them on each repaso.
+    if (_visitedPages[index] == null ||
+        ModalRoute.of(context)?.isCurrent != false) {
+      _visitedPages[index] = pages[index];
+    }
     const destinations = [
       (Icons.grid_view_outlined, 'Inicio'),
       (Icons.style_outlined, 'Estudiar'),
@@ -148,7 +163,12 @@ class _AppShellState extends State<AppShell> {
                     .map((d) => NavigationRailDestination(
                         icon: Icon(d.$1), label: Text(d.$2)))
                     .toList()),
-          Expanded(child: IndexedStack(index: index, children: pages))
+          Expanded(
+              child: IndexedStack(
+                  index: index,
+                  children: _visitedPages
+                      .map((p) => p ?? const SizedBox.shrink())
+                      .toList()))
         ])),
         bottomNavigationBar: wide
             ? null

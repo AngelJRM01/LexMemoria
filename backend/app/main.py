@@ -32,7 +32,7 @@ def create_app(database_url=None):
     engine, factory = connect(database_url)
     with factory() as session:
         rebuild_index(session)
-    app = FastAPI(title='LexMemoria', version='0.8.1')
+    app = FastAPI(title='LexMemoria', version='0.8.2')
     origins = [v.strip() for v in os.getenv('CORS_ORIGINS', '').split(',') if v.strip()]
     if origins:
         app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=False,
@@ -512,7 +512,7 @@ def create_app(database_url=None):
         old = s.get(Record, id_)
         if old is None and body.clientId:
             candidates = list(s.scalars(select(Record).where(Record.kind == 'card', Record.owner == user.id,
-                Record.data['clientId'].as_string() == body.clientId).limit(2)))
+                Record.client_id == body.clientId).limit(2)))
             if len(candidates) > 1:
                 raise HTTPException(409, 'Identificador de tarjeta ambiguo; conserva los datos y compara')
             old = candidates[0] if candidates else None
@@ -532,7 +532,7 @@ def create_app(database_url=None):
     def card_by_client(client_id: str, user=Depends(identity), s=Depends(db)):
         if not 8 <= len(client_id) <= 80:raise HTTPException(404, 'Tarjeta no encontrada')
         rows = list(s.scalars(select(Record).where(Record.kind == 'card', Record.owner == user.id,
-            Record.data['clientId'].as_string() == client_id).limit(2)))
+            Record.client_id == client_id).limit(2)))
         if len(rows) != 1:raise HTTPException(404 if not rows else 409, 'Tarjeta no disponible o ambigua')
         deck = own(s, rows[0].data['deckId'], user, 'deck')
         return {**pack(rows[0]), 'deckTitle': deck.data['title']}
@@ -545,7 +545,7 @@ def create_app(database_url=None):
         if any(not 8 <= len(value) <= 80 for value in body.clientIds):
             raise HTTPException(422, 'Identificador de tarjeta no válido')
         rows = s.scalars(select(Record).where(Record.kind=='card',Record.owner==user.id,
-            Record.data['clientId'].as_string().in_(body.clientIds)))
+            Record.client_id.in_(body.clientIds)))
         result = {}; decks = {}
         for row in rows:
             client_id = row.data['clientId']
@@ -556,7 +556,7 @@ def create_app(database_url=None):
         missing = set(body.clientIds) - set(result)
         if missing:
             for row in s.scalars(select(Record).where(Record.kind=='card',Record.owner==user.id,
-                Record.data['clientId'].as_string().is_(None))):
+                Record.client_id.is_(None))):
                 legacy_id = str(uuid5(NAMESPACE_DNS,row.id))
                 if legacy_id not in missing:continue
                 deck_id = row.data['deckId']
