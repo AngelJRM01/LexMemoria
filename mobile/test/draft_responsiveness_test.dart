@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,12 +11,14 @@ class DraftStorage implements LocalPersistence {
   int writes = 0;
   String? snapshot;
   bool fail = false;
+  Completer<void>? hold;
   @override
   Future<String?> read() async => snapshot;
   @override
   Future<void> write(String value) async {
     writes++;
     if (fail) throw StateError('Disk full');
+    await hold?.future;
     snapshot = value;
   }
 
@@ -97,6 +100,70 @@ void main() {
     final writes = storage.writes;
     await tester.pump(const Duration(seconds: 1));
     expect(storage.writes, writes);
+    await tester.pumpWidget(const SizedBox.shrink());
+    store.dispose();
+  });
+  testWidgets('draft status only confirms a completed write', (tester) async {
+    final storage = DraftStorage()..hold = Completer<void>();
+    final store = AppStore(await SharedPreferences.getInstance(), {},
+        persistence: storage);
+    await tester.pumpWidget(MaterialApp(home: CardEditor(store: store)));
+    await tester.enterText(find.byType(TextFormField).at(1), 'Texto pendiente');
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Guardando borrador…'), findsOneWidget);
+    expect(find.text('Borrador guardado'), findsNothing);
+    storage.hold!.complete();
+    await tester.pumpAndSettle();
+    expect(find.text('Borrador guardado'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    store.dispose();
+  });
+
+  testWidgets('continuous typing checkpoints without waiting for idle',
+      (tester) async {
+    final storage = DraftStorage();
+    final store = AppStore(await SharedPreferences.getInstance(), {},
+        persistence: storage);
+    await tester.pumpWidget(MaterialApp(home: CardEditor(store: store)));
+    for (var i = 0; i < 7; i++) {
+      await tester.enterText(find.byType(TextFormField).at(1), 'Texto $i');
+      await tester.pump(const Duration(milliseconds: 180));
+    }
+    expect(storage.writes, greaterThanOrEqualTo(1));
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    expect(jsonDecode(storage.snapshot!)['draftCard']['front'], 'Texto 6');
+    store.dispose();
+  });
+
+  testWidgets(
+      'back waits for persistence and a failed save keeps the editor open',
+      (tester) async {
+    final storage = DraftStorage()..fail = true;
+    final store = AppStore(await SharedPreferences.getInstance(), {},
+        persistence: storage);
+    await tester.pumpWidget(MaterialApp(
+        home: Builder(
+            builder: (context) => Scaffold(
+                body: TextButton(
+                    onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => CardEditor(store: store))),
+                    child: const Text('Abrir'))))));
+    await tester.tap(find.text('Abrir'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).at(1), 'No perder');
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byType(CardEditor), findsOneWidget);
+    expect(store.data['draftCard']['front'], 'No perder');
+    expect(store.error, isNotNull);
+    storage.fail = false;
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byType(CardEditor), findsNothing);
+    expect(jsonDecode(storage.snapshot!)['draftCard']['front'], 'No perder');
     await tester.pumpWidget(const SizedBox.shrink());
     store.dispose();
   });

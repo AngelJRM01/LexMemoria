@@ -446,11 +446,6 @@ class SettingsPage extends StatelessWidget {
                   title: const Text('Progreso e historial'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => push(context, ProgressPage(store: store))),
-              ListTile(
-                  leading: const Icon(Icons.workspace_premium_outlined),
-                  title: const Text('Planes y suscripciones'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => push(context, const PlansPage())),
             ])),
         Details('Conexión avanzada', children: [
           TextFormField(
@@ -566,7 +561,7 @@ class SettingsPage extends StatelessWidget {
             ])),
         const SizedBox(height: 24),
         const Text(
-            'LexMemoria 0.5.0 · Versión de prueba\nProducto educativo independiente de las administraciones públicas.',
+            'LexMemoria 1.0.0 · Edición gratuita\nProducto educativo independiente de las administraciones públicas.',
             style: TextStyle(fontSize: 12)),
       ]));
 }
@@ -635,7 +630,7 @@ class PrivacyPage extends StatelessWidget {
         const SizedBox(height: 20),
         const Paper(
             child: Text(
-                'Esta versión guarda datos en el almacenamiento local de la aplicación. No se envían notas ni respuestas a proveedores de IA. No hay publicidad ni analítica conectada. Las preferencias no implican suscripción a ningún servicio.')),
+                'El estudio se guarda localmente. Si activas la cuenta y la sincronización, los datos admitidos se envían también a tu servidor. Google/Firebase comprueba tu identidad; la API y PostgreSQL alojados en Render conservan los datos remotos. No se envían notas ni respuestas a proveedores de IA. No hay publicidad ni analítica conectada. Las preferencias no implican suscripción a ningún servicio.')),
         const Section('Datos y conservación'),
         const Text(
             'Se guardan perfiles, tarjetas, notas, respuestas de simulacros e historial hasta que los borres. En Android/iOS se utiliza SQLCipher con clave separada en Keychain/Keystore; en web se usan preferencias locales sin este cifrado adicional. Evita guardar datos especialmente sensibles. Exportar o compartir crea una copia JSON legible bajo tu control, incluida la copia anterior a la última restauración si existe.'),

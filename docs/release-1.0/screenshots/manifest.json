@@ -1,0 +1,44 @@
+{
+  "source": "Real app navigation and theme, Android 15 software emulator, synthetic local data",
+  "physicalPhone": false,
+  "playInstalledBundle": false,
+  "onlineProviderAcceptance": false,
+  "visualReview": "All five raw images reviewed; no retouching",
+  "captures": [
+    {
+      "file": "01-inicio.png",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 114018,
+      "sha256": "3e21ffbe847b22fc9394367f430e1290f8bbdfc335806b6a36d5e11046e40e36"
+    },
+    {
+      "file": "02-biblioteca.png",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 121545,
+      "sha256": "6af8898de5a6cbac1216eab4cb630ace6ee104452593f4cadfa82c8b8291d4d4"
+    },
+    {
+      "file": "03-articulo.png",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 147069,
+      "sha256": "b92b409959e6ace2fea5c956c08c782ad6af1251bbb997ac9fc65837f6d20c5d"
+    },
+    {
+      "file": "04-tarjeta.png",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 125306,
+      "sha256": "5cd9c710d5d611e3ecbeef1ee5cb36f36047696aed5c7dc701502cc542b3eb70"
+    },
+    {
+      "file": "05-respuesta.png",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 105431,
+      "sha256": "6cd0507c8eaf1214425e1713d9c4f1f635a1fee4c9ef49d29026e6ac094b8ddb"
+    }
+  ]
+}

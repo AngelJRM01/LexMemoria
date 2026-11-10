@@ -6,7 +6,7 @@ plugins {
 }
 
 // Generic reader builds remain usable without Firebase application configuration.
-if (file("google-services.json").exists()) {
+if (file("google-services.json").exists() && System.getenv("LEXMEMORIA_ANDROID_VALIDATION_ONLY") != "1") {
     apply(plugin = "com.google.gms.google-services")
 }
 
@@ -39,6 +39,21 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        val names = listOf("LEXMEMORIA_UPLOAD_STORE_FILE", "LEXMEMORIA_UPLOAD_STORE_PASSWORD",
+                           "LEXMEMORIA_UPLOAD_KEY_ALIAS", "LEXMEMORIA_UPLOAD_KEY_PASSWORD")
+        val configured = names.map { System.getenv(it).orEmpty() }
+        if (System.getenv("LEXMEMORIA_PREVIEW_SIGNING") != "1" && configured.any { it.isNotBlank() }) {
+            require(configured.all { it.isNotBlank() }) { "Incomplete upload signing configuration" }
+            create("upload") {
+                storeFile = file(configured[0])
+                storePassword = configured[1]
+                keyAlias = configured[2]
+                keyPassword = configured[3]
+            }
+        }
+    }
+
     buildTypes {
         release {
             // Production signing must be configured with the owner's release key.
@@ -49,6 +64,8 @@ android {
                 applicationIdSuffix = ".preview"
                 resValue("string", "app_name", "LexMemoria Prueba")
                 signingConfig = signingConfigs.getByName("debug")
+            } else if (signingConfigs.findByName("upload") != null) {
+                signingConfig = signingConfigs.getByName("upload")
             }
         }
     }

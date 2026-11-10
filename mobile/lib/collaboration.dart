@@ -8,6 +8,9 @@ import 'store.dart';
 import 'widgets.dart';
 import 'study.dart' show CardEditor;
 
+// V1 is private-only even when connecting to an older server.
+const publicDeckPublicationEnabled = false;
+
 Future<String?> collaborationText(BuildContext context, String title,
     {String initial = '', int maxLength = 120}) async {
   final controller = TextEditingController(text: initial);
@@ -287,7 +290,8 @@ class CollaborationPage extends StatelessWidget {
           'mine': 'Compartir mis mazos',
           'shared': 'Mazos compartidos conmigo',
           'groups': 'Grupos privados',
-          'catalogue': 'Explorar mazos públicos'
+          if (publicDeckPublicationEnabled)
+            'catalogue': 'Explorar mazos públicos'
         }.entries)
           ListTile(
               title: Text(item.value),
@@ -350,6 +354,10 @@ class _CollaborationListPageState extends State<CollaborationListPage> {
       _ =>
         '/v1/collaboration/catalogue?q=${Uri.encodeQueryComponent(query)}&cursor=${Uri.encodeQueryComponent(cursor)}&limit=20&subject=${Uri.encodeQueryComponent(subject)}&normId=${Uri.encodeQueryComponent(norm)}',
     };
+    if (widget.kind == 'catalogue' && !publicDeckPublicationEnabled) {
+      throw StateError(
+          'El catálogo público no está disponible en esta versión.');
+    }
     final result = await RemoteSync(widget.store).request('GET', path);
     if (!mounted) return;
     setState(() {
@@ -1193,47 +1201,48 @@ class _DeckAccessPageState extends State<DeckAccessPage> {
                         PopupMenuItem(
                             value: 'remove', child: Text('Retirar acceso'))
                       ])),
-        Details('Catálogo público', children: [
-          const Text(
-              'La publicación es opcional, requiere moderación y no implica revisión jurídica. No incluye datos de estudio ni notas privadas.'),
-          OutlinedButton(
-              onPressed: busy
-                  ? null
-                  : () => run(() async {
-                        if (!await confirm(
-                            context,
-                            'Solicitar publicación pública',
-                            'Confirma que puedes compartir este material y sus fuentes. Se enviará a moderación antes de aparecer en el catálogo.')) {
-                          return;
-                        }
-                        if (!context.mounted) return;
-                        final subject = await collaborationText(
-                            context, 'Materia (opcional)',
-                            maxLength: 80);
-                        if (subject == null) return;
-                        await RemoteSync(widget.store).send(
-                            '/v1/collaboration/decks/${widget.id}/publication',
-                            body: {
-                              'confirmation': 'PUBLICAR',
-                              'subject': subject
-                            });
-                        if (context.mounted) {
-                          toast(context, 'Solicitud enviada a moderación');
-                        }
-                      }),
-              child: const Text('Solicitar publicación')),
-          TextButton(
-              onPressed: busy
-                  ? null
-                  : () => run(() async {
-                        await RemoteSync(widget.store).request('DELETE',
-                            '/v1/collaboration/decks/${widget.id}/publication');
-                        if (context.mounted) {
-                          toast(context, 'Publicación retirada');
-                        }
-                      }),
-              child: const Text('Retirar del catálogo público')),
-        ]),
+        if (publicDeckPublicationEnabled)
+          Details('Catálogo público', children: [
+            const Text(
+                'La publicación es opcional, requiere moderación y no implica revisión jurídica. No incluye datos de estudio ni notas privadas.'),
+            OutlinedButton(
+                onPressed: busy
+                    ? null
+                    : () => run(() async {
+                          if (!await confirm(
+                              context,
+                              'Solicitar publicación pública',
+                              'Confirma que puedes compartir este material y sus fuentes. Se enviará a moderación antes de aparecer en el catálogo.')) {
+                            return;
+                          }
+                          if (!context.mounted) return;
+                          final subject = await collaborationText(
+                              context, 'Materia (opcional)',
+                              maxLength: 80);
+                          if (subject == null) return;
+                          await RemoteSync(widget.store).send(
+                              '/v1/collaboration/decks/${widget.id}/publication',
+                              body: {
+                                'confirmation': 'PUBLICAR',
+                                'subject': subject
+                              });
+                          if (context.mounted) {
+                            toast(context, 'Solicitud enviada a moderación');
+                          }
+                        }),
+                child: const Text('Solicitar publicación')),
+            TextButton(
+                onPressed: busy
+                    ? null
+                    : () => run(() async {
+                          await RemoteSync(widget.store).request('DELETE',
+                              '/v1/collaboration/decks/${widget.id}/publication');
+                          if (context.mounted) {
+                            toast(context, 'Publicación retirada');
+                          }
+                        }),
+                child: const Text('Retirar del catálogo público')),
+          ]),
       ]));
 }
 

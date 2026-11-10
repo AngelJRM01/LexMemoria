@@ -119,6 +119,7 @@ def test_contacts_discovery_and_blocking(data):
 
 
 def test_publication_and_moderation_do_not_certify_law(data,monkeypatch):
+    monkeypatch.setenv("PUBLIC_DECK_PUBLICATION_ENABLED", "true")
     app,c,users,(a,b,d),deck,card,body=data
     pub='/v1/collaboration/decks/'+deck['id']+'/publication'
     assert c.post(pub,headers=a,json={'confirmation':'PUBLICAR','subject':'Civil'}).json()['state']=='pending'
@@ -259,3 +260,30 @@ def test_group_members_and_resources_are_paged_without_leaking_outsiders(data):
     assert len(next_page['members'])==2 and len(next_page['resources'])==2
     assert not ({x['id'] for x in first['members']} & {x['id'] for x in next_page['members']})
     assert not ({x['id'] for x in first['resources']} & {x['id'] for x in next_page['resources']})
+
+
+def test_v1_public_switch_blocks_old_approvals_but_preserves_private_sharing(data, monkeypatch):
+    monkeypatch.delenv('PUBLIC_DECK_PUBLICATION_ENABLED', raising=False)
+    app,c,users,(owner,reader,outsider),deck,card,body=data
+    path='/v1/collaboration/decks/'+deck['id']
+    publication=path+'/publication'
+    with app.state.factory() as session:
+        session.add(Record(id=deck['id']+':publication',kind='deck_publication',owner=users[0]['userId'],
+                           data={'deckId':deck['id'],'state':'allowed'}))
+        session.commit()
+    assert c.get('/health').json()['publicDeckPublicationEnabled'] is False
+    assert c.get('/v1/collaboration/catalogue').status_code==404
+    assert c.post(publication,headers=owner,json={'confirmation':'PUBLICAR'}).status_code==404
+    assert c.get(path,headers=outsider).status_code==404
+    assert c.post(path+'/copy',headers=outsider).status_code==404
+    assert c.get(path,headers=owner).status_code==200
+    private_invitation=invite(c,owner,deck['id'],'reader')
+    assert accept(c,reader,private_invitation).status_code==200
+    assert c.get(path,headers=reader).status_code==200
+    assert c.post(path+'/copy',headers=reader).status_code==201
+    monkeypatch.setenv('PUBLIC_DECK_PUBLICATION_ENABLED','true')
+    assert c.get(path,headers=outsider).status_code==200
+    monkeypatch.setenv('PUBLIC_DECK_PUBLICATION_ENABLED','false')
+    assert c.get(path,headers=outsider).status_code==404
+    assert c.get(path,headers=reader).status_code==200
+    assert c.delete(publication,headers=owner).status_code==200

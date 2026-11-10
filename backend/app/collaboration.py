@@ -1,5 +1,6 @@
 """Opt-in collaboration. Shared content never grants access to private progress."""
 import hashlib
+import os
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Literal
@@ -16,6 +17,16 @@ from .db import Base, Record, Audit, now, uid
 from .notifications import optional_notice
 from .catalogue import normalize
 from .rate_limits import account_limit
+
+
+def public_deck_publication_enabled():
+    # Explicit opt-in only; disabling also removes public access to old approvals.
+    return os.getenv('PUBLIC_DECK_PUBLICATION_ENABLED', '').lower() == 'true'
+
+
+def require_public_deck_publication():
+    if not public_deck_publication_enabled():
+        raise HTTPException(404, 'El catálogo público no está disponible')
 
 
 class Membership(Base):
@@ -175,7 +186,7 @@ def deck_role(s, deck, user_id):
         if group and group_role(s, group, user_id) and group_role(s, group, deck.owner):
             return 'reader'
     publication = s.get(Record, deck.id + ':publication')
-    if publication and publication.data.get('state') == 'allowed':
+    if public_deck_publication_enabled() and publication and publication.data.get('state') == 'allowed':
         return 'reader'
     return None
 
@@ -629,6 +640,7 @@ def register_collaboration(app, identity, db, pack, card_input, validate_card, e
 
     @app.post('/v1/collaboration/decks/{deck_id}/publication')
     def request_publication(deck_id:str,body:PublicationInput,user=Depends(identity),s=Depends(db)):
+        require_public_deck_publication()
         limited(s,user,'collaboration_publish')
         deck=target(s,deck_id,'deck')
         if deck.owner!=user.id:raise HTTPException(404,'Mazo no disponible')
@@ -640,6 +652,7 @@ def register_collaboration(app, identity, db, pack, card_input, validate_card, e
 
     @app.get('/v1/collaboration/catalogue')
     def catalogue(q:str='',subject:str='',normId:str='',cursor:str='',limit:int=20,s=Depends(db)):
+        require_public_deck_publication()
         if not 1<=limit<=100 or len(q)>120:raise HTTPException(422,'Consulta no válida')
         rows=list(s.scalars(select(Record).where(Record.kind=='deck_publication',Record.id>cursor,
             Record.data['state'].as_string()=='allowed').order_by(Record.id)))
@@ -663,6 +676,7 @@ def register_collaboration(app, identity, db, pack, card_input, validate_card, e
 
     @app.post('/v1/admin/collaboration/{deck_id}/decision')
     def moderate(deck_id:str,body:DecisionInput,request:Request,user=Depends(identity),s=Depends(db)):
+        if body.action == 'allow':require_public_deck_publication()
         editorial(user,request,s);deck=target(s,deck_id,'deck');publication=target(s,deck.id+':publication','deck_publication')
         if deck.owner==user.id:raise HTTPException(403,'No puedes moderar tu propia publicación')
         publication.data={**publication.data,'state':'allowed' if body.action=='allow' else 'hidden','moderatedAt':now()}

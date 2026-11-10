@@ -1,0 +1,23 @@
+{
+  "candidateVersion": "1.0.0+18",
+  "package": "es.lexmemoria.app",
+  "backendTestsPassed": 221,
+  "flutterTestsPassed": 163,
+  "flutterAnalyze": "no_issues",
+  "androidEmulatorStorageTestsPassed": 2,
+  "androidEmulatorCaptureScenarioPassed": true,
+  "physicalDeviceAcceptance": "pending",
+  "googleProviderAcceptance": "pending",
+  "renderProductionAcceptance": "pending",
+  "googlePlayConsoleAcceptance": "pending",
+  "publicDeckPublicationDefault": false,
+  "previewSignatureReplaced": false,
+  "productionDatabaseModified": false,
+  "pythonDependenciesAudited": 38,
+  "pythonKnownVulnerabilityRecordsAfterFix": 0,
+  "pillowSecurityUpdate": "12.0.0 -> 13.0.0",
+  "aabUnsignedValidationBuilt": false,
+  "aabSigned": false,
+  "bundleStructureAndMetadataVerified": false,
+  "readyForPlaySubmission": false
+}
