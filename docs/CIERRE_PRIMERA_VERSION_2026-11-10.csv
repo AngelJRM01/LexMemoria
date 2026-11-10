@@ -1,0 +1,13 @@
+﻿ID,Trabajo,Responsable,Criterio de aceptación,Estado,Evidencia / observaciones
+B01,"Identidad legal, correo de soporte y política pública.",Titular + asesoría cuando proceda.,"URLs públicas finales, contacto válido y política coherente con app/API/Firebase/Render.",Pendiente de cierre,
+B02,"Paquete de tienda, custodia de claves y Play App Signing.",Titular; preparación técnica asistida.,"Firma/IDs definidos, certificados Firebase registrados y actualización ensayada.",Pendiente de cierre,
+B03,Google y sincronización real.,Desarrollo + titular/dispositivos.,"A y B recuperan el mismo progreso, conservan conflictos y sobreviven reinicio/red irregular.",Pendiente de cierre,
+B04,Continuidad PostgreSQL y backups.,Titular/proveedor + desarrollo.,"Base sin caducidad incompatible, backup restaurado y datos de prueba comparados.",Pendiente de cierre,
+B05,Rendimiento y navegación física.,Desarrollo + probadores.,"Recorridos medidos en OPPO y otro Android; sin recortes, bloqueos o esperas inexplicadas.",Pendiente de cierre,
+B06,Accesibilidad básica.,Desarrollo + probadores.,"TalkBack, texto grande, foco, contraste y controles principales aceptados.",Pendiente de cierre,
+B07,Publicación/colaboración segura.,Titular + desarrollo/moderación.,"Equipo y proceso operativos, o funciones públicas realmente deshabilitadas en cliente/API.",Pendiente de cierre,
+B08,Borrado/exportación de cuenta.,Desarrollo + titular.,App y vía web aceptadas con Google real y política de retención definida.,Pendiente de cierre,
+B09,Revisión del material que se anuncia.,Responsable de contenido + desarrollo.,"Alcance piloto definido, hallazgos resueltos y carácter automático declarado; sin sello editorial ficticio.",Pendiente de cierre,
+B10,Despliegue y observabilidad.,Desarrollo + acceso del titular.,"Commit Live identificado, health y pruebas funcionales, alertas y rollback comprobados.",Pendiente de cierre,
+B11,Ficha y formularios Play.,Titular; preparación técnica asistida.,Capturas/textos/datos/privacidad/audiencia/revisores completos y coherentes.,Pendiente de cierre,
+B12,AAB y pruebas de tienda.,Desarrollo + titular Play Console.,"Artefacto firmado, API objetivo y requisitos vigentes comprobados; pruebas exigidas y acceso a producción aprobados.",Pendiente de cierre,

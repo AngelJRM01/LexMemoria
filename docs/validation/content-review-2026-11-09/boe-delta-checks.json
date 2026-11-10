@@ -1,0 +1,200 @@
+[
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-1982-20820/texto",
+    "sha256": "9dad14531d4f0b999181a515df5423fff37b99bfd15efc975e1c77304cf116ef",
+    "observedAt": "2026-11-09T13:26:16.592522+00:00",
+    "identifier": "BOE-A-1982-20820",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2002-6235/texto",
+    "sha256": "f2da82c9f32513dc00e8e763e5614590e48a27307103fb80b678ddf7bd3bf196",
+    "observedAt": "2026-11-09T13:26:17.059010+00:00",
+    "identifier": "BOE-A-2002-6235",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2019-6772/texto",
+    "sha256": "3732743a0ff254cb0a9684bd84089bf80cf1015129942b2c72b3e28c9eb89d26",
+    "observedAt": "2026-11-09T13:26:17.915702+00:00",
+    "identifier": "BOE-A-2019-6772",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/DOCM-q-2023-90063/texto",
+    "sha256": "3660db4ea67751afd601527d10e5fecefafd7b068c62d9779fe3e2cb66616ec5",
+    "observedAt": "2026-11-09T13:26:18.693235+00:00",
+    "identifier": "DOCM-q-2023-90063",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2001-3896/texto",
+    "sha256": "e6cf9b5cc327527d08e85fb7f15663fd172325c2ba3e22eadeee5b519a42202e",
+    "observedAt": "2026-11-09T13:26:19.268321+00:00",
+    "identifier": "BOE-A-2001-3896",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2005-14494/texto",
+    "sha256": "6daf21761979dc53fe848c08db1b69914172371b249e802f94f39afb55aaae67",
+    "observedAt": "2026-11-09T13:26:19.569722+00:00",
+    "identifier": "BOE-A-2005-14494",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2011-7752/texto",
+    "sha256": "01efabdbd8fe8d8d671e6b791bf677cfc8f34ab09e99c66afbefc8c0c82c25ad",
+    "observedAt": "2026-11-09T13:26:20.553075+00:00",
+    "identifier": "BOE-A-2011-7752",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2012-10756/texto",
+    "sha256": "7b434390e2da734b33687a26fcb39170f7c3f040a319fb072e25a7df1ae81bf4",
+    "observedAt": "2026-11-09T13:26:21.063510+00:00",
+    "identifier": "BOE-A-2012-10756",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2002-14086/texto",
+    "sha256": "875159642fa64b99c8be059ac107bce8d71f3c6f974ec59cd22d28b578933d2a",
+    "observedAt": "2026-11-09T13:26:21.360586+00:00",
+    "identifier": "BOE-A-2002-14086",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2017-1373/texto",
+    "sha256": "16a6a5267ba0bc8b27b592c809100f192a79fe5fbeb4fc0be2f8f294aa5cb57d",
+    "observedAt": "2026-11-09T13:26:22.207983+00:00",
+    "identifier": "BOE-A-2017-1373",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-1991-6605/texto",
+    "sha256": "e8e0456ab7e089c0473e4577eb1039de0528f0da5dc29d6711f8173caa484113",
+    "observedAt": "2026-11-09T13:26:22.494245+00:00",
+    "identifier": "BOE-A-1991-6605",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2002-18103/texto",
+    "sha256": "3838dd25b85914390f3d9615cd8dc8b7d11ddc5d4d4c0ab841cf8e63a469c2d6",
+    "observedAt": "2026-11-09T13:26:22.888119+00:00",
+    "identifier": "BOE-A-2002-18103",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-3158/texto",
+    "sha256": "5dd6cb05881e2da72523673567c40011627cad51bac68ad27501021389b92a7a",
+    "observedAt": "2026-11-09T13:26:23.891513+00:00",
+    "identifier": "BOE-A-2006-3158",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2025-18966/texto",
+    "sha256": "fa90d53961920ea2ced8eba77366a09105440038bd48ced3732bb19d16b5aa7c",
+    "observedAt": "2026-11-09T13:26:24.318086+00:00",
+    "identifier": "BOE-A-2025-18966",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2011-2752/texto",
+    "sha256": "12cf0123e05b527ed4d54b38e4824665df8639596f00c6126f1b0f1e51a042be",
+    "observedAt": "2026-11-09T13:26:24.809405+00:00",
+    "identifier": "BOE-A-2011-2752",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2013-2558/texto",
+    "sha256": "9be3ed888527bfb91123e12baf8fe83c39c1bb126b2ab93e43c4c759080a4f4d",
+    "observedAt": "2026-11-09T13:26:25.852054+00:00",
+    "identifier": "BOE-A-2013-2558",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2021-11513/texto",
+    "sha256": "32c4eefdd7bd2e45cba6afa4bf17433c8a6b3f5fa0b07a20b8bac0b6ab9ec261",
+    "observedAt": "2026-11-09T13:26:26.490994+00:00",
+    "identifier": "BOE-A-2021-11513",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-1999-16378/texto",
+    "sha256": "a3e18cdfae8892c12193421b0a9a2bd43dc2fa8fd9c8c320caf8b8a8b1803597",
+    "observedAt": "2026-11-09T13:26:26.928760+00:00",
+    "identifier": "BOE-A-1999-16378",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2014-1368/texto",
+    "sha256": "bee9e2c7da65dee66f4fdfddc2b2a044ab95b8e9aee7c998c74182ae110a1c57",
+    "observedAt": "2026-11-09T13:26:27.312333+00:00",
+    "identifier": "BOE-A-2014-1368",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2015-6877/texto",
+    "sha256": "874099c1dadec8623eb7009839956ea58c2e204eba758306c78e950c7106364e",
+    "observedAt": "2026-11-09T13:26:28.567610+00:00",
+    "identifier": "BOE-A-2015-6877",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2018-988/texto",
+    "sha256": "f2d57e2a7058a101dd99774c82fdaba6e0237b98cedcb30bcb965e615ac4842b",
+    "observedAt": "2026-11-09T13:26:28.874293+00:00",
+    "identifier": "BOE-A-2018-988",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  },
+  {
+    "url": "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2022-4920/texto",
+    "sha256": "46b79b1fdf646e5fbc5746a0985dbf557c14aa55ededbb0580ba7a9744f6fb4a",
+    "observedAt": "2026-11-09T13:26:29.853625+00:00",
+    "identifier": "BOE-A-2022-4920",
+    "bodyChangedUnits": [],
+    "removedUnits": [],
+    "exactSourceMatches": false
+  }
+]

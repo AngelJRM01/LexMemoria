@@ -1,0 +1,44 @@
+{
+  "version": "0.8.1+14",
+  "sourceCodeCommit": "1ab19073ca153a47ed0b79ef771f9f7350429441",
+  "europeanManifestSha256": "c0f2787e30b1ed3777e17e2d3534994396c72101bef07e7b21d10607cc0457f3",
+  "eu": {
+    "norms": 149352,
+    "editionsConsidered": 100204,
+    "editionsEligible": 87603,
+    "articles": 713924,
+    "qa": 2171522,
+    "cloze": 116045,
+    "test": 87363,
+    "reference": 1659666
+  },
+  "boe": {
+    "normsChecked": 12457,
+    "allNormsChecked": true,
+    "exercises": {
+      "qa": 1427352,
+      "cloze": 31087,
+      "test": 79344,
+      "reference": 1223774
+    },
+    "validationPassed": true,
+    "legalReview": "not_performed",
+    "catalogueSha256": "69c7d2ffa48ed0c6622a0f9dbfa9aad83678c7130e626b124106b0835114f762",
+    "independentProcesses": 3,
+    "elapsedSeconds": 833.24
+  },
+  "allCorpusTechnicalChecksPassed": true,
+  "completeCorpusManualReview": false,
+  "wholeArticlesManuallyRead": 19,
+  "manualJournal": "manual-journal.json",
+  "backendTestsPassed": 215,
+  "flutterTestsPassed": 140,
+  "flutterAnalyzer": "no_issues",
+  "androidReleaseBuild": "passed",
+  "webReleaseBuild": "passed",
+  "publicApkDownloadVerified": true,
+  "googlePhysicalAcceptance": "pending",
+  "renderLive": "not_verified",
+  "storePublication": false,
+  "continuedOn": "2026-11-10"
+}

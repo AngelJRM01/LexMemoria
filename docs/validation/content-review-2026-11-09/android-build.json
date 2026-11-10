@@ -1,0 +1,24 @@
+{
+  "version": "0.8.1+14",
+  "package": "es.lexmemoria.app.preview",
+  "mode": "release",
+  "debuggable": false,
+  "googleConfigured": true,
+  "bytes": 89977157,
+  "sha256": "f3058cf6db2219e57d9018949e59379d5dd4d3b51afd0974de87b93d952e0f77",
+  "certificateSha1": "967643569eddb573c9153ce97b4b789671c29008",
+  "sourceCommit": "1ab19073ca153a47ed0b79ef771f9f7350429441",
+  "physicalGoogleSignIn": "pending",
+  "storePublication": false,
+  "downloadUrl": "https://raw.githubusercontent.com/AngelJRM01/LexMemoria/android-google-preview-0.8.1/LexMemoria-0.8.1-google-prueba.apk",
+  "publicDownloadVerified": true,
+  "publicDownloadedBytes": 89977157,
+  "binaryCommit": "7509e0d77fbf294f65991ef0b42cc4f8e860d279",
+  "minSdk": 24,
+  "targetSdk": 36,
+  "abis": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86_64"
+  ]
+}

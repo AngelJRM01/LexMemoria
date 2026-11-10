@@ -2,6 +2,18 @@
 
 Aplicación Flutter para estudiar Derecho español en Universidad y Oposiciones, con backend FastAPI. Implementación en desarrollo a partir de la especificación maestra V2 aportada por el usuario. **No es todavía el producto completo ni está lista para publicación.**
 
+## Especificación y primera publicación · 10 de noviembre
+
+[Documento Word](docs/ESPECIFICACION_Y_PUBLICACION_2026-11-10.docx) · [PDF](docs/ESPECIFICACION_Y_PUBLICACION_2026-11-10.pdf) · [Versión consultable](docs/ESPECIFICACION_Y_PUBLICACION_2026-11-10.md) · [Anexo técnico](docs/ANEXO_TECNICO_2026-11-10.md)
+
+Inventario actual de funciones, límites, evidencia y doce puntos de cierre para una primera versión Android. Distingue lo implementado de la aceptación real y separa los pasos del titular del trabajo técnico. La revisión de ejercicios 0.8.1 mantiene un diario manual y auditorías técnicas separadas; no declara lectura jurídica de todas las normas.
+
+## Versión 0.8.1 de pruebas
+
+[Descargar APK 0.8.1 con Google](https://raw.githubusercontent.com/AngelJRM01/LexMemoria/android-google-preview-0.8.1/LexMemoria-0.8.1-google-prueba.apk) · [Correcciones y límites](docs/MEJORAS_0_8_1.md) · [Revisión de contenido](docs/validation/content-review-2026-11-09/)
+
+Corrige preguntas de títulos y frases incompletas, conserva definiciones largas y afina los distractores. Archiva plantillas locales incompletas sin borrar repasos ni ediciones personales. APK release de pruebas verificado por descarga completa; no es una publicación en tienda ni una aceptación de Google en teléfono físico.
+
 ## Versión 0.8.0 de pruebas
 
 [Descargar APK 0.8.0 con Google](https://raw.githubusercontent.com/AngelJRM01/LexMemoria/android-google-preview-0.8.0/LexMemoria-0.8.0-google-prueba.apk) · [Funciones y límites](docs/MEJORAS_0_8_0.md) · [Verificaciones](docs/validation/0.8.0/)
@@ -17,7 +29,7 @@ El catálogo europeo se descarga al entrar en esa biblioteca; los textos se desc
 - Catálogo de 12.457 normas del BOE consolidado observado, veinte incluidas y el resto descargable por norma sin servidor privado. Búsqueda tolerante a tildes, materias, marcadores y seguimiento local. Los textos son consolidaciones informativas; **no incluyen material educativo certificado**.
 - Descarga de normas importadas desde una API configurable, lectura offline, notas privadas, copia de referencias, voz mediante plataforma, selector histórico, consulta por fecha efectiva que rechaza metadatos ambiguos y comparación textual de párrafos.
 - Tarjetas personales QA, cloze, verdadero/falso, ordenación, caso y test; creación desde artículo; importación CSV con previsualización, límites y validación completa antes de guardar.
-- Almacén SQLCipher en Android/iOS con clave separada en Keychain/Keystore; migración verificada desde preferencias. La versión web conserva preferencias locales sin este cifrado. La integración nativa está pendiente de ejecución.
+- Almacén SQLCipher en Android/iOS con clave separada en Keychain/Keystore; migración verificada desde preferencias. La versión web conserva preferencias locales sin este cifrado. Hay pruebas previas en emulador Android 15; la aceptación física e iOS siguen pendientes.
 - Repaso con cuatro grados, programación SM-2 adaptada `sm2-1`, eventos persistentes, bloqueo por revisión normativa, sesión guardada, borradores y deshacer local.
 - Plan de estudio con cola que respeta descansos y vacaciones, previsión semanal, fecha de examen y asignaturas personales. Simulacro cronometrado con banco congelado, respuestas guardadas, penalización y corrección al finalizar. El contenido no se presenta como examen oficial.
 - Historial, progreso por mazo, exportación/restauración JSON, consentimientos separados y borrado local confirmado.

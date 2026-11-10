@@ -1,0 +1,29 @@
+[
+  {
+    "url": "https://publications.europa.eu/resource/cellar/3e485e15-11bd-11e6-ba9a-01aa75ed71a1.0023.03/DOC_1",
+    "sha256": "7e6f4309e448e2532be3fd9464f3de7929a0e25b5c4c53239b320669b9bce33b",
+    "observedAt": "2026-11-09T13:26:30.982152+00:00",
+    "identifier": "32016R0679",
+    "archivedSha256": "7e6f4309e448e2532be3fd9464f3de7929a0e25b5c4c53239b320669b9bce33b",
+    "exactSourceMatches": true,
+    "mime": "application/xhtml+xml;charset=UTF-8"
+  },
+  {
+    "url": "https://publications.europa.eu/resource/cellar/aaba87d8-a3b5-11e9-9d01-01aa75ed71a1.0023.03/DOC_1",
+    "sha256": "df945b9ae38ed9854445807b2b555828c2ec32ebb218b304a315ee07e1e46def",
+    "observedAt": "2026-11-09T13:26:31.693988+00:00",
+    "identifier": "32019L1152",
+    "archivedSha256": "df945b9ae38ed9854445807b2b555828c2ec32ebb218b304a315ee07e1e46def",
+    "exactSourceMatches": true,
+    "mime": "application/xhtml+xml;charset=UTF-8"
+  },
+  {
+    "url": "https://publications.europa.eu/resource/cellar/55862dbf-c72b-11eb-a925-01aa75ed71a1.0023.03/DOC_1",
+    "sha256": "58f77d46815fed2bc442021aa83e245f5ef422c586f42b76fe6de8a3361efc98",
+    "observedAt": "2026-11-09T13:26:32.374727+00:00",
+    "identifier": "32021D0914",
+    "archivedSha256": "58f77d46815fed2bc442021aa83e245f5ef422c586f42b76fe6de8a3361efc98",
+    "exactSourceMatches": true,
+    "mime": "application/xhtml+xml;charset=UTF-8"
+  }
+]
