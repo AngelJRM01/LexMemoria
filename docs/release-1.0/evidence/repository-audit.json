@@ -1,9 +1,9 @@
 {
-  "sourceCommit": "a21bf48f113d70e13ece6d85bee79387d86e5458",
-  "workingTreeCodeSha256": "7ec0d61867568c02b562c7d93fa95c5863a9f764e4d29bbaf2b3b4b5d39343d5",
+  "sourceCommit": "fa42217f35a599139cce9218adaa710ba6365627",
+  "workingTreeCodeSha256": "451976ea8296a58fe2fa8a2255a60447f88171aff5eb480d2b33a07b364b3cc4",
   "codeFilesFingerprinted": 197,
   "lockfiles": {
-    "backend/requirements.lock": "927d658b8d50d853b4f6ac9ebedf0c9810197520a4e363d82277fb4fcba7b6f1",
+    "backend/requirements.lock": "1b4f06cf0446ecaa4cab09924ffc70d154f57c8c6f20a9eccd5d64c9c9034962",
     "mobile/pubspec.lock": "74054cd8006415798c1c2297d8c6f7a4ea34f4d390b8c61372161b272d758399"
   },
   "sbom": {
@@ -230,8 +230,8 @@
       {
         "type": "library",
         "name": "Pillow",
-        "version": "12.0.0",
-        "purl": "pkg:pypi/pillow@12.0.0"
+        "version": "13.0.0",
+        "purl": "pkg:pypi/pillow@13.0.0"
       },
       {
         "type": "library",
@@ -1666,8 +1666,10 @@
     "findings": []
   },
   "vulnerabilityDatabaseScan": {
-    "status": "NOT_RUN",
-    "limitation": "Offline inventory and pip check do not prove absence of vulnerable dependencies."
+    "status": "SEPARATE_PYTHON_SCAN_COMPLETED",
+    "scope": "38 packages in backend/requirements.lock; not all native transitive dependencies",
+    "knownVulnerabilityRecords": 0,
+    "report": "python-vulnerability-audit.json"
   },
   "supplyChainRisks": [
     "CI actions use version tags rather than immutable commit SHAs.",

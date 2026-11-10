@@ -16,8 +16,8 @@
   "pythonDependenciesAudited": 38,
   "pythonKnownVulnerabilityRecordsAfterFix": 0,
   "pillowSecurityUpdate": "12.0.0 -> 13.0.0",
-  "aabUnsignedValidationBuilt": false,
+  "aabUnsignedValidationBuilt": true,
   "aabSigned": false,
-  "bundleStructureAndMetadataVerified": false,
+  "bundleStructureAndMetadataVerified": true,
   "readyForPlaySubmission": false
 }

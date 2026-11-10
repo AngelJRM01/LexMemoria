@@ -30,7 +30,7 @@ Los resultados de pruebas solo se cuentan cuando terminan. Ninguna prueba local 
 - PROTOCOLO_FISICO.md: casos y criterios de bloqueo.
 - BLOQUEOS.csv: responsable y evidencia de cierre.
 - store-assets/: icono 512×512 y gráfico 1024×500 de la marca existente.
-- screenshots/: capturas reales de emulador con datos sintéticos, si el ensayo termina; no contienen éxito inventado de cuentas online.
+- screenshots/: capturas reales de emulador con datos sintéticos, verificadas mediante el driver nativo; no contienen éxito inventado de cuentas online.
 
 ## Orden mínimo para publicar
 
@@ -41,3 +41,7 @@ Los resultados de pruebas solo se cuentan cuando terminan. Ninguna prueba local 
 5. Completar ficha, formularios y requisitos de la cuenta; enviar a revisión el artefacto aceptado.
 
 No hace falta desarrollar módulos grandes adicionales para recorrer este cierre. No se aceptan planes de pago ni se publica en tiendas automáticamente desde este expediente.
+
+## Resultado registrado
+
+221 pruebas backend, 163 Flutter y analizador limpio. Dos escenarios SQLCipher nativos y escenario de capturas en Android 15 emulado superados. Ensayo de integridad PostgreSQL completo; 38 dependencias Python auditadas sin avisos conocidos tras corregir Pillow. AAB unsigned de validación y estructura/metadata/alineación 16 KiB estática verificados. AAB firmado y aceptación externa siguen pendientes. Resumen: evidence/release-status.json. Informe de cierre: CIERRE_1_0.pdf / CIERRE_1_0.docx.

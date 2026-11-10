@@ -25,6 +25,8 @@ Los ejercicios generados son literales y automáticos: no son preguntas oficiale
 
 LexMemoria es una aplicación educativa independiente, sin vinculación con BOE, la Unión Europea ni otras administraciones. No ofrece asesoramiento jurídico ni garantiza resultados académicos o en oposiciones. Algunas fichas pueden tener solo metadatos o requerir consultar la fuente oficial.
 
+Fuentes oficiales: https://www.boe.es/ y https://eur-lex.europa.eu/.
+
 La primera descarga de contenido y las funciones online necesitan conexión. Puedes estudiar los textos y tarjetas ya guardados sin conexión. La cuenta y la sincronización son opcionales; para recuperar datos en otro dispositivo debe haberse completado la sincronización. Las copias JSON son legibles y debes custodiarlas.
 
 Edición gratuita, sin publicidad ni compras activas. El catálogo público de mazos está desactivado en esta edición.

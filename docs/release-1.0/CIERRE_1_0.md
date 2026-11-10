@@ -51,7 +51,7 @@ La versión preview sigue usando es.lexmemoria.app.preview y su certificado de p
 
 El proceso de firma preparado exige una clave ya custodiada fuera del repositorio, mediante variables seguras, y Firebase de es.lexmemoria.app. No crea una clave ni usa debug como firma de producción. No se solicitan claves privadas ni contraseñas al chat. Play App Signing y certificado de subida son piezas diferentes; Firebase debe reconocer el certificado con el que se instala desde Play.
 
-La preparación de compilación está disponible; la validación del AAB se registrará en evidence/play-bundle.json al terminar. No hay AAB final firmado acreditado.
+Se ha compilado un AAB de VALIDACIÓN SIN FIRMA: LexMemoria-1.0.0-UNSIGNED-validation.aab, 80,448,011 bytes, SHA-256 69a5ffca9f1ffbee8991e53f88318e9d86894d1270a2e2cf62d8c791949a6e26. Bundletool confirma estructura, paquete, versión, SDK y seguridad; las bibliotecas de 64 bits superan la comprobación estática de alineación de 16 KiB. Esto no acredita ejecución en un dispositivo de páginas 16 KiB ni aceptación de Play. El artefacto omite Google y NO es el AAB final para enviar. La firma final está bloqueada por ausencia de clave custodiada/configuración Firebase de tienda disponibles en esta sesión.
 
 ## 7. Documentación y recursos listos para revisar
 

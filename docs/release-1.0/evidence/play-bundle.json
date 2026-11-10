@@ -1,0 +1,23 @@
+{
+  "package": "es.lexmemoria.app",
+  "missingSigningVariables": [
+    "LEXMEMORIA_UPLOAD_STORE_FILE",
+    "LEXMEMORIA_UPLOAD_STORE_PASSWORD",
+    "LEXMEMORIA_UPLOAD_KEY_ALIAS",
+    "LEXMEMORIA_UPLOAD_KEY_PASSWORD"
+  ],
+  "existingKeyOutsideRepository": false,
+  "productionFirebaseConfigured": false,
+  "readyForSignedBuild": false,
+  "artifact": "LexMemoria-1.0.0-UNSIGNED-validation.aab",
+  "signed": false,
+  "validationOnly": true,
+  "uploadCertificateSha1": null,
+  "googleEnabledInArtifact": false,
+  "readyForPlaySubmission": false,
+  "bytes": 80448011,
+  "sha256": "69a5ffca9f1ffbee8991e53f88318e9d86894d1270a2e2cf62d8c791949a6e26",
+  "sourceCommit": "fa42217f35a599139cce9218adaa710ba6365627",
+  "playConsoleAcceptance": "pending",
+  "physicalAcceptance": "pending"
+}

@@ -36,3 +36,9 @@ Este modo omite la configuración Google preview, desactiva acceso Google en el 
 ## Bloqueos externos de esta sesión
 
 No hay clave de subida del titular configurada mediante un mecanismo seguro, ni registro/configuración Firebase de es.lexmemoria.app acreditados. No se ha accedido a Play Console. Por tanto no se afirma disponer de un AAB final firmado, de firma aceptada por Play ni de Google funcionando en el paquete definitivo. No se pedirá una clave privada para quitar estos bloqueos.
+
+## Resultado de validación local
+
+AAB unsigned de validación compilado y verificado con bundletool 1.18.3: paquete es.lexmemoria.app, versión 1.0.0/código 18, min SDK 24, target SDK 36, no depurable y backup Android deshabilitado. Todas las bibliotecas de 64 bits superan alineación estática de segmentos de 16 KiB; la ejecución en dispositivo de páginas 16 KiB sigue pendiente.
+
+El manifiesto fusionado declara permisos normales de red y soporte biométrico procedentes de SDK. La app no ofrece una función propia de captura/lectura de huellas ni recoge plantillas biométricas; la presencia de un permiso de SDK no prueba recopilación. No hay permiso de identificador publicitario en este artefacto de validación. Revisar de nuevo el manifiesto y la declaración de SDK del AAB final firmado, no copiar automáticamente una declaración de seguridad de datos.

@@ -26,3 +26,6 @@ key.properties
 *.p12
 *.pfx
 *.aab
+
+# Regenerable Kotlin compiler state.
+.kotlin/
