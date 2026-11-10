@@ -1,7 +1,7 @@
-# LexMemoria 0.8.1 — APK de pruebas con Google
+# LexMemoria 0.8.2 — actualización de rendimiento
 
-Compilación release, sin modo debug. Paquete es.lexmemoria.app.preview, versión 0.8.1+14. No es una publicación en Google Play.
+APK release de pruebas con Google, versión 0.8.2+15, paquete es.lexmemoria.app.preview. Mantiene el certificado de pruebas anterior. No es una publicación en Google Play.
 
-Corrige títulos y fragmentos incompletos convertidos en preguntas, conserva frases y definiciones largas completas para recuerdo y exige alternativas más precisas en los tests. Mantiene las fuentes originales, ediciones personales e historial de repaso. La revisión manual es de casos concretos, no una certificación de todas las leyes.
+Carga las pestañas al visitarlas y conserva sus filtros; evita reconstruir pantallas ocultas. Guarda cada repaso una sola vez, actualiza solo fragmentos cifrados distintos, codifica snapshots grandes fuera de la interfaz y acelera la selección por mazo y la paginación europea.
 
-Actualiza sobre la aplicación de pruebas anterior, conservando previamente una copia. Si Android rechaza la actualización, no desinstales para resolverlo sin proteger el progreso. Google y recuperación todavía necesitan aceptación real en dispositivos.
+Actualiza sobre el APK de pruebas anterior para conservar los datos. Los cambios de índices del servidor requieren desplegar también el backend. El objetivo de respuesta visual local inferior a 100 ms todavía necesita medición en un teléfono físico. Las mediciones publicadas son del entorno de pruebas, no de Render ni del OPPO.
