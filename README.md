@@ -1,7 +1,7 @@
-# LexMemoria 0.8.0 — APK de pruebas con Google
+# LexMemoria 0.8.1 — APK de pruebas con Google
 
-Compilación release, no publicada en tiendas. Paquete es.lexmemoria.app.preview, versión 0.8.0+13.
+Compilación release, sin modo debug. Paquete es.lexmemoria.app.preview, versión 0.8.1+14. No es una publicación en Google Play.
 
-Biblioteca europea completa con versiones, lectura por páginas, descarga a demanda y mazos literales condicionados. Fuente europea automática, sin revisión jurídica manual.
+Corrige títulos y fragmentos incompletos convertidos en preguntas, conserva frases y definiciones largas completas para recuerdo y exige alternativas más precisas en los tests. Mantiene las fuentes originales, ediciones personales e historial de repaso. La revisión manual es de casos concretos, no una certificación de todas las leyes.
 
-Instala el APK sobre la versión de pruebas anterior para conservar los datos. Conserva una copia de seguridad. No desinstales si Android rechaza la actualización.
+Actualiza sobre la aplicación de pruebas anterior, conservando previamente una copia. Si Android rechaza la actualización, no desinstales para resolverlo sin proteger el progreso. Google y recuperación todavía necesitan aceptación real en dispositivos.
