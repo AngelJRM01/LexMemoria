@@ -1,0 +1,13 @@
+{
+  "version": "0.8.3+16",
+  "baselineCommit": "b41d9bc9bb6554e976c819c5cd7651a6e5e2b9f9",
+  "flutterTestsPassed": 150,
+  "flutterAnalyzer": "no_issues",
+  "backendChanged": false,
+  "nativePersistenceChanged": false,
+  "physicalLatencyAcceptance": "pending",
+  "responseTargetMs": 100,
+  "sourceCommit": "15965e4a090f2c10be896f79641b3b818787ca8f",
+  "androidReleaseBuild": "passed",
+  "webReleaseBuild": "passed"
+}
