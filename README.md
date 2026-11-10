@@ -2,6 +2,12 @@
 
 Aplicación Flutter para estudiar Derecho español en Universidad y Oposiciones, con backend FastAPI. Implementación en desarrollo a partir de la especificación maestra V2 aportada por el usuario. **No es todavía el producto completo ni está lista para publicación.**
 
+## Especificaciones actualizadas · 0.8.4
+
+[Word](docs/ESPECIFICACION_ACTUAL_0_8_4.docx) · [PDF](docs/ESPECIFICACION_ACTUAL_0_8_4.pdf) · [Texto](docs/ESPECIFICACION_ACTUAL_0_8_4.md)
+
+Funciones, límites, mejoras de rendimiento y pendientes para publicar. Incluye explicación de Render, Firebase y PostgreSQL con el recorrido de cambio de móvil. La mejora percibida por el titular no sustituye una medición de latencia.
+
 ## Especificación y primera publicación · 10 de noviembre
 
 [Documento Word](docs/ESPECIFICACION_Y_PUBLICACION_2026-11-10.docx) · [PDF](docs/ESPECIFICACION_Y_PUBLICACION_2026-11-10.pdf) · [Versión consultable](docs/ESPECIFICACION_Y_PUBLICACION_2026-11-10.md) · [Anexo técnico](docs/ANEXO_TECNICO_2026-11-10.md)
