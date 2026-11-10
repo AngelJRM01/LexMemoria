@@ -40,3 +40,5 @@ La aceptación en el OPPO físico sigue pendiente. No se afirma que toda interac
 ## Verificación automatizada
 
 159 pruebas Flutter superadas, incluida la integración con la distribución europea real, y analizador sin incidencias. Las regresiones cubren borrador al cerrar, reintento tras fallo, guardado sin resucitar el borrador, metadatos inválidos, peticiones compartidas y expulsión de caché por presupuesto.
+
+APK release y web compilados correctamente. El APK público se ha descargado completo y coincide en tamaño y SHA-256 con el artefacto local. Google y la firma Android están comprobados en la compilación; el acceso real con el proveedor y la latencia del teléfono requieren aceptación en el dispositivo.

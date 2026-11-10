@@ -6,5 +6,9 @@
   "backendChanged": false,
   "nativePersistenceChanged": false,
   "physicalLatencyAcceptance": "pending",
-  "responseTargetMs": 100
+  "responseTargetMs": 100,
+  "sourceCommit": "675400a5f9b4da68de82b784a6afdc2c081fc4ab",
+  "androidReleaseBuild": "passed",
+  "webReleaseBuild": "passed",
+  "publicDownloadVerified": true
 }
