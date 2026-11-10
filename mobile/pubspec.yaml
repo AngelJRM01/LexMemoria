@@ -1,7 +1,7 @@
 name: lexmemoria
 description: Estudio jurídico con fuentes, versiones y memoria espaciada.
 publish_to: none
-version: 0.8.2+15
+version: 0.8.3+16
 environment:
   sdk: '>=3.6.0 <4.0.0'
 dependencies:

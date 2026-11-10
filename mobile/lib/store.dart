@@ -433,18 +433,57 @@ class AppStore extends ChangeNotifier {
   Json state(String id) => Json.from((data['states'] as Map? ?? {})[id] ?? {});
   List<StudyCard>? _deckIndexSource;
   Map<String, List<StudyCard>> _deckIndex = {};
-  Iterable<StudyCard> _cardsInDeck(String? deck) {
+  Map<String, StudyCard> _cardIdIndex = {};
+  void _ensureCardIndexes() {
     final all = cards;
-    if (deck == null) return all;
     if (!identical(all, _deckIndexSource)) {
       final grouped = <String, List<StudyCard>>{};
+      final byId = <String, StudyCard>{};
       for (final card in all) {
         (grouped[card.deck] ??= []).add(card);
+        byId.putIfAbsent(card.id, () => card);
       }
       _deckIndex = grouped;
+      _cardIdIndex = byId;
       _deckIndexSource = all;
     }
+  }
+
+  StudyCard? cardById(String id) {
+    _ensureCardIndexes();
+    return _cardIdIndex[id];
+  }
+
+  Iterable<StudyCard> _cardsInDeck(String? deck) {
+    if (deck == null) return cards;
+    _ensureCardIndexes();
     return _deckIndex[deck] ?? const <StudyCard>[];
+  }
+
+  Object? _todayReviewSource;
+  String? _todayReviewDate;
+  Duration? _todayReviewOffset;
+  int _todayReviewLegacy = -1, _todayReviewCount = 0;
+  int reviewCountOn(DateTime day) {
+    final events = data['reviews'];
+    final date = civilDate(day);
+    final offset = DateTime.now().timeZoneOffset;
+    if (identical(events, _todayReviewSource) &&
+        date == _todayReviewDate &&
+        offset == _todayReviewOffset &&
+        _todayReviewLegacy == _legacyDataGeneration) {
+      return _todayReviewCount;
+    }
+    var count = 0;
+    for (final event in events is List ? events : const []) {
+      final stamp = DateTime.tryParse(event['occurredAt']?.toString() ?? '');
+      if (stamp != null && civilDate(stamp.toLocal()) == date) count++;
+    }
+    _todayReviewSource = events;
+    _todayReviewDate = date;
+    _todayReviewOffset = offset;
+    _todayReviewLegacy = _legacyDataGeneration;
+    return _todayReviewCount = count;
   }
 
   List<StudyCard> due({String? deck, DateTime? at, bool includeRest = false}) {
@@ -598,7 +637,7 @@ class AppStore extends ChangeNotifier {
         if (data['remoteUserId'] != owner || apiBase != server) {
           throw StateError('La cuenta cambió; el conflicto se conserva.');
         }
-        final current = cards.where((c) => c.id == id).firstOrNull;
+        final current = cardById(id);
         if (current == null ||
             jsonEncode(current.toJson()) != jsonEncode(expected)) {
           throw StateError('La tarjeta cambió. Vuelve a comparar.');
@@ -840,7 +879,7 @@ class AppStore extends ChangeNotifier {
 
   Future<void> editCard(StudyCard card, {required int expectedRevision}) async {
     await _commitMutation(() {
-      final previous = cards.where((c) => c.id == card.id).firstOrNull;
+      final previous = cardById(card.id);
       if (previous == null || previous.revision != expectedRevision) {
         throw StateError(
             'La tarjeta ha cambiado. Conserva el borrador y vuelve a abrirla.');
@@ -941,7 +980,7 @@ class AppStore extends ChangeNotifier {
       throw ArgumentError('Continuación de sesión incoherente');
     }
     await _commitMutation(() {
-      final current = cards.where((c) => c.id == card.id).firstOrNull;
+      final current = cardById(card.id);
       if (current == null || current.revision != card.revision) {
         throw StateError('La tarjeta ha cambiado; abre una sesión nueva.');
       }

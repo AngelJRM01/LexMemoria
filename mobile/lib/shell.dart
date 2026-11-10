@@ -190,12 +190,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final due = store.due().length;
     final restDay = !isStudyDay(DateTime.now(), store.profile);
-    final today = store
-        .list('reviews')
-        .where((r) =>
-            civilDate(DateTime.parse(r['occurredAt']).toLocal()) ==
-            civilDate(DateTime.now()))
-        .length;
+    final today = store.reviewCountOn(DateTime.now());
     final goal = (store.profile['dailyGoal'] as num? ?? 20).toInt();
     return PageBody(children: [
       Text('Tu estudio de hoy',

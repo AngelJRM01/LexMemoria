@@ -86,13 +86,17 @@ class _StudyPageState extends State<StudyPage> {
     final resumeIds =
         session is Map ? List<String>.from(session['ids'] ?? []) : <String>[];
     final resumeCards = resumeIds
-        .map((id) => s.cards.where((c) => c.id == id && !c.blocked).firstOrNull)
+        .map((id) => s.cardById(id))
         .whereType<StudyCard>()
+        .where((c) => !c.blocked)
         .toList();
     final needle = normalize(query);
+    final favorites = favoritesOnly
+        ? (s.data['favoriteCards'] as List? ?? const []).toSet()
+        : const <dynamic>{};
     final eligible = s.cards
         .where((c) =>
-            (!favoritesOnly || s.has('favoriteCards', c.id)) &&
+            (!favoritesOnly || favorites.contains(c.id)) &&
             (!weakOnly || (s.state(c.id)['lapses'] as num? ?? 0) > 0) &&
             (needle.isEmpty || studyCardSearchText(c).contains(needle)))
         .toList();
@@ -737,10 +741,12 @@ class _CardListPageState extends State<CardListPage> {
       animation: widget.store,
       builder: (context, _) {
         final store = widget.store;
+        final needle = normalize(query);
         final cards = store.cards
             .where((c) =>
                 c.deck == widget.deck &&
-                normalize('${c.front} ${c.back}').contains(normalize(query)))
+                (needle.isEmpty ||
+                    normalize('${c.front} ${c.back}').contains(needle)))
             .toList();
         final slice = ResultPage(cards, page, pageSize);
         return Scaffold(

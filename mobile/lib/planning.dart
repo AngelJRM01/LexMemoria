@@ -501,8 +501,21 @@ class ProgressPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cards = store.cards;
-    final events = store.list('reviews');
-    final correct = events.where((e) => (e['rating'] as int) >= 3).length;
+    final events = store.data['reviews'] as List? ?? const [];
+    final cardDecks = <String, String>{};
+    final deckCards = <String, int>{}, deckReviews = <String, int>{};
+    for (final card in cards) {
+      cardDecks.putIfAbsent(card.id, () => card.deck);
+      deckCards.update(card.deck, (n) => n + 1, ifAbsent: () => 1);
+    }
+    var correct = 0;
+    for (final event in events) {
+      if ((event['rating'] as int) >= 3) correct++;
+      final deck = cardDecks[event['cardId']];
+      if (deck != null) {
+        deckReviews.update(deck, (n) => n + 1, ifAbsent: () => 1);
+      }
+    }
     return Scaffold(
         appBar: AppBar(title: const Text('Mi progreso')),
         body: PageBody(children: [
@@ -526,16 +539,13 @@ class ProgressPage extends StatelessWidget {
                     style: TextStyle(fontSize: 12))
               ])),
           Details('Progreso por mazo', children: [
-            ...cards.map((c) => c.deck).toSet().map((deck) {
-              final ids =
-                  cards.where((c) => c.deck == deck).map((c) => c.id).toSet();
-              final reviewed =
-                  events.where((e) => ids.contains(e['cardId'])).length;
+            ...deckCards.keys.map((deck) {
+              final count = deckCards[deck]!;
+              final reviewed = deckReviews[deck] ?? 0;
               return ListTile(
                   leading: const Icon(Icons.layers_outlined, color: teal),
                   title: Text(deck),
-                  subtitle:
-                      Text('$reviewed revisiones · ${ids.length} tarjetas'));
+                  subtitle: Text('$reviewed revisiones · $count tarjetas'));
             }),
           ]),
           Details('Simulacros completados', children: [

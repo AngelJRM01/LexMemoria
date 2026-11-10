@@ -751,7 +751,7 @@ class RemoteSync {
     final owner = store.data['remoteUserId'] as String?;
     final server = base;
     if (owner == null) throw StateError('Conecta la cuenta del conflicto.');
-    final expected = store.cards.where((c) => c.id == id).firstOrNull?.toJson();
+    final expected = store.cardById(id)?.toJson();
     if (expected == null) throw StateError('La tarjeta no está disponible.');
     final snapshot = await exportRemote();
     if (snapshot['userId'] != owner) {
