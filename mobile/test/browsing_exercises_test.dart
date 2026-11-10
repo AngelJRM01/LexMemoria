@@ -26,6 +26,100 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   test(
+      'template review archives incomplete local prompts but preserves edits and history',
+      () async {
+    StudyCard card(String id, {int revision = 1}) => StudyCard(
+        id: id,
+        deck: 'D',
+        front: 'Completa de memoria esta regla de Artículo 4.',
+        back: 'A efectos del presente Reglamento se entenderá por:',
+        editorialState: 'source_literal',
+        revision: revision);
+    final store = AppStore(await SharedPreferences.getInstance(), {
+      'cards': [
+        card('old').toJson(),
+        card('edited', revision: 2).toJson(),
+        card('cloud').toJson()
+      ],
+      'remoteCardIds': {'cloud': 'remote'},
+      'states': {
+        'old': {'repetitions': 7}
+      },
+      'reviews': [
+        {'cardId': 'old', 'rating': 3}
+      ],
+      'session': {
+        'ids': ['old'],
+        'index': 0
+      }
+    });
+    await store.retireIncompleteLiteralTemplates();
+    expect(store.cards.map((c) => c.id).toSet(), {'edited', 'cloud'});
+    expect(store.list('supersededPreparedCards').single['id'], 'old');
+    expect(store.state('old')['repetitions'], 7);
+    expect(store.list('reviews').single['cardId'], 'old');
+    expect(store.data['session'], isNull);
+    await store.retireIncompleteLiteralTemplates();
+    expect(store.list('supersededPreparedCards').length, 1);
+    store.dispose();
+  });
+
+  test('definitions are never split at semicolons', () {
+    const definition =
+        '1) «datos personales»: toda información sobre una persona física identificada o identificable («el interesado»); se considerará persona física identificable toda persona cuya identidad pueda determinarse, directa o indirectamente, en particular mediante un identificador, como por ejemplo un nombre, un número de identificación, datos de localización o un identificador en línea.';
+    expect(
+        incompleteDefinitionPassage(
+            '${definition.split(';').first};', definition),
+        isTrue);
+    expect(incompleteDefinitionPassage(definition, '  $definition  '), isFalse);
+  });
+
+  test('reviewed distractors keep legal roles, data and units separate', () {
+    expect(targetCategory('datos personales'), 'data_category');
+    expect(targetCategory('derecho de acceso'), 'right:singular');
+    expect(targetCategory('interesado'), 'legal_actor:singular');
+    expect(targetCategory('autoridad de control'), 'public_authority');
+    expect(targetCategory('72 horas'), isNot(targetCategory('16 años')));
+    expect(targetCategory('un mes'), isNot(targetCategory('30 días')));
+  });
+
+  test('manual review keeps complete CE 24.2 and rejects article captions', () {
+    const rights =
+        '2. Asimismo, todos tienen derecho al Juez ordinario predeterminado por la ley, a la defensa y a la asistencia de letrado, a ser informados de la acusación formulada contra ellos, a un proceso público sin dilaciones indebidas y con todas las garantías, a utilizar los medios de prueba pertinentes para su defensa, a no declarar contra sí mismos, a no confesarse culpables y a la presunción de inocencia.';
+    final input = {
+      'norm': {'id': 'ce', 'title': 'Constitución', 'latestVersion': 'current'},
+      'units': [
+        {
+          'id': 'a24',
+          'title': 'Artículo 24',
+          'versions': [
+            {
+              'text':
+                  'Artículo 24\nDerechos reconocidos a todas las personas\n$rights',
+              'hash': 'source'
+            }
+          ]
+        }
+      ],
+      'format': 'qa'
+    };
+    final cards = buildLiteralCards(input);
+    expect(cards.map((c) => c['back']), contains(rights));
+    expect(
+        cards.any(
+            (c) => c['back'] == 'Derechos reconocidos a todas las personas'),
+        isFalse);
+    expect(
+        safeStudyPassage('A efectos del presente Reglamento se entenderá por:'),
+        isFalse);
+    expect(safeStudyPassage('la oferta de servicios a los interesados, o'),
+        isFalse);
+    expect(safeStudyPassage('Condiciones aplicables al consentimiento\n1.'),
+        isFalse);
+    expect((buildPreparedInstallation(input)['legacyIds'] as List), isNotEmpty);
+  });
+
+  test(
       'community aliases are merged and state departments are never communities',
       () {
     expect(normCommunity(regionNorm('a', 'Comunitat Valenciana')),
@@ -203,7 +297,7 @@ void main() {
     expect(answers, isNot(contains('000 EUR')));
     expect(targetCategory('20 000 000 EUR'), 'amount');
     expect(targetCategory('4 %'), 'percentage');
-    expect(targetCategory('un mes'), 'duration');
+    expect(targetCategory('un mes'), 'duration:month');
   });
 
   test(

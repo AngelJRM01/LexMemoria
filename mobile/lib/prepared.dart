@@ -90,6 +90,52 @@ List<String> exercisePassages(String title, String text,
   return result;
 }
 
+/// A heading or an unfinished list item is not a standalone recall rule.
+bool safeStudyPassage(String text) {
+  var value = text.trim();
+  if (RegExp(r'(?:^|\n)\s*\d+\.\s*$').hasMatch(value)) return false;
+  while (value.isNotEmpty && '»”"’)]'.contains(value[value.length - 1])) {
+    value = value.substring(0, value.length - 1).trimRight();
+  }
+  if (value.isEmpty || !RegExp(r'[.;!?]$').hasMatch(value)) return false;
+  value = value.replaceFirst(RegExp(r'^\d+[.)]\s*'), '');
+  return value.isNotEmpty &&
+      (RegExp(r'^\p{Lu}', unicode: true).hasMatch(value) ||
+          '«“"'.contains(value[0]));
+}
+
+/// Keep existing short-fragment positions stable; append omitted full sentences.
+List<String> longRecallPassages(String title, String text) {
+  final paragraphs =
+      text.split('\n').map((p) => p.trim()).where((p) => p.isNotEmpty).toList();
+  if (paragraphs.isNotEmpty && paragraphs.first == title.trim()) {
+    paragraphs.removeAt(0);
+  }
+  final result = <String>[];
+  for (final paragraph in paragraphs) {
+    if (paragraph.runes.length <= 320) continue;
+    if (paragraph.runes.length <= 1200 &&
+        RegExp(r'^\d+\)\s*[«"“]').hasMatch(paragraph)) {
+      result.add(paragraph);
+      continue;
+    }
+    var prefix = '';
+    for (final sentence in paragraph.split(RegExp(r'(?<=[.;!?])\s+'))) {
+      final part =
+          prefix.isEmpty ? sentence.trim() : '$prefix ${sentence.trim()}';
+      prefix = '';
+      if (part.length < 35) {
+        prefix = part;
+        continue;
+      }
+      if (part.runes.length > 320 && part.runes.length <= 1200) {
+        result.add(part);
+      }
+    }
+  }
+  return result;
+}
+
 List<String> _legacyPassages(String title, String text,
     {bool paragraphsOnly = true}) {
   final result = <String>[];
@@ -253,17 +299,69 @@ const _concepts = [
   'notificación',
   'motivación'
 ];
+// Each article supplies several passages. Parse its definitions once, keeping
+// only the most recent source so a corpus walk cannot retain entire books.
+String? _definitionSource;
+List<String> _definitionParagraphs = const [];
+bool incompleteDefinitionPassage(String candidate, String source) {
+  if (!identical(source, _definitionSource)) {
+    _definitionSource = source;
+    _definitionParagraphs = source
+        .split('\n')
+        .where((p) => RegExp(r'^\s*\d+\)\s*[«"“]').hasMatch(p))
+        .map((p) => p.replaceAll(RegExp(r'\s+'), ' ').trim())
+        .toList();
+  }
+  final quote = candidate.replaceAll(RegExp(r'\s+'), ' ').trim();
+  return _definitionParagraphs
+      .any((full) => full != quote && full.contains(quote));
+}
+
 String targetCategory(String answer) {
   if (_money.hasMatch(answer)) return 'amount';
   if (_percentage.hasMatch(answer)) return 'percentage';
   if (_quantity.hasMatch(answer)) {
-    return RegExp(r'euros?', caseSensitive: false).hasMatch(answer)
-        ? 'amount'
-        : 'duration';
+    final value = normalize(answer);
+    if (RegExp(r'\bhoras?\b').hasMatch(value)) return 'duration:hour';
+    if (RegExp(r'\bdias?\b').hasMatch(value)) return 'duration:day';
+    if (RegExp(r'\bsemanas?\b').hasMatch(value)) return 'duration:week';
+    if (RegExp(r'\bmes(?:es)?\b').hasMatch(value)) return 'duration:month';
+    if (RegExp(r'\banos?\b').hasMatch(value)) return 'duration:year';
+    return 'amount';
   }
   if (_institutions.any((v) => normalize(v) == normalize(answer))) {
     return 'institution';
   }
+  final value = normalize(answer);
+  if (value.startsWith('datos ')) return 'data_category';
+  if (value.startsWith('derecho de la union') || value == 'derecho nacional') {
+    return 'legal_framework';
+  }
+  if (value == 'estado miembro' || value == 'estados miembros') {
+    return 'territorial_subject';
+  }
+  if (value.startsWith('responsable') ||
+      value.startsWith('encargado') ||
+      value.startsWith('interesad')) {
+    return value.startsWith('responsables ') ||
+            value.startsWith('encargados ') ||
+            value == 'interesados' ||
+            value == 'interesadas'
+        ? 'legal_actor:plural'
+        : 'legal_actor:singular';
+  }
+  if (value.startsWith('autoridad')) return 'public_authority';
+  if (value.startsWith('derechos ')) return 'right:plural';
+  if (value.startsWith('derecho ') ||
+      value.startsWith('libertad ') ||
+      value.startsWith('libertades ') ||
+      value.startsWith('tutela ') ||
+      value.startsWith('presuncion ') ||
+      value.startsWith('garantias ') ||
+      value == 'propiedad privada') {
+    return 'right:singular';
+  }
+  if (value.startsWith('recurso ')) return 'legal_remedy';
   return 'concept';
 }
 
@@ -353,6 +451,10 @@ List<Json> buildLiteralCards(Json input) {
         '${unit['title']}${(titleCounts[sourceComparable(unit['title'])] ?? 0) > 1 ? ' [${unit['id']}]' : ''}';
     final chunks = exercisePassages(unit['title'], legalBodyText(versions.last),
         paragraphsOnly: format != 'reference');
+    if (format == 'qa') {
+      chunks.addAll(
+          longRecallPassages(unit['title'], legalBodyText(versions.last)));
+    }
     final localPool = format == 'test'
         ? _targets(legalBodyText(versions.last), limit: 64)
             .map((t) => t.answer)
@@ -360,6 +462,10 @@ List<Json> buildLiteralCards(Json input) {
         : <String>[];
     for (var i = 0; i < chunks.length; i++) {
       final chunk = chunks[i];
+      if (!safeStudyPassage(chunk) ||
+          incompleteDefinitionPassage(chunk, legalBodyText(versions.last))) {
+        continue;
+      }
       final seed =
           "lexmemoria:${norm['id']}:${norm['latestVersion']}:${unit['id']}:$i";
       final cue = chunk.split(RegExp(r'\s+')).take(5).join(' ');
@@ -424,6 +530,7 @@ List<Json> buildLiteralCards(Json input) {
         } else {
           final target = candidates.first;
           back = target.answer;
+          if (targetCategory(back) == 'concept') continue;
           final alternatives = <String>[];
           for (final value in candidates
               .skip(1)
@@ -490,6 +597,21 @@ Json buildPreparedInstallation(Json input) {
       final versions = unit['versions'] as List;
       if (versions.isEmpty) continue;
       final oldText = versions.last['text'] ?? '';
+      final oldPassages = exercisePassages(
+          unit['title'], legalBodyText(versions.last),
+          paragraphsOnly: format != 'reference');
+      for (var index = 0; index < oldPassages.length; index++) {
+        if (safeStudyPassage(oldPassages[index]) &&
+            !incompleteDefinitionPassage(
+                oldPassages[index], legalBodyText(versions.last))) {
+          continue;
+        }
+        final seed =
+            "lexmemoria:${norm['id']}:${norm['latestVersion']}:${unit['id']}:$index:$format-v3${group.isEmpty ? '' : ':group:$group'}";
+        legacy
+            .add(const Uuid().v5('6ba7b811-9dad-11d1-80b4-00c04fd430c8', seed));
+      }
+
       final a = literalChunks(unit['title'], oldText).length;
       final b = _legacyPassages(unit['title'], oldText,
               paragraphsOnly: format != 'reference')

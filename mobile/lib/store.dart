@@ -117,6 +117,7 @@ class AppStore extends ChangeNotifier {
 
   bool get onboarded => data['onboarded'] == true;
   Future<void> loadPreparedCards() async {
+    await retireIncompleteLiteralTemplates();
     final manifest = Json.from(
         jsonDecode(await rootBundle.loadString('assets/ready/index.json')));
     final corpusById = {for (final n in corpusNorms) n['id']: n};
@@ -131,6 +132,44 @@ class AppStore extends ChangeNotifier {
       data['starterInstalled'] = true;
       await save();
     }
+  }
+
+  /// Quarantine incomplete old generated prompts without losing review history.
+  Future<void> retireIncompleteLiteralTemplates() async {
+    if (data['literalTemplateReview'] == 1) return;
+    await _commitMutation(() {
+      final remote = data['remoteCardIds'] as Map? ?? {};
+      final retired = cards
+          .where((c) =>
+              c.type == 'qa' &&
+              c.revision == 1 &&
+              c.editorialState == 'source_literal' &&
+              !remote.containsKey(c.id) &&
+              c.front.startsWith('Completa de memoria esta regla de ') &&
+              !safeStudyPassage(c.back))
+          .toList();
+      final ids = retired.map((c) => c.id).toSet();
+      final archive = {
+        for (final c in list('supersededPreparedCards')) c['id']: c
+      };
+      for (final c in retired) {
+        archive[c.id] = c.toJson();
+      }
+      final session = data['session'];
+      final invalidSession = session is Map &&
+          session['ids'] is List &&
+          (session['ids'] as List).any(ids.contains);
+      return {
+        ...data,
+        'literalTemplateReview': 1,
+        'cards': cards
+            .where((c) => !ids.contains(c.id))
+            .map((c) => c.toJson())
+            .toList(),
+        'supersededPreparedCards': archive.values.toList(),
+        if (invalidSession) 'session': null
+      };
+    });
   }
 
   Future<int> installPreparedDeck(Json deck,
@@ -202,12 +241,34 @@ class AppStore extends ChangeNotifier {
         data['session'] = null;
       }
     }
+    final replacements = {for (final c in prepared) c['id']: c};
     final existing = previous.map((c) => c.id).toSet();
     final added = prepared.where((c) => !existing.contains(c['id'])).toList();
     data['cards'] = [
-      ...previous
-          .where((c) => !retiredIds.contains(c.id))
-          .map((c) => c.toJson()),
+      ...previous.where((c) => !retiredIds.contains(c.id)).map((c) {
+        final next = replacements[c.id];
+        // Refresh wording/options only for unchanged local source templates.
+        // Identity and review states stay stable; personal/cloud edits win.
+        if (next != null &&
+            c.revision == 1 &&
+            c.editorialState == 'source_literal' &&
+            !(data['remoteCardIds'] as Map? ?? {}).containsKey(c.id) &&
+            c.normId == next['normId'] &&
+            c.unitId == next['unitId'] &&
+            c.versionId == next['versionId'] &&
+            c.unitVersionHash == next['unitVersionHash'] &&
+            c.type == next['type'] &&
+            c.back == next['back']) {
+          return {
+            ...c.toJson(),
+            'front': next['front'],
+            'explanation': next['explanation'],
+            'options': next['options'],
+            'correct': next['correct']
+          };
+        }
+        return c.toJson();
+      }),
       ...added
     ];
     await save();

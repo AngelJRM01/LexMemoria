@@ -30,7 +30,6 @@ void main(List<String> args) {
           .putIfAbsent(unit['title'] as String, () => [])
           .add(sourceComparable(unit['versions'].last['text']));
     }
-    final qaPositions = <String, int>{};
     for (final format in totals.keys) {
       final cards = buildLiteralCards(
           {'norm': pack['norm'], 'units': units, 'format': format});
@@ -43,12 +42,12 @@ void main(List<String> args) {
         if (legalUnitKind(unit) != 'article') {
           throw StateError('Non-article used as an exercise');
         }
-        if (format == 'qa' && (card['back'] as String).runes.length > 320) {
+        if (format == 'qa' && (card['back'] as String).runes.length > 1200) {
           throw StateError('Oversized recall rule');
         }
         if (format == 'test' &&
-            (card['options'] as List)
-                .any((v) => targetCategory(v) != targetCategory(card['back']))) {
+            (card['options'] as List).any(
+                (v) => targetCategory(v) != targetCategory(card['back']))) {
           throw StateError('Unrelated distractor category');
         }
         if (!ids.add(card['id']) ||
@@ -96,13 +95,11 @@ void main(List<String> args) {
         } else {
           final answer =
               (card['back'] as String).replaceAll(RegExp(r'\s+'), ' ');
-          final start = format == 'qa' ? (qaPositions[card['unitId']] ?? 0) : 0;
+          // Supplemental full sentences keep new slots after legacy short cards.
+          const start = 0;
           final found = source[card['unitId']]!.indexOf(answer, start);
           if (found < 0) {
             throw StateError('Answer not found in official source');
-          }
-          if (format == 'qa') {
-            qaPositions[card['unitId']] = found + answer.length;
           }
         }
         if ((card['options'] as List).isNotEmpty &&

@@ -75,7 +75,7 @@ def build(archive, output, branch, previous=None):
                         'packBytes':len(pack_bytes),'studyReviewUnitIds':[u['id'] for u in units if unit_kind(u)=='article' and u.get('versions') and requires_legal_context_review(u['versions'][-1])],
                         'packUrl':f'https://raw.githubusercontent.com/AngelJRM01/LexMemoria/{branch}/{filename}'})
         if (i+1)%250==0:print(json.dumps({'built':i+1,'total':len(rows),'cards':total}),flush=True)
-    catalogue={'schemaVersion':1,'source':'BOE','catalogueDay':day,'exerciseGenerator':'article-passages-v3-reviewed-notes','items':entries,
+    catalogue={'schemaVersion':1,'source':'BOE','catalogueDay':day,'exerciseGenerator':'article-passages-v4-reviewed-complete-sentences','items':entries,
                'norms':len(entries),'literalCards':total,'reviewState':'pending',
                'attribution':'Fuente: Agencia Estatal Boletín Oficial del Estado. Textos consolidados informativos.'}
     encoded=json.dumps(catalogue,ensure_ascii=False,separators=(',',':')).encode()

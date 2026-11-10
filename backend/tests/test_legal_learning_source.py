@@ -27,3 +27,16 @@ def test_historical_wording_is_editorial_but_current_normative_quotes_remain():
     version={'text':'Regla actual.','xml':'<version><p class="parrafo">Regla actual.</p><blockquote><p class="nota_pie">No es inconstitucional siempre que se interprete conforme a la Sentencia.</p></blockquote></version>'}
     assert requires_legal_context_review(version)
     assert study_units([{'title':'Artículo 1','versions':[version]}])==[]
+
+
+def test_review_rejects_headings_and_unfinished_chapeaux_without_cutting_law():
+    from app.prepared import safe_study_passage,recall_passages,incomplete_definition_passage
+    for text in ['Principios relativos al tratamiento','A efectos del presente Reglamento se entenderá por:', 'la oferta de servicios a los interesados, o']:
+        assert not safe_study_passage(text)
+    rights='2. Asimismo, todos tienen derecho al Juez ordinario predeterminado por la ley, a la defensa y a la asistencia de letrado, a ser informados de la acusación formulada contra ellos, a un proceso público sin dilaciones indebidas y con todas las garantías, a utilizar los medios de prueba pertinentes para su defensa, a no declarar contra sí mismos, a no confesarse culpables y a la presunción de inocencia.'
+    assert len(rights)>320 and rights in recall_passages('Artículo 24',rights)
+    assert safe_study_passage(rights)
+
+    definition='1) «datos personales»: información sobre una persona identificada; se incluye la identificación indirecta mediante uno o varios factores.'
+    assert incomplete_definition_passage(definition.split(';')[0]+';',definition)
+    assert not incomplete_definition_passage(definition,'  '+definition+'  ')

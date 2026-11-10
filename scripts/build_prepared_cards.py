@@ -8,7 +8,7 @@ import re
 import uuid
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'backend'))
-from app.prepared import passages,study_units,body_text,chunks as legacy_chunks
+from app.prepared import passages,recall_passages,safe_study_passage,incomplete_definition_passage,study_units,body_text,chunks as legacy_chunks
 
 ROOT=Path(__file__).resolve().parents[1]/'mobile'
 output=ROOT/'assets/ready';output.mkdir(exist_ok=True)
@@ -32,8 +32,12 @@ for norm in catalogue:
         if not versions:continue
         version=versions[-1];text=body_text(version).strip()
         if not text or text.lower() in ('(derogado)','(derogada)','derogado.','derogada.'):continue
-        chunks=passages(unit['title'],text)
+        base=passages(unit['title'],text)
+        for old_i,old in enumerate(base):
+            if not safe_study_passage(old) or incomplete_definition_passage(old,text):legacy.append(str(uuid.uuid5(uuid.NAMESPACE_URL,f"lexmemoria:{norm['id']}:{norm['latestVersion']}:{unit['id']}:{old_i}:qa-v3")))
+        chunks=recall_passages(unit['title'],text)
         for i,chunk in enumerate(chunks):
+            if not safe_study_passage(chunk) or incomplete_definition_passage(chunk,text):continue
             assert len(chunk)<=1200
             cue=' '.join(chunk.split()[:5])
             prompt=f"Completa de memoria esta regla de {unit['title']} de {title}.\n\n{cue}…"

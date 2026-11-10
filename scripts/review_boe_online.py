@@ -16,7 +16,7 @@ from defusedxml import ElementTree as ET
 
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--output',type=Path,default=Path('/workspace/lexmemoria-legal-review-20261107'));args=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--output',type=Path,default=Path('/workspace/lexmemoria-legal-review-20261109'));p.add_argument('--archive',type=Path,default=Path('/workspace/lexmemoria-corpus-20261107'));args=p.parse_args()
     args.output.mkdir(exist_ok=True);client=OfficialClient(interval=.5)
     requests=[]
     def fetch(path,key):
@@ -41,7 +41,7 @@ def main():
         print(json.dumps({'phase':'official_inventory','offset':offset,'records':len(catalogue)}),flush=True)
         offset+=len(items)
         if len(items)<1000:break
-    archive=sqlite3.connect('file:/workspace/lexmemoria-corpus/archive.sqlite3?mode=ro',uri=True);archive.row_factory=sqlite3.Row
+    archive=sqlite3.connect((args.archive.resolve()/'archive.sqlite3').as_uri()+'?mode=ro',uri=True);archive.row_factory=sqlite3.Row
     local={r['id']:dict(r) for r in archive.execute('SELECT id,metadata,source_updated,hash FROM inventory')}
     new_ids=sorted(set(catalogue)-set(local));missing=sorted(set(local)-set(catalogue))
     updated=[{'normId':id_,'archivedUpdated':local[id_]['source_updated'],'officialUpdated':fields.get('fecha_actualizacion')} for id_,fields in catalogue.items() if id_ in local and fields.get('fecha_actualizacion','')>(local[id_]['source_updated'] or '')]

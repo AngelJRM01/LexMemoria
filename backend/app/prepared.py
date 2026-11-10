@@ -1,5 +1,6 @@
 """Literal study fragments; no generated interpretation or claim of validity."""
 import re
+import unicodedata
 
 ARTICLE = re.compile(r'^(?:Art[íi]culo|Art\.?)\s', re.I)
 
@@ -45,7 +46,7 @@ def study_units(units):
 
 
 def count_cards(units):
-    return sum(len(passages(u['title'],body_text(u['versions'][-1]))) for u in study_units(units))
+    return sum(sum(safe_study_passage(p) and not incomplete_definition_passage(p,body_text(u['versions'][-1])) for p in recall_passages(u['title'],body_text(u['versions'][-1]))) for u in study_units(units))
 
 
 def passages(title,text):
@@ -62,6 +63,39 @@ def passages(title,text):
             if len(part)<35:prefix=part;continue
             if len(part)<=320:result.append(part)
     return result
+
+
+def safe_study_passage(text):
+    value=text.strip()
+    if re.search(r'(?:^|\n)\s*\d+\.\s*$',value):return False
+    while value and value[-1] in '»”"’)]':value=value[:-1].rstrip()
+    if not value or value[-1] not in '.;!?':return False
+    value=re.sub(r'^\d+[.)]\s*','',value)
+    return bool(value) and (unicodedata.category(value[0])=='Lu' or value[0] in '«“"')
+
+
+def incomplete_definition_passage(candidate,source):
+    quote=' '.join(candidate.split())
+    return any(full!=quote and quote in full for p in source.split('\n') if re.match(r'^\s*\d+\)\s*[«"“]',p) for full in [' '.join(p.split())])
+
+def long_recall_passages(title,text):
+    paragraphs=[p.strip() for p in text.splitlines() if p.strip()]
+    if paragraphs and paragraphs[0]==title.strip():paragraphs.pop(0)
+    result=[]
+    for paragraph in paragraphs:
+        if len(paragraph)<=320:continue
+        if len(paragraph)<=1200 and re.match(r'^\d+\)\s*[«"“]',paragraph):
+            result.append(paragraph);continue
+        prefix=''
+        for sentence in re.split(r'(?<=[.;!?])\s+',paragraph):
+            part=(prefix+' '+sentence.strip()).strip();prefix=''
+            if len(part)<35:prefix=part;continue
+            if 320<len(part)<=1200:result.append(part)
+    return result
+
+
+def recall_passages(title,text):
+    return passages(title,text)+long_recall_passages(title,text)
 
 
 from functools import lru_cache

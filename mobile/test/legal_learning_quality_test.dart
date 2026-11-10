@@ -95,7 +95,7 @@ void main() {
     expect(cards, hasLength(4));
     for (final card in cards) {
       expect((card['options'] as List).map((v) => targetCategory(v)).toSet(),
-          {'duration'});
+          {'duration:day'});
       expect(card['options'][card['correct']], card['back']);
       expect((card['options'] as List).toSet().length, 4);
     }

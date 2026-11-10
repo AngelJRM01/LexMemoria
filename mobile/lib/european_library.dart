@@ -384,14 +384,21 @@ class _FullEuropeanNormPageState extends State<FullEuropeanNormPage> {
           'latestVersion': edition['celex']
         };
         final available = <String, List<Json>>{};
+        final retired = <String, Set<String>>{};
         for (final format in ['qa', 'cloze', 'test', 'reference']) {
-          final cards = await compute(buildLiteralCards, <String, dynamic>{
+          final installation =
+              await compute(buildPreparedInstallation, <String, dynamic>{
             'norm': inputNorm,
             'units': units,
             'format': format,
             'deck': '$short · ${edition['celex']} · $format'
           });
-          if (cards.isNotEmpty) available[format] = cards;
+          final cards =
+              (installation['cards'] as List).map((c) => Json.from(c)).toList();
+          if (cards.isNotEmpty) {
+            available[format] = cards;
+            retired[format] = Set<String>.from(installation['legacyIds']);
+          }
         }
         if (available.isEmpty) {
           throw StateError(
@@ -428,7 +435,8 @@ class _FullEuropeanNormPageState extends State<FullEuropeanNormPage> {
                                 onTap: () => Navigator.pop(sheet, key)),
                         ]))));
         if (format != null) {
-          final count = await widget.store.addPreparedCards(available[format]!);
+          final count = await widget.store.addPreparedCards(available[format]!,
+              legacyIds: retired[format]!);
           if (mounted) toast(context, '$count tarjetas añadidas.');
         }
       });
