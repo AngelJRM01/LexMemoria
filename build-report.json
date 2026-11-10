@@ -1,15 +1,15 @@
 {
-  "version": "0.8.3+16",
+  "version": "0.8.4+17",
   "package": "es.lexmemoria.app.preview",
   "mode": "release",
   "debuggable": false,
   "googleConfigured": true,
   "certificateSha1": "967643569eddb573c9153ce97b4b789671c29008",
-  "bytes": 90042693,
-  "sha256": "1cda4235327c22c3120eaa1695120a2ac49f5958c04c0f3985504b3bc152a7ee",
-  "sourceCommit": "15965e4a090f2c10be896f79641b3b818787ca8f",
+  "bytes": 90059077,
+  "sha256": "2b7b9e71ec1847bec30698e3805b252bdaca7e2b54c26fb350fd182f1cb2b464",
+  "sourceCommit": "675400a5f9b4da68de82b784a6afdc2c081fc4ab",
   "physicalLatencyAcceptance": "pending",
   "storePublication": false,
-  "publicDownloadVerified": true,
-  "downloadUrl": "https://raw.githubusercontent.com/AngelJRM01/LexMemoria/android-google-preview-0.8.3/LexMemoria-0.8.3-google-prueba.apk"
+  "publicDownloadVerified": false,
+  "downloadUrl": "https://raw.githubusercontent.com/AngelJRM01/LexMemoria/android-google-preview-0.8.4/LexMemoria-0.8.4-google-prueba.apk"
 }

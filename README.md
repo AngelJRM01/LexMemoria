@@ -1,7 +1,7 @@
-# LexMemoria 0.8.3 — historial y navegación más rápidos
+# LexMemoria 0.8.4 — arranque, lectura y edición
 
-APK release de pruebas con Google, paquete es.lexmemoria.app.preview y certificado de pruebas compatible con 0.8.2. Actualiza sobre la instalación anterior para conservar sus datos.
+APK release de pruebas con Google, paquete es.lexmemoria.app.preview y certificado compatible con 0.8.3. Actualiza sobre la instalación anterior para conservar sus datos.
 
-Evita repetir recuentos del historial al reconstruir Inicio, calcula Progreso por mazo en una sola pasada y reutiliza búsquedas de tarjetas por ID. Con 20.000 tarjetas y 100.000 repasos sintéticos, las aperturas repetidas de Inicio pasan de 527 a 34 ms y Progreso de 951 a 64 ms en host Flutter. No son mediciones del OPPO: la primera carga de Inicio de ese historial extremo sigue por encima de 100 ms.
+Carga paralela, análisis de datos grandes fuera del hilo de interfaz en Android, descargas europeas compartidas y guardados de borrador agrupados. 159 pruebas Flutter superadas y analizador sin incidencias.
 
-No cambia las fuentes, el esquema de almacenamiento ni el algoritmo de repaso. No es una publicación en Google Play ni una certificación de latencia física.
+Las mediciones de host muestran un intervalo máximo del temporizador durante la carga de 528 a 27 ms y reapertura europea de 58 a 0,22 ms. No son medidas de latencia táctil del OPPO. No es una publicación en Google Play ni una certificación de respuesta inferior a 100 ms.
