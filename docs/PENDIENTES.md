@@ -4,6 +4,8 @@ El inventario vigente está en [Especificación y publicación](ESPECIFICACION_Y
 
 El catálogo actual contiene 12.457 normas BOE y 184.737 registros UE agrupados en 149.352 actos. La integración europea seleccionada está disponible en 0.8.0; quedan excepciones de fuente documentadas y revisión jurídica integral pendiente. No se anuncia como todo EUR-Lex ni todo el Derecho vigente.
 
+La actualización de [rendimiento 0.8.2](MEJORAS_0_8_2.md) incorpora mejoras comprobadas del cliente y PostgreSQL local. La latencia del OPPO y el despliegue actualizado en Render siguen pendientes de aceptación.
+
 ## Bloqueos para primera publicación
 
 1. Responsable, correo público y política definitiva de privacidad, conservación y soporte; el titular pidió dejarlos pendientes.

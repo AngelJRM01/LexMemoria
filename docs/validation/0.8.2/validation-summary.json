@@ -1,0 +1,16 @@
+{
+  "version": "0.8.2+15",
+  "backendTestsPassed": 217,
+  "flutterTestsPassed": 147,
+  "androidNativeTestsPassed": 2,
+  "flutterAnalyzer": "no_issues",
+  "postgresql18LocalApiChecksPassed": true,
+  "visualResponseTargetMs": 100,
+  "physicalPhoneLatencyAcceptance": "pending",
+  "renderLive": "not_verified",
+  "productionDatabaseModifiedFromEnvironment": false,
+  "corpusAndStudyHistoryDeleted": false,
+  "sourceCommit": "b899a67cea9f56440e158dda9b05ff7971388901",
+  "androidReleaseBuild": "passed",
+  "webReleaseBuild": "passed"
+}

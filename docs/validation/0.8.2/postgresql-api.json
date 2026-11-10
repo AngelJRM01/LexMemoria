@@ -1,0 +1,6 @@
+{
+  "engine": "PostgreSQL 18 local, not Render",
+  "twoAccountsSameClientIdIsolated": true,
+  "indexedSingleAndBatchLookupPassed": true,
+  "reviewAndStatePersisted": true
+}

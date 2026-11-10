@@ -1,0 +1,30 @@
+{
+  "engine": "PostgreSQL 18 local disposable container, not Render",
+  "norms": 12457,
+  "cards": 50000,
+  "before": {
+    "rebuildMs": 12889.999278006144,
+    "rebuildStatements": 24915,
+    "lookupMedianMs": 38.96020200045314,
+    "plan": [
+      "Bitmap Heap Scan on records  (cost=13.15..17.17 rows=1 width=714)",
+      "  Recheck Cond: (((owner)::text = 'benchmark-owner'::text) AND ((kind)::text = 'card'::text))",
+      "  Filter: ((data ->> 'clientId'::text) = 'local-00049999'::text)",
+      "  ->  BitmapAnd  (cost=13.15..13.15 rows=1 width=0)",
+      "        ->  Bitmap Index Scan on ix_records_owner  (cost=0.00..6.45 rows=288 width=0)",
+      "              Index Cond: ((owner)::text = 'benchmark-owner'::text)",
+      "        ->  Bitmap Index Scan on ix_records_kind  (cost=0.00..6.45 rows=288 width=0)",
+      "              Index Cond: ((kind)::text = 'card'::text)"
+    ]
+  },
+  "after": {
+    "rebuildMs": 1418.4210789971985,
+    "rebuildStatements": 126,
+    "lookupMedianMs": 0.3381964925210923,
+    "plan": [
+      "Index Scan using ix_records_owner_kind_client_id on records  (cost=0.41..8.44 rows=1 width=714)",
+      "  Index Cond: (((owner)::text = 'benchmark-owner'::text) AND ((kind)::text = 'card'::text) AND ((data ->> 'clientId'::text) = 'local-00049999'::text))"
+    ]
+  },
+  "ownerIsolationPassed": true
+}

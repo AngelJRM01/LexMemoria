@@ -1,0 +1,12 @@
+{
+  "platform": "Android 15 emulator, software emulation without hardware acceleration",
+  "testsPassed": 2,
+  "legacyRowOver3MiBMigrated": true,
+  "unchangedSnapshotChunkUpdates": 0,
+  "changedTailChunkUpdates": 1,
+  "failedWriteRolledBack": true,
+  "shorterSnapshotRemovedOldTail": true,
+  "unicodeAndReopenPassed": true,
+  "physicalPhoneLatency": "not_measured",
+  "googleAuthentication": "not_tested"
+}

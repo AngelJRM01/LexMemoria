@@ -8,6 +8,12 @@ Aplicación Flutter para estudiar Derecho español en Universidad y Oposiciones,
 
 Inventario actual de funciones, límites, evidencia y doce puntos de cierre para una primera versión Android. Distingue lo implementado de la aceptación real y separa los pasos del titular del trabajo técnico. La revisión de ejercicios 0.8.1 mantiene un diario manual y auditorías técnicas separadas; no declara lectura jurídica de todas las normas.
 
+## Versión 0.8.2 · rendimiento
+
+[Descargar APK 0.8.2 con Google](https://raw.githubusercontent.com/AngelJRM01/LexMemoria/android-google-preview-0.8.2/LexMemoria-0.8.2-google-prueba.apk) · [Cambios y mediciones](docs/MEJORAS_0_8_2.md) · [Informes](docs/validation/0.8.2/)
+
+Reduce reconstrucciones de pantallas ocultas, guarda repaso y continuación una vez y actualiza solo fragmentos cifrados distintos. Indexa tarjetas por mazo y evita repetir el filtrado europeo al paginar. El backend incorpora índices de sincronización y reconstrucción del buscador por lotes, comprobados en PostgreSQL 18 local. No se presenta la medición local como latencia de Render ni del móvil físico; el objetivo visual de 100 ms sigue pendiente de aceptación en el teléfono.
+
 ## Versión 0.8.1 de pruebas
 
 [Descargar APK 0.8.1 con Google](https://raw.githubusercontent.com/AngelJRM01/LexMemoria/android-google-preview-0.8.1/LexMemoria-0.8.1-google-prueba.apk) · [Correcciones y límites](docs/MEJORAS_0_8_1.md) · [Revisión de contenido](docs/validation/content-review-2026-11-09/)

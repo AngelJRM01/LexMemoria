@@ -1,0 +1,25 @@
+{
+  "norms": 12457,
+  "cards": 50000,
+  "database": "SQLite synthetic fixture, not Render",
+  "indexRebuild": [
+    {
+      "milliseconds": 903.009,
+      "statements": 126
+    },
+    {
+      "milliseconds": 892.366,
+      "statements": 126
+    }
+  ],
+  "cardLookupMedianMs": 0.05,
+  "cardLookupP95Ms": 0.123,
+  "lookupPlan": [
+    [
+      3,
+      0,
+      61,
+      "SEARCH records USING INDEX ix_records_owner_kind_client_id (owner=? AND kind=? AND <expr>=?)"
+    ]
+  ]
+}
