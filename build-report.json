@@ -10,5 +10,7 @@
   "sha256": "81abbd3a7a260ab51bcf860e44661c48ae11c7163f02735b3d7ecd5e73f587a0",
   "physicalLatencyAcceptance": "pending",
   "renderLive": "not_verified",
-  "storePublication": false
+  "storePublication": false,
+  "publicDownloadVerified": true,
+  "downloadUrl": "https://raw.githubusercontent.com/AngelJRM01/LexMemoria/android-google-preview-0.8.2/LexMemoria-0.8.2-google-prueba.apk"
 }
