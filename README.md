@@ -4,7 +4,7 @@ Aplicación Flutter para estudiar Derecho español en Universidad y Oposiciones,
 
 ## Cierre de la primera versión Google Play
 
-[Expediente 1.0](docs/release-1.0/README.md) · [Bloqueos y responsables](docs/release-1.0/BLOQUEOS.csv) · [Pruebas físicas](docs/release-1.0/PROTOCOLO_FISICO.md)
+[Compilación Apple](docs/release-1.0/apple/README.md) · [Expediente 1.0](docs/release-1.0/README.md) · [Bloqueos y responsables](docs/release-1.0/BLOQUEOS.csv) · [Pruebas físicas](docs/release-1.0/PROTOCOLO_FISICO.md)
 
 Candidato gratuito centrado en estabilidad: publicación pública desactivada, protección de salida del editor, firma de subida preparada y ensayo de backup PostgreSQL sin tocar producción. No equivale a publicación en tienda ni a un AAB final firmado disponible.
 

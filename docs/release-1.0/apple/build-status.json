@@ -1,0 +1,115 @@
+{
+  "observedAtUtc": "2026-11-11T08:03:48.006166+00:00",
+  "workflowStatus": "success",
+  "workflowRunUrl": "https://github.com/AngelJRM01/LexMemoria/actions/runs/42981920967",
+  "jobUrl": "https://github.com/AngelJRM01/LexMemoria/actions/runs/42981920967/job/130394068409",
+  "sourceCommit": "e2a1db02084f8bfc85928d82285ff9bfa76689a1",
+  "runner": "macos-latest",
+  "iphoneReleaseCompilation": "passed",
+  "iphoneMetadataVerification": "passed",
+  "simulatorCompilation": "passed",
+  "simulatorMetadataVerification": "passed",
+  "artifactUpload": "passed",
+  "artifactName": "LexMemoria-1.0.0-Apple-1",
+  "artifactId": "13838487483",
+  "artifactSizeDisplayedByGitHub": "97.6 MB",
+  "artifactSha256ReportedByGitHub": "9336e68af25b9ef041d74ab1a35fa6f9a0713b6d2d75d92c036516c4c2ca24e9",
+  "artifactDownloadedAndHashedLocally": false,
+  "distributionSigned": false,
+  "testFlightReady": false,
+  "physicalIPhoneTests": "not_run",
+  "nativeIosPersistenceTests": "not_run",
+  "steps": [
+    {
+      "name": "Set up job",
+      "number": "1",
+      "conclusion": "success",
+      "started-at": "2026-11-11T07:46:19Z",
+      "completed-at": "2026-11-11T07:46:21Z"
+    },
+    {
+      "name": "Run actions/checkout@v4",
+      "number": "2",
+      "conclusion": "success",
+      "started-at": "2026-11-11T07:46:21Z",
+      "completed-at": "2026-11-11T07:46:24Z"
+    },
+    {
+      "name": "Run subosito/flutter-action@v2",
+      "number": "3",
+      "conclusion": "success",
+      "started-at": "2026-11-11T07:46:24Z",
+      "completed-at": "2026-11-11T07:47:35Z"
+    },
+    {
+      "name": "Record Apple toolchain",
+      "number": "4",
+      "conclusion": "success",
+      "started-at": "2026-11-11T07:47:35Z",
+      "completed-at": "2026-11-11T07:47:40Z"
+    },
+    {
+      "name": "Resolve locked dependencies",
+      "number": "5",
+      "conclusion": "success",
+      "started-at": "2026-11-11T07:47:40Z",
+      "completed-at": "2026-11-11T07:47:42Z"
+    },
+    {
+      "name": "Compile iPhone device release without signing",
+      "number": "6",
+      "conclusion": "success",
+      "started-at": "2026-11-11T07:47:42Z",
+      "completed-at": "2026-11-11T07:54:58Z"
+    },
+    {
+      "name": "Package device build and verify metadata",
+      "number": "7",
+      "conclusion": "success",
+      "started-at": "2026-11-11T07:54:58Z",
+      "completed-at": "2026-11-11T07:55:02Z"
+    },
+    {
+      "name": "Compile iOS simulator",
+      "number": "8",
+      "conclusion": "success",
+      "started-at": "2026-11-11T07:55:02Z",
+      "completed-at": "2026-11-11T08:01:11Z"
+    },
+    {
+      "name": "Package simulator and verify metadata",
+      "number": "9",
+      "conclusion": "success",
+      "started-at": "2026-11-11T08:01:11Z",
+      "completed-at": "2026-11-11T08:01:23Z"
+    },
+    {
+      "name": "Upload compiled Apple artifacts",
+      "number": "10",
+      "conclusion": "success",
+      "started-at": "2026-11-11T08:01:23Z",
+      "completed-at": "2026-11-11T08:01:29Z"
+    },
+    {
+      "name": "Post Run subosito/flutter-action@v2",
+      "number": "19",
+      "conclusion": "success",
+      "started-at": "2026-11-11T08:01:29Z",
+      "completed-at": "2026-11-11T08:01:37Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v4",
+      "number": "20",
+      "conclusion": "success",
+      "started-at": "2026-11-11T08:01:37Z",
+      "completed-at": "2026-11-11T08:01:38Z"
+    },
+    {
+      "name": "Complete job",
+      "number": "21",
+      "conclusion": "success",
+      "started-at": "2026-11-11T08:01:38Z",
+      "completed-at": "2026-11-11T08:01:48Z"
+    }
+  ]
+}
