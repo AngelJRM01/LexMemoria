@@ -33,7 +33,9 @@ Edición gratuita, sin publicidad ni compras activas. El catálogo público de m
 
 ## Campos del titular y consola
 
-- Responsable/desarrollador público, correo de soporte y política HTTPS final.
+- Responsable legal: Ángel Joaquín Rodríguez Mercado.
+- Correo público de soporte: armcode.dev@gmail.com.
+- Nombre comercial que mostrará la ficha de desarrollador y política HTTPS final: pendientes de confirmar.
 - Categoría propuesta: Educación. Confirmar clasificación y audiencia en Play Console.
 - Declarar publicidad: no en esta edición, siempre que el artefacto final conserve esta configuración.
 - Completar IARC, público objetivo, seguridad de datos y acceso de revisores con el comportamiento real.

@@ -4,7 +4,7 @@
 
 LexMemoria permite solicitar la eliminación de tu cuenta y los datos asociados. En la aplicación, abre Perfil → Cuenta y copias y utiliza la opción de eliminación de cuenta, confirma ELIMINAR y acredita de nuevo la misma identidad Google cuando se solicite. Borrar solo el almacenamiento del móvil no elimina la cuenta remota.
 
-También puedes usar https://lexmemoria-api.onrender.com/account/delete cuando esté configurada y aceptada la identidad web. Si no puedes acceder, contacta con [CORREO PÚBLICO DE SOPORTE] para ejercer tus derechos mediante un procedimiento de identificación proporcionado. No envíes contraseñas, claves o códigos de recuperación al soporte.
+También puedes usar https://lexmemoria-api.onrender.com/account/delete cuando esté configurada y aceptada la identidad web. Si no puedes acceder, contacta con armcode.dev@gmail.com para ejercer tus derechos mediante un procedimiento de identificación proporcionado. No envíes contraseñas, claves o códigos de recuperación al soporte.
 
 La eliminación afecta a los datos activos vinculados a la cuenta y revoca sus sesiones. Las copias de materiales que otras personas recibieron legítimamente pueden conservarse con atribución anonimizada. El alcance/plazo de copias de seguridad y registros será [PLAZO APROBADO E IMPLANTADO]. Una copia JSON o datos locales en otro dispositivo quedan bajo control de quien los conserva.
 

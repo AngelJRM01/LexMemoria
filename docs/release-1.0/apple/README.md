@@ -19,7 +19,7 @@ Compilar no equivale a probar persistencia SQLCipher/Keychain en un iPhone. Las 
 
 Requiere cuenta/equipo Apple Developer, registrar el identificador, firma y perfiles válidos mediante custodia segura; para TestFlight, App Store Connect y su aceptación. No enviar claves privadas, certificados privados o contraseñas al chat. El workflow actual no firma, no sube a TestFlight y no publica en App Store.
 
-Antes de distribuir: aceptar almacenamiento/migración en iPhone, identidad que se vaya a anunciar, privacidad/manifiestos de SDK y declaración de cifrado aplicable a SQLCipher. No marcar la declaración de exportación como exenta por suposición. El responsable/contacto público siguen pendientes según el expediente 1.0.
+Antes de distribuir: aceptar almacenamiento/migración en iPhone, identidad que se vaya a anunciar, privacidad/manifiestos de SDK y declaración de cifrado aplicable a SQLCipher. No marcar la declaración de exportación como exenta por suposición. Responsable y contacto público confirmados en CONTACTO_PUBLICO.md; el resto de la política sigue pendiente.
 
 No hace falta un Mac propio para la compilación remota, pero una app de simulador solo se ejecuta en un Mac. Una entrega firmada mediante TestFlight permite probar en iPhone sin que el titular tenga un Mac propio.
 

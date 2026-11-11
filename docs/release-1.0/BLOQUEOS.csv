@@ -1,5 +1,5 @@
 ID,Bloqueo real,Puede resolverse autónomamente aquí,Requiere titular o servicio externo,Evidencia de cierre
-R01,Identidad legal contacto y política definitiva,no,Nombre legal correo público público objetivo bases jurídicas y retención aprobados,Política HTTPS exacta y revisión de coherencia
+R01,Política definitiva y conservación,no,Público objetivo bases jurídicas retención y páginas finales aprobados,Política HTTPS exacta y revisión de coherencia
 R02,Firma final y Firebase del paquete es.lexmemoria.app,Preparación y validación de compilación,Clave custodiada en entorno seguro y registro/certificados Firebase Play,AAB firmado aceptado y Google instalado desde Play
 R03,Estado Live de Render y continuidad PostgreSQL,Procedimiento y pruebas locales,Consola y estado real de planes variables y caducidad,Health y commit Live más prueba de persistencia
 R04,Backup y restauración productiva,Script cifrado y ensayo aislado,Acceso al proveedor y política operativa,Backup real y restauración en base nueva comparados

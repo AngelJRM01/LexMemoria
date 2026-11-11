@@ -1,6 +1,6 @@
 # LexMemoria 1.0 — informe de cierre y bloqueos de Google Play
 
-Fecha: 10 de noviembre de 2026. Candidato Android gratuito 1.0.0+18; paquete definitivo es.lexmemoria.app. Este informe recoge trabajo ejecutado y evidencia. No acredita publicación en tienda ni aceptación de servicios externos.
+Fecha del cierre técnico: 10 de noviembre de 2026. Contacto actualizado el 11 de noviembre de 2026. Candidato Android gratuito 1.0.0+18; paquete definitivo es.lexmemoria.app. Este informe recoge trabajo ejecutado y evidencia. No acredita publicación en tienda ni aceptación de servicios externos.
 
 ## 1. Dictamen
 
@@ -16,7 +16,7 @@ El trabajo se ha limitado al cierre de la primera versión: integridad, segurida
 | Render/PostgreSQL | Protección productiva, procedimiento de backup cifrado y ensayo íntegro en PostgreSQL 18 local separado. | Estado Live, plan/caducidad, backup y restauración real del proveedor. |
 | Público/privado | Público desactivado por defecto en cliente y servidor, incluidas aprobaciones antiguas; permisos privados y retirada conservados. | Desplegar y comprobar el flag en Render y aceptar los recorridos privados anunciados. |
 | Paquete y AAB | es.lexmemoria.app, código 18, configuración segura de firma de subida y validación separada sin firma. | Clave custodiada por el titular, Firebase del paquete de tienda, firma y aceptación de Play. |
-| Documentación | Política borrador, eliminación, ficha, matriz de datos, protocolo físico, icono y gráfico de la marca y capturas reales. | Identidad/contacto, audiencia, bases/retención y páginas públicas finales verificadas. |
+| Documentación | Política borrador, eliminación, ficha, matriz de datos, protocolo físico, icono y gráfico de la marca y capturas reales. | Audiencia, bases/retención y páginas públicas finales verificadas. |
 | Bloqueos | Matriz BLOQUEOS.csv con responsables y evidencias para cerrar. | Ningún punto externo se marca aprobado por inferencia. |
 
 ## 3. Guardado del editor
@@ -57,7 +57,7 @@ Se ha compilado un AAB de VALIDACIÓN SIN FIRMA: LexMemoria-1.0.0-UNSIGNED-valid
 
 PRIVACIDAD_BORRADOR.md y privacidad-borrador.html; ELIMINACION_DE_CUENTA.md; FICHA_GOOGLE_PLAY.md; SEGURIDAD_DE_DATOS_PLAY.csv; PROTOCOLO_FISICO.md; FIRMA_Y_CAMBIO_DE_PAQUETE.md; RENDER_Y_BACKUPS.md; EDITOR_Y_GUARDADO.md; BLOQUEOS.csv. Recursos originales de tienda en store-assets/ y capturas en screenshots/.
 
-Los datos personales y legales pendientes se mantienen visibles: nombre del responsable, correo público, información aplicable de contacto, audiencia/menores, bases de tratamiento, retención real y URLs definitivas. No se han rellenado con información de Git ni identidades inventadas.
+Datos confirmados por el titular el 11 de noviembre: responsable Ángel Joaquín Rodríguez Mercado; correo público armcode.dev@gmail.com. Siguen pendientes la información adicional aplicable, audiencia/menores, bases de tratamiento, retención real y URLs definitivas. No se han inventado decisiones legales ni configuraciones productivas.
 
 La página de eliminación necesita Firebase web/dominio y aceptación real. No basta un HTML que cargue o una respuesta de salud. La ficha propone una edición gratuita, sin publicidad ni compras activas, y declara el carácter automático/literal del material. No promete preguntas oficiales ni revisión jurídica universal.
 
@@ -65,7 +65,7 @@ La página de eliminación necesita Firebase web/dominio y aceptación real. No 
 
 | Bloqueo | Trabajo autónomo completado | Intervención necesaria |
 | --- | --- | --- |
-| Identidad y privacidad | Borradores y matriz preparados. | Titular: identidad/contacto, audiencia y política/retención aprobadas; publicar páginas exactas. |
+| Privacidad | Borradores, matriz y responsable/contacto confirmados. | Titular: audiencia y política/retención aprobadas; publicar páginas exactas. |
 | Firma y Firebase de tienda | Configuración, preflight y compilación de validación. | Titular en entorno custodio: clave de subida, Play App Signing, registro es.lexmemoria.app/certificados Firebase; no enviar claves al chat. |
 | Render/PostgreSQL | Código y ensayo local con restauración protegida. | Titular/proveedor: consola, continuidad, commit Live y backup/restauración reales. Desarrollo puede asistir cuando exista acceso seguro suficiente. |
 | Google y dispositivos | Regresiones y protocolo listos. | Dos instalaciones reales: traslado, Google, sync/conflictos, borrado, red irregular, cierre forzado y accesibilidad; desarrollo corrige hallazgos. |

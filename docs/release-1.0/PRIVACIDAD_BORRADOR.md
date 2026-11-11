@@ -4,7 +4,7 @@ Este borrador describe la edición gratuita Android con publicación pública de
 
 ## Responsable y contacto
 
-Responsable: [NOMBRE LEGAL DEL TITULAR]. Contacto público para soporte y derechos: [CORREO]. Domicilio o información adicional legalmente aplicable: [DATOS DEL RESPONSABLE]. URL pública definitiva de esta política: [URL HTTPS]. Fecha de entrada en vigor: [FECHA].
+Responsable: Ángel Joaquín Rodríguez Mercado. Contacto público para soporte y derechos: armcode.dev@gmail.com. Domicilio o información adicional legalmente aplicable: [DATOS DEL RESPONSABLE]. URL pública definitiva de esta política: [URL HTTPS]. Fecha de entrada en vigor: [FECHA].
 
 ## Estudio local
 
@@ -46,7 +46,7 @@ El alias retirado tiene una reserva técnica de 30 días para impedir suplantaci
 
 Desde Perfil → Cuenta y copias se ofrecen exportación y eliminación remota con confirmación e identidad reciente. Eliminar datos locales es una acción distinta. La eliminación asociada a Google debe completar también el paso del proveedor; la app conserva un reintento si falla esa coordinación. No se presenta como aceptado hasta probarlo con una cuenta real.
 
-Vía web prevista: https://lexmemoria-api.onrender.com/account/delete. Debe configurarse y probarse el acceso Firebase web y el dominio autorizado. No basta con que cargue la página. Canal alternativo de derechos: [CORREO PÚBLICO DEL RESPONSABLE].
+Vía web prevista: https://lexmemoria-api.onrender.com/account/delete. Debe configurarse y probarse el acceso Firebase web y el dominio autorizado. No basta con que cargue la página. Canal alternativo de derechos: armcode.dev@gmail.com.
 
 Puedes solicitar los derechos aplicables de acceso, rectificación, supresión, oposición, limitación y portabilidad, y acudir a la autoridad de protección de datos competente; para España, AEPD (https://www.aepd.es/). El responsable debe concretar identificación y procedimiento proporcionados.
 

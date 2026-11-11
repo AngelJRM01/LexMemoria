@@ -45,3 +45,7 @@ No hace falta desarrollar módulos grandes adicionales para recorrer este cierre
 ## Resultado registrado
 
 221 pruebas backend, 163 Flutter y analizador limpio. Dos escenarios SQLCipher nativos y escenario de capturas en Android 15 emulado superados. Ensayo de integridad PostgreSQL completo; 38 dependencias Python auditadas sin avisos conocidos tras corregir Pillow. AAB unsigned de validación y estructura/metadata/alineación 16 KiB estática verificados. AAB firmado y aceptación externa siguen pendientes. Resumen: evidence/release-status.json. Informe de cierre: CIERRE_1_0.pdf / CIERRE_1_0.docx.
+
+## Contacto confirmado · 11 de noviembre de 2026
+
+Responsable: Ángel Joaquín Rodríguez Mercado. Soporte y derechos: armcode.dev@gmail.com. Véase CONTACTO_PUBLICO.md. Se completan estos campos; la audiencia, retención, política final y aceptación real siguen pendientes.
