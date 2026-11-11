@@ -48,4 +48,6 @@ No hace falta desarrollar módulos grandes adicionales para recorrer este cierre
 
 ## Contacto confirmado · 11 de noviembre de 2026
 
-Responsable: Ángel Joaquín Rodríguez Mercado. Soporte y derechos: armcode.dev@gmail.com. Véase CONTACTO_PUBLICO.md. Se completan estos campos; la audiencia, retención, política final y aceptación real siguen pendientes.
+Responsable: Ángel Joaquín Rodríguez Mercado. Soporte y derechos: armcode.dev@gmail.com. Véase CONTACTO_PUBLICO.md. Se completan estos campos; la retención, política final y aceptación real siguen pendientes.
+
+Audiencia confirmada: desde los 16 años, incluidos 16–17 y adultos. La revisión del tratamiento de adolescentes y las clasificaciones de tiendas siguen pendientes. No se ha incorporado fecha de nacimiento ni verificación automática.

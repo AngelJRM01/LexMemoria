@@ -36,7 +36,8 @@ Edición gratuita, sin publicidad ni compras activas. El catálogo público de m
 - Responsable legal: Ángel Joaquín Rodríguez Mercado.
 - Correo público de soporte: armcode.dev@gmail.com.
 - Nombre comercial que mostrará la ficha de desarrollador y política HTTPS final: pendientes de confirmar.
-- Categoría propuesta: Educación. Confirmar clasificación y audiencia en Play Console.
+- Categoría propuesta: Educación. Audiencia confirmada por el titular: desde los 16 años, incluidos 16–17 años y adultos. Declarar los grupos correspondientes en Play Console según sus opciones vigentes.
+- No está específicamente dirigida a niños menores de 16 años. No se recoge fecha de nacimiento ni se implementa verificación automática. La clasificación IARC y la clasificación de Apple no se deducen automáticamente de esta audiencia.
 - Declarar publicidad: no en esta edición, siempre que el artefacto final conserve esta configuración.
 - Completar IARC, público objetivo, seguridad de datos y acceso de revisores con el comportamiento real.
 - Proporcionar instrucciones de acceso que permitan revisar las funciones anunciadas; no inventar una contraseña para el acceso Google.

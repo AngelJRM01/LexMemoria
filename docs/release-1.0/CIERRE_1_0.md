@@ -57,7 +57,7 @@ Se ha compilado un AAB de VALIDACIÓN SIN FIRMA: LexMemoria-1.0.0-UNSIGNED-valid
 
 PRIVACIDAD_BORRADOR.md y privacidad-borrador.html; ELIMINACION_DE_CUENTA.md; FICHA_GOOGLE_PLAY.md; SEGURIDAD_DE_DATOS_PLAY.csv; PROTOCOLO_FISICO.md; FIRMA_Y_CAMBIO_DE_PAQUETE.md; RENDER_Y_BACKUPS.md; EDITOR_Y_GUARDADO.md; BLOQUEOS.csv. Recursos originales de tienda en store-assets/ y capturas en screenshots/.
 
-Datos confirmados por el titular el 11 de noviembre: responsable Ángel Joaquín Rodríguez Mercado; correo público armcode.dev@gmail.com. Siguen pendientes la información adicional aplicable, audiencia/menores, bases de tratamiento, retención real y URLs definitivas. No se han inventado decisiones legales ni configuraciones productivas.
+Datos confirmados por el titular el 11 de noviembre: responsable Ángel Joaquín Rodríguez Mercado; correo público armcode.dev@gmail.com. Siguen pendientes la información adicional aplicable, revisión del tratamiento de adolescentes, bases de tratamiento, retención real y URLs definitivas. No se han inventado decisiones legales ni configuraciones productivas.
 
 La página de eliminación necesita Firebase web/dominio y aceptación real. No basta un HTML que cargue o una respuesta de salud. La ficha propone una edición gratuita, sin publicidad ni compras activas, y declara el carácter automático/literal del material. No promete preguntas oficiales ni revisión jurídica universal.
 
@@ -65,7 +65,7 @@ La página de eliminación necesita Firebase web/dominio y aceptación real. No 
 
 | Bloqueo | Trabajo autónomo completado | Intervención necesaria |
 | --- | --- | --- |
-| Privacidad | Borradores, matriz y responsable/contacto confirmados. | Titular: audiencia y política/retención aprobadas; publicar páginas exactas. |
+| Privacidad | Borradores, matriz y responsable/contacto confirmados. | Titular: política/retención aprobadas y condiciones para adolescentes revisadas; publicar páginas exactas. |
 | Firma y Firebase de tienda | Configuración, preflight y compilación de validación. | Titular en entorno custodio: clave de subida, Play App Signing, registro es.lexmemoria.app/certificados Firebase; no enviar claves al chat. |
 | Render/PostgreSQL | Código y ensayo local con restauración protegida. | Titular/proveedor: consola, continuidad, commit Live y backup/restauración reales. Desarrollo puede asistir cuando exista acceso seguro suficiente. |
 | Google y dispositivos | Regresiones y protocolo listos. | Dos instalaciones reales: traslado, Google, sync/conflictos, borrado, red irregular, cierre forzado y accesibilidad; desarrollo corrige hallazgos. |
@@ -73,3 +73,7 @@ La página de eliminación necesita Firebase web/dominio y aceptación real. No 
 | Colaboración privada | Aislamiento, permisos, revocación y bloqueo probados localmente. | Soporte responsable y aceptación real de los recorridos si se incluyen en la ficha. |
 
 No quedan módulos grandes que sea necesario desarrollar por esta preparación. Los bloqueos externos no se ocultan como tareas técnicas ya resueltas. El candidato podrá enviarse cuando se cierren con evidencia; no se afirma una fecha de aprobación de Google Play.
+
+## Audiencia confirmada · 11 de noviembre de 2026
+
+El titular confirma la audiencia desde los 16 años: estudiantes de Derecho, opositores y personas interesadas en estudiar legislación, incluidos adolescentes de 16 y 17 años. No se incorpora recogida de fecha de nacimiento ni control técnico de acceso por edad. Esta decisión no asigna automáticamente clasificación IARC/Apple ni cierra la revisión jurídica del tratamiento de menores.
