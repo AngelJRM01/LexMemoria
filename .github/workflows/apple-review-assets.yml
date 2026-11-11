@@ -35,6 +35,7 @@ jobs:
           with open(os.environ['GITHUB_ENV'],'a') as output:output.write('IOS_SIMULATOR_ID='+selected['udid']+'\n')
           Path('apple-review-assets/simulator.json').write_text(json.dumps(selected,indent=2))
           PY
+          export IOS_SIMULATOR_ID="$(python3 -c 'import json; print(json.load(open("apple-review-assets/simulator.json"))["udid"])')"
           set -o pipefail
           xcrun simctl bootstatus "$IOS_SIMULATOR_ID" -b 2>&1 | tee apple-review-assets/simulator-boot.txt
       - name: Verify native encrypted iOS storage
