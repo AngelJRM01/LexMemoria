@@ -1,0 +1,52 @@
+name: Apple build artifacts
+on:
+  push:
+    branches: [release/1.0.0-rc1]
+    paths:
+      - '.github/workflows/apple-build.yml'
+      - 'mobile/**'
+      - 'scripts/verify_apple_artifact.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ios:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.9'
+          cache: true
+      - name: Record Apple toolchain
+        run: |
+          xcodebuild -version
+          flutter --version
+          pod --version
+      - name: Resolve locked dependencies
+        working-directory: mobile
+        run: flutter pub get --enforce-lockfile
+      - name: Compile iPhone device release without signing
+        working-directory: mobile
+        run: flutter build ios --release --no-codesign --dart-define=LEXMEMORIA_API_URL=https://lexmemoria-api.onrender.com
+      - name: Package device build and verify metadata
+        run: |
+          mkdir -p apple-artifacts
+          ditto -c -k --sequesterRsrc --keepParent mobile/build/ios/iphoneos/Runner.app apple-artifacts/LexMemoria-1.0.0-ios-device-UNSIGNED.zip
+          python3 scripts/verify_apple_artifact.py mobile/build/ios/iphoneos/Runner.app --kind device --archive apple-artifacts/LexMemoria-1.0.0-ios-device-UNSIGNED.zip --output apple-artifacts/device-report.json
+      - name: Compile iOS simulator
+        working-directory: mobile
+        run: flutter build ios --simulator --debug --dart-define=LEXMEMORIA_API_URL=https://lexmemoria-api.onrender.com
+      - name: Package simulator and verify metadata
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent mobile/build/ios/iphonesimulator/Runner.app apple-artifacts/LexMemoria-1.0.0-ios-simulator.zip
+          python3 scripts/verify_apple_artifact.py mobile/build/ios/iphonesimulator/Runner.app --kind simulator --archive apple-artifacts/LexMemoria-1.0.0-ios-simulator.zip --output apple-artifacts/simulator-report.json
+      - name: Upload compiled Apple artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: LexMemoria-1.0.0-Apple-${{ github.run_number }}
+          path: apple-artifacts/
+          if-no-files-found: warn
+          retention-days: 14
