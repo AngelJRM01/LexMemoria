@@ -47,3 +47,17 @@ def test_project_changes_only_runner_and_leaves_test_bundle_automatic():
     assert configured.count('CODE_SIGN_STYLE = Automatic;')==source.count('CODE_SIGN_STYLE = Automatic;')
     assert signing.configure_project(configured,profile()['UUID'],FINGERPRINT)==configured
     assert 'ITSAppUsesNonExemptEncryption' not in configured
+
+
+def test_artifact_retry_does_not_hide_failure_or_include_private_material():
+    import yaml
+    workflow=yaml.load((ROOT/'.github/workflows/apple-signed-build.yml').read_text(),Loader=yaml.BaseLoader)
+    steps=workflow['jobs']['signed-ipa']['steps']
+    first=next(s for s in steps if s.get('id')=='upload_ipa')
+    retry=next(s for s in steps if s.get('name')=='Retry transient artifact upload failure')
+    assert first['continue-on-error']=='true'
+    assert retry['if']=="${{ steps.upload_ipa.outcome == 'failure' }}"
+    assert retry.get('continue-on-error','false')=='false'
+    assert first['with']['path']==retry['with']['path']=='apple-signed-artifacts/'
+    assert retry['with']['overwrite']=='true'
+    assert steps[-1]['if']=='${{ always() }}'

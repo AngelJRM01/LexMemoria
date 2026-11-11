@@ -13,3 +13,9 @@ Puede ejecutarse manualmente desde Actions seleccionando esa rama; el primer cam
 Esto **no sube a TestFlight, no publica en App Store y no acredita pruebas físicas**. La subida requerirá autenticación adicional de App Store Connect mediante custodia segura. Un fallo se diagnostica por el paso y el mensaje, sin copiar valores privados. No revocar ni regenerar certificados para corregir nombres de secretos o perfiles sin identificar antes el problema.
 
 Validación local del cambio: 11 pruebas específicas superadas (10 de preflight de firma y una de arranque de simulador); YAML y sintaxis Bash comprobados. Las pruebas usan certificados sintéticos, no los secretos del titular. La firma real solo queda acreditada por una ejecución macOS completada con éxito.
+
+## Primera ejecución real — 11 de noviembre de 2026
+
+Ejecución 43094524563: importación/validación, compilación de IPA y verificación de firma superadas según los estados públicos del job. La subida falló en CreateArtifact al recibir HTML en vez de JSON tras cinco intentos. La limpieza terminó correctamente. No hay IPA descargada ni subida TestFlight acreditada. Evidencia: signed-build-status.json.
+
+Se añade un segundo intento de upload-artifact condicionado al fallo del primero, con overwrite para evitar un artefacto parcial y sin compresión adicional sobre la IPA. Si también falla, el job falla: no se oculta la ausencia del artefacto. Se lanza una ejecución nueva, porque el runner temporal anterior ya no conserva una copia recuperable desde este entorno. La causa concreta de la respuesta HTML no se conoce; el reintento no garantiza resolver una indisponibilidad persistente del servicio.

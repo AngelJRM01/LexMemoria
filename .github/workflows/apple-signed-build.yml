@@ -82,11 +82,24 @@ jobs:
           cp mobile/build/ios/ipa/*.ipa apple-signed-artifacts/
           shasum -a 256 apple-signed-artifacts/*.ipa > apple-signed-artifacts/SHA256SUMS.txt
       - name: Upload signed IPA only
+        id: upload_ipa
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: LexMemoria-1.0.0-SIGNED-IPA-${{ github.run_number }}
           path: apple-signed-artifacts/
           if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Retry transient artifact upload failure
+        if: ${{ steps.upload_ipa.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: LexMemoria-1.0.0-SIGNED-IPA-${{ github.run_number }}
+          path: apple-signed-artifacts/
+          if-no-files-found: error
+          compression-level: 0
+          overwrite: true
           retention-days: 14
       - name: Remove temporary signing material
         if: ${{ always() }}

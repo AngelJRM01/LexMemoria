@@ -1,0 +1,16 @@
+{
+  "runUrl": "https://github.com/AngelJRM01/LexMemoria/actions/runs/43094524563",
+  "sourceCommit": "0272ce9ee3405d193c33f3a63fea3f8162496010",
+  "checkedAtDate": "2026-11-11",
+  "evidence": "Public GitHub job step conclusions and owner-provided upload log",
+  "signingIdentityAndProfileValidated": true,
+  "signedIpaBuildPassed": true,
+  "signatureAndPackageVerificationPassed": true,
+  "artifactUploadPassed": false,
+  "failure": "CreateArtifact returned HTML instead of JSON after five attempts",
+  "temporarySigningCleanupPassed": true,
+  "ipaDownloadedLocally": false,
+  "testFlightUploaded": false,
+  "physicalDeviceTested": false,
+  "nextAction": "Fresh workflow execution with one additional artifact action attempt; no certificate replacement"
+}
