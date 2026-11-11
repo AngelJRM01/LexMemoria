@@ -1,0 +1,79 @@
+{
+  "environment": "PostgreSQL 18 disposable local container; not Render",
+  "ownerIsolation": true,
+  "reviewIdempotency": true,
+  "workspaceConflictPreserved": true,
+  "restartPreservedExport": true,
+  "encryptedBackup": true,
+  "restoredAllTablesEqual": true,
+  "refusedSourceAndNonemptyTargets": true,
+  "tamperedBackupRejectedBeforeWrite": true,
+  "restoredApiExportEqual": true,
+  "tableInventory": {
+    "account_aliases": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "account_sync_clocks": {
+      "rows": 1,
+      "sha256": "3a0487037ea5da23b2224598402919be43918d30dc33e03847187dc41d621e3c"
+    },
+    "accounts": {
+      "rows": 2,
+      "sha256": "735a8d8e84b02e0bf0c2744199dfb372e57cdfc52aa4b5705996283313c881c6"
+    },
+    "audit": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "collaboration_invitations": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "collaboration_members": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "external_identities": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "mutations": {
+      "rows": 1,
+      "sha256": "84b6198dedcec94d29d4c655bd13e059732bfb8e35d9ca7ca6191dba639cc2a0"
+    },
+    "norm_search": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "records": {
+      "rows": 5,
+      "sha256": "11e6f5a7328751ff1487a337bd007844eefc68541e10fb7c4c11318a939ab513"
+    },
+    "recovery_codes": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "recovery_receipts": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "session_tokens": {
+      "rows": 4,
+      "sha256": "3b5caa86fa322241fcc76c9dc013ed0dc6b5f214fcf1526bcb38d6cfb819a2ad"
+    },
+    "tokens": {
+      "rows": 4,
+      "sha256": "10d832673574d91dca82a8066833bae5ba4e063b83fbee30fcaa3a768e57235a"
+    },
+    "user_relationships": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "user_sessions": {
+      "rows": 2,
+      "sha256": "700308f809b768558cf91db7d67f26b4c976b4c8c59889595dc7f57fb1c7ea08"
+    }
+  },
+  "renderVerified": false
+}

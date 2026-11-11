@@ -20,3 +20,12 @@ coverage/
 # Native Firebase configuration supplied by the owner for each app/signature.
 google-services.json
 GoogleService-Info.plist
+
+# Local release signing configuration; never commit signing material.
+key.properties
+*.p12
+*.pfx
+*.aab
+
+# Regenerable Kotlin compiler state.
+.kotlin/

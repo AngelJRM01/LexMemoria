@@ -1,0 +1,12 @@
+{
+  "package": "es.lexmemoria.app",
+  "missingSigningVariables": [
+    "LEXMEMORIA_UPLOAD_STORE_FILE",
+    "LEXMEMORIA_UPLOAD_STORE_PASSWORD",
+    "LEXMEMORIA_UPLOAD_KEY_ALIAS",
+    "LEXMEMORIA_UPLOAD_KEY_PASSWORD"
+  ],
+  "existingKeyOutsideRepository": false,
+  "productionFirebaseConfigured": false,
+  "readyForSignedBuild": false
+}

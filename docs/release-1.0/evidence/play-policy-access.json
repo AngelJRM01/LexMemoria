@@ -1,0 +1,12 @@
+[
+  {
+    "url": "https://developer.android.com/google/play/requirements/target-sdk",
+    "error": "ProxyError",
+    "readable": false
+  },
+  {
+    "url": "https://support.google.com/googleplay/android-developer/answer/14151465",
+    "error": "ProxyError",
+    "readable": false
+  }
+]

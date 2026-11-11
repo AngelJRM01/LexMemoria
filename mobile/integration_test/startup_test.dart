@@ -13,7 +13,7 @@ void main() {
         '${await sqlite.getDatabasesPath()}/lexmemoria-integration-${DateTime.now().microsecondsSinceEpoch}.db';
     const testKey = 'temporary-integration-key-not-a-production-secret';
     final original =
-        '{"probe":"${List.filled(3 * 1024 * 1024, 'ñ').join()}𝑥"}';
+        '{"probe":"${List.filled(96, List.filled(32768, 'ñ').join()).join()}𝑥"}';
     sqlite.Database? db;
     try {
       db = await sqlite.openDatabase(path, password: testKey, version: 1,
@@ -75,7 +75,7 @@ void main() {
     final existed = first.data.containsKey('startupIntegrationProbe');
     final before = first.data['startupIntegrationProbe'];
     final largeProbe =
-        'native-reopen-probe:${List.filled(3 * 1024 * 1024, 'a').join()}𝑥';
+        'native-reopen-probe:${List.filled(96, List.filled(32768, 'a').join()).join()}𝑥';
     first.data['startupIntegrationProbe'] = largeProbe;
     await first.save();
     await first.persistence.close();

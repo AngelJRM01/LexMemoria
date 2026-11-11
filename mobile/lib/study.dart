@@ -236,7 +236,9 @@ class CardEditor extends StatefulWidget {
 }
 
 class _CardEditorState extends State<CardEditor> with WidgetsBindingObserver {
-  Timer? _draftTimer;
+  Timer? _draftTimer, _maxDraftTimer;
+  final _draftStatus = ValueNotifier<String>('');
+  bool _leaving = false, _allowExit = false, _editorDisposed = false;
   Future<void>? _draftWrite;
   int _draftRevision = 0, _draftSavedRevision = 0, _draftWriteRevision = -1;
   static const _draftFailure =
@@ -320,6 +322,8 @@ class _CardEditorState extends State<CardEditor> with WidgetsBindingObserver {
       widget.store.data['draftCard'] = draft;
     }
     _draftRevision++;
+    _draftStatus.value = 'Guardando borrador…';
+    _maxDraftTimer ??= Timer(const Duration(seconds: 1), _flushDraftSafely);
     _draftTimer?.cancel();
     _draftTimer = Timer(const Duration(milliseconds: 250), _flushDraftSafely);
   }
@@ -327,6 +331,8 @@ class _CardEditorState extends State<CardEditor> with WidgetsBindingObserver {
   Future<void> _flushDraft() async {
     _draftTimer?.cancel();
     _draftTimer = null;
+    _maxDraftTimer?.cancel();
+    _maxDraftTimer = null;
     if (_draftSavedRevision >= _draftRevision ||
         (_draftWrite != null && _draftWriteRevision == _draftRevision)) {
       await _draftWrite;
@@ -341,6 +347,9 @@ class _CardEditorState extends State<CardEditor> with WidgetsBindingObserver {
       await operation;
       if (version > _draftSavedRevision) _draftSavedRevision = version;
       if (store.error == _draftFailure) store.error = null;
+      if (!_editorDisposed && _draftSavedRevision >= _draftRevision) {
+        _draftStatus.value = 'Borrador guardado';
+      }
     } finally {
       if (identical(_draftWrite, operation)) _draftWrite = null;
     }
@@ -350,8 +359,31 @@ class _CardEditorState extends State<CardEditor> with WidgetsBindingObserver {
     final store = widget.store;
     unawaited(_flushDraft().catchError((Object error) {
       store.error = _draftFailure;
-      if (mounted) toast(context, store.error!);
+      if (!_editorDisposed) _draftStatus.value = 'Borrador sin guardar';
+      if (mounted && !_editorDisposed) toast(context, store.error!);
     }));
+  }
+
+  Future<void> _leaveSaved() async {
+    if (!mounted) return;
+    setState(() => _allowExit = true);
+    await WidgetsBinding.instance.endOfFrame;
+    if (mounted) Navigator.pop(context);
+  }
+
+  Future<void> _closeEditor() async {
+    if (_leaving || saving) return;
+    setState(() => _leaving = true);
+    try {
+      await _flushDraft();
+      await _leaveSaved();
+    } catch (_) {
+      widget.store.error = _draftFailure;
+      if (!_editorDisposed) _draftStatus.value = 'Borrador sin guardar';
+      if (mounted) toast(context, _draftFailure);
+    } finally {
+      if (mounted) setState(() => _leaving = false);
+    }
   }
 
   @override
@@ -362,7 +394,9 @@ class _CardEditorState extends State<CardEditor> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _editorDisposed = true;
     _flushDraftSafely();
+    _draftStatus.dispose();
     for (final c in [deck, front, back, explanation, options]) {
       c.dispose();
     }
@@ -437,7 +471,7 @@ class _CardEditorState extends State<CardEditor> with WidgetsBindingObserver {
         widget.store.data['draftCard'] = null;
       }
       await widget.store.save();
-      if (mounted) Navigator.pop(context);
+      await _leaveSaved();
     });
     if (mounted) setState(() => saving = false);
   }
@@ -460,95 +494,113 @@ class _CardEditorState extends State<CardEditor> with WidgetsBindingObserver {
                         ? 'Completa este campo'
                         : null
                     : null));
-    return Scaffold(
-        appBar: AppBar(
-            title: Text(widget.onSaveShared != null
-                ? 'Editar tarjeta compartida'
-                : widget.existing == null
-                    ? 'Nueva tarjeta privada'
-                    : 'Editar tarjeta privada')),
-        body: IgnorePointer(
-            ignoring: saving,
-            child: Form(
-                key: form,
-                child: PageBody(children: [
-                  const Badge('Creada por el usuario · sin revisión jurídica',
-                      warning: true),
-                  const SizedBox(height: 20),
-                  field(deck, 'Mazo', max: 160),
-                  DropdownButtonFormField<String>(
-                      initialValue: type,
-                      decoration:
-                          const InputDecoration(labelText: 'Tipo de ejercicio'),
-                      items: const [
-                        DropdownMenuItem(
-                            value: 'qa', child: Text('Pregunta y respuesta')),
-                        DropdownMenuItem(
-                            value: 'cloze', child: Text('Completar huecos')),
-                        DropdownMenuItem(
-                            value: 'truefalse',
-                            child: Text('Verdadero / falso')),
-                        DropdownMenuItem(
-                            value: 'order', child: Text('Ordenar una lista')),
-                        DropdownMenuItem(
-                            value: 'case', child: Text('Caso práctico')),
-                        DropdownMenuItem(
-                            value: 'test', child: Text('Pregunta tipo test'))
+    return PopScope(
+        canPop: _allowExit,
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop) unawaited(_closeEditor());
+        },
+        child: Scaffold(
+            appBar: AppBar(
+                title: Text(widget.onSaveShared != null
+                    ? 'Editar tarjeta compartida'
+                    : widget.existing == null
+                        ? 'Nueva tarjeta privada'
+                        : 'Editar tarjeta privada')),
+            body: IgnorePointer(
+                ignoring: saving || _leaving,
+                child: Form(
+                    key: form,
+                    child: PageBody(children: [
+                      ValueListenableBuilder<String>(
+                          valueListenable: _draftStatus,
+                          builder: (_, value, __) => value.isEmpty
+                              ? const SizedBox.shrink()
+                              : Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Text(value, semanticsLabel: value))),
+                      const Badge(
+                          'Creada por el usuario · sin revisión jurídica',
+                          warning: true),
+                      const SizedBox(height: 20),
+                      field(deck, 'Mazo', max: 160),
+                      DropdownButtonFormField<String>(
+                          initialValue: type,
+                          decoration: const InputDecoration(
+                              labelText: 'Tipo de ejercicio'),
+                          items: const [
+                            DropdownMenuItem(
+                                value: 'qa',
+                                child: Text('Pregunta y respuesta')),
+                            DropdownMenuItem(
+                                value: 'cloze',
+                                child: Text('Completar huecos')),
+                            DropdownMenuItem(
+                                value: 'truefalse',
+                                child: Text('Verdadero / falso')),
+                            DropdownMenuItem(
+                                value: 'order',
+                                child: Text('Ordenar una lista')),
+                            DropdownMenuItem(
+                                value: 'case', child: Text('Caso práctico')),
+                            DropdownMenuItem(
+                                value: 'test',
+                                child: Text('Pregunta tipo test'))
+                          ],
+                          onChanged: (v) {
+                            setState(() {
+                              type = v!;
+                              correct = 0;
+                            });
+                            saveDraft();
+                          }),
+                      const SizedBox(height: 20),
+                      field(
+                          front,
+                          type == 'cloze'
+                              ? 'Enunciado con {{c1::respuesta}}'
+                              : 'Pregunta / hechos del caso',
+                          lines: 3),
+                      field(back, 'Respuesta y excepciones relevantes',
+                          lines: 3, max: 8000),
+                      field(explanation, 'Explicación y contexto',
+                          lines: 3, required: false, max: 8000),
+                      if (['test', 'case', 'order'].contains(type))
+                        field(
+                            options,
+                            type == 'order'
+                                ? 'Elementos en orden correcto · uno por línea'
+                                : 'Opciones · una por línea',
+                            lines: 4),
+                      if (['test', 'case', 'truefalse'].contains(type)) ...[
+                        DropdownButtonFormField<int>(
+                            initialValue: correct,
+                            decoration: const InputDecoration(
+                                labelText: 'Respuesta correcta'),
+                            items: List.generate(
+                                type == 'truefalse' ? 2 : 6,
+                                (i) => DropdownMenuItem(
+                                    value: i,
+                                    child: Text(type == 'truefalse'
+                                        ? ['Verdadero', 'Falso'][i]
+                                        : 'Opción ${i + 1}'))),
+                            onChanged: (v) {
+                              correct = v!;
+                              saveDraft();
+                            }),
+                        const SizedBox(height: 20)
                       ],
-                      onChanged: (v) {
-                        setState(() {
-                          type = v!;
-                          correct = 0;
-                        });
-                        saveDraft();
-                      }),
-                  const SizedBox(height: 20),
-                  field(
-                      front,
-                      type == 'cloze'
-                          ? 'Enunciado con {{c1::respuesta}}'
-                          : 'Pregunta / hechos del caso',
-                      lines: 3),
-                  field(back, 'Respuesta y excepciones relevantes',
-                      lines: 3, max: 8000),
-                  field(explanation, 'Explicación y contexto',
-                      lines: 3, required: false, max: 8000),
-                  if (['test', 'case', 'order'].contains(type))
-                    field(
-                        options,
-                        type == 'order'
-                            ? 'Elementos en orden correcto · uno por línea'
-                            : 'Opciones · una por línea',
-                        lines: 4),
-                  if (['test', 'case', 'truefalse'].contains(type)) ...[
-                    DropdownButtonFormField<int>(
-                        initialValue: correct,
-                        decoration: const InputDecoration(
-                            labelText: 'Respuesta correcta'),
-                        items: List.generate(
-                            type == 'truefalse' ? 2 : 6,
-                            (i) => DropdownMenuItem(
-                                value: i,
-                                child: Text(type == 'truefalse'
-                                    ? ['Verdadero', 'Falso'][i]
-                                    : 'Opción ${i + 1}'))),
-                        onChanged: (v) {
-                          correct = v!;
-                          saveDraft();
-                        }),
-                    const SizedBox(height: 20)
-                  ],
-                  Paper(
-                      child: Text(widget.existing?.normId.isNotEmpty == true
-                          ? 'Fuente: ${widget.existing!.normId} · ${widget.existing!.unitId}\nVersión: ${widget.existing!.versionId}'
-                          : widget.norm == null
-                              ? 'Sin fuente jurídica anclada. Puedes crear una tarjeta desde un artículo descargado para conservar norma, versión y bloque.'
-                              : 'Fuente: ${widget.norm!['id']} · ${widget.unit!['title']}\nVersión: ${widget.norm!['latestVersion']}')),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                      onPressed: saving ? null : save,
-                      child: Text(saving ? 'Guardando…' : 'Guardar tarjeta')),
-                ]))));
+                      Paper(
+                          child: Text(widget.existing?.normId.isNotEmpty == true
+                              ? 'Fuente: ${widget.existing!.normId} · ${widget.existing!.unitId}\nVersión: ${widget.existing!.versionId}'
+                              : widget.norm == null
+                                  ? 'Sin fuente jurídica anclada. Puedes crear una tarjeta desde un artículo descargado para conservar norma, versión y bloque.'
+                                  : 'Fuente: ${widget.norm!['id']} · ${widget.unit!['title']}\nVersión: ${widget.norm!['latestVersion']}')),
+                      const SizedBox(height: 24),
+                      FilledButton(
+                          onPressed: saving ? null : save,
+                          child:
+                              Text(saving ? 'Guardando…' : 'Guardar tarjeta')),
+                    ])))));
   }
 }
 

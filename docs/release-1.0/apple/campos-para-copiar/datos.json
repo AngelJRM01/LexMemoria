@@ -1,0 +1,19 @@
+{
+  "name": "LexMemoria",
+  "subtitle": "Estudia leyes y repasa",
+  "version": "1.0.0",
+  "language": "Español (España)",
+  "copyright": "2026 Ángel Joaquín Rodríguez Mercado",
+  "supportUrl": "https://github.com/AngelJRM01/LexMemoria/blob/release/1.0.0-rc1/docs/release-1.0/SOPORTE.md",
+  "marketingUrl": null,
+  "reviewContact": {
+    "firstName": "Ángel Joaquín",
+    "lastName": "Rodríguez Mercado",
+    "email": "armcode.dev@gmail.com",
+    "phone": null
+  },
+  "releaseMode": "manual",
+  "submittedToAppStoreConnect": false,
+  "privacyPolicyFinal": false,
+  "signedBuildUploaded": false
+}

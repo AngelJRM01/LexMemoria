@@ -1,0 +1,23 @@
+{
+  "checkedAtUtc": "2026-11-11T11:58:45.605436+00:00",
+  "project": "lexmemoria-aa86a",
+  "android": {
+    "expectedPackage": "es.lexmemoria.app",
+    "registrationMatches": true,
+    "webOAuthClientPresent": true,
+    "signingCertificateRegistered": false,
+    "googleSignInAcceptedOnDevice": false
+  },
+  "ios": {
+    "expectedBundleId": "es.lexmemoria.app",
+    "receivedBundleId": "es.lexmemoria.app",
+    "registrationMatches": true,
+    "googleOAuthFieldsPresent": true,
+    "configurationApplied": false,
+    "requiresCorrectRegistration": false,
+    "googleSignInAcceptedOnDevice": false
+  },
+  "previewConfigurationReplaced": false,
+  "configurationFilesCommitted": false,
+  "productionSigningChanged": false
+}

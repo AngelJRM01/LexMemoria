@@ -1,0 +1,86 @@
+name: Apple review screenshots and storage
+on:
+  push:
+    branches: [release/1.0.0-rc1]
+    paths:
+      - '.github/workflows/apple-review-assets.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  screenshots:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.9'
+          cache: true
+      - name: Resolve locked dependencies
+        working-directory: mobile
+        run: flutter pub get --enforce-lockfile
+      - name: Select and boot iPhone simulator
+        run: |
+          mkdir -p apple-review-assets
+          xcrun simctl list devices available --json > apple-review-assets/available-simulators.json
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          devices=json.loads(Path('apple-review-assets/available-simulators.json').read_text())['devices']
+          candidates=[{**d,'runtime':runtime} for runtime,rows in devices.items() if '.iOS-' in runtime for d in rows if d.get('isAvailable') and d['name'].startswith('iPhone')]
+          candidates.sort(key=lambda d: ('Pro Max' in d['name'],d['runtime'],d['name']),reverse=True)
+          assert candidates,'No available iPhone simulator'
+          selected=candidates[0]
+          with open(os.environ['GITHUB_ENV'],'a') as output:output.write('IOS_SIMULATOR_ID='+selected['udid']+'\n')
+          Path('apple-review-assets/simulator.json').write_text(json.dumps(selected,indent=2))
+          PY
+          export IOS_SIMULATOR_ID="$(python3 -c 'import json; print(json.load(open("apple-review-assets/simulator.json"))["udid"])')"
+          set -o pipefail
+          xcrun simctl bootstatus "$IOS_SIMULATOR_ID" -b 2>&1 | tee apple-review-assets/simulator-boot.txt
+      - name: Verify native encrypted iOS storage
+        working-directory: mobile
+        run: |
+          set -o pipefail
+          flutter test integration_test/startup_test.dart -d "$IOS_SIMULATOR_ID" 2>&1 | tee ../apple-review-assets/native-storage.txt
+      - name: Capture real iPhone screens
+        working-directory: mobile
+        run: |
+          set -o pipefail
+          rm -f ../docs/release-1.0/screenshots/*.png
+          flutter drive --driver test_driver/store_screenshots.dart --target integration_test/release_acceptance_test.dart -d "$IOS_SIMULATOR_ID" 2>&1 | tee ../apple-review-assets/screenshots-test.txt
+          mkdir -p ../apple-review-assets/screenshots
+          cp ../docs/release-1.0/screenshots/*.png ../apple-review-assets/screenshots/
+      - name: Verify capture files
+        run: |
+          python3 - <<'PY'
+          import json,struct,hashlib,os
+          from pathlib import Path
+          root=Path('apple-review-assets/screenshots');rows=[]
+          for name in ['01-inicio','02-biblioteca','03-articulo','04-tarjeta','05-respuesta']:
+              path=root/(name+'.png');raw=path.read_bytes()
+              assert raw[:8]==b'\x89PNG\r\n\x1a\n'
+              width,height=struct.unpack('>II',raw[16:24]);assert width>=320 and height>=320
+              rows.append({'file':path.name,'width':width,'height':height,'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()})
+          assert len({row['sha256'] for row in rows})==5
+          Path('apple-review-assets/capture-report.json').write_text(json.dumps({'platform':'iOS simulator','sourceCommit':os.environ['GITHUB_SHA'],'syntheticData':True,'physicalDeviceTested':False,'storeAcceptance':'pending','captures':rows},indent=2))
+          PY
+      - name: Summarize failed native checks
+        if: ${{ failure() }}
+        run: |
+          python3 - <<'PY'
+          import os,re
+          from pathlib import Path
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as output:
+              for path in Path('apple-review-assets').glob('*.txt'):
+                  text=path.read_text(errors='replace');text=re.sub(r'http://127\.0\.0\.1:\d+/[^/\s]+/','[LOCAL_VM_SERVICE]',text)
+                  output.write('\n## '+path.name+'\n\n```text\n'+'\n'.join(text.splitlines()[-80:])+'\n```\n')
+          PY
+      - name: Upload native evidence and screenshots
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: LexMemoria-1.0.0-AppStore-Capturas
+          path: apple-review-assets/
+          if-no-files-found: error
+          retention-days: 14

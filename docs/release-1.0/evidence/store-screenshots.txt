@@ -1,0 +1,109 @@
+Resolving dependencies...
+Downloading packages...
+  code_assets 2.1.0 (2.2.0 available)
+  cross_file 0.3.5+5 (0.4.0 available)
+  csv 6.0.0 (8.0.0 available)
+  dbus 0.7.15 (0.8.0 available)
+  file_picker 10.3.10 (13.3.2 available)
+  flutter_lints 5.0.0 (6.0.0 available)
+  flutter_secure_storage 9.2.4 (11.2.0 available)
+  flutter_secure_storage_linux 1.2.3 (3.0.3 available)
+  flutter_secure_storage_macos 3.1.3 (4.0.0 available)
+  flutter_secure_storage_platform_interface 1.1.2 (2.1.1 available)
+  flutter_secure_storage_web 1.2.1 (2.1.1 available)
+  flutter_secure_storage_windows 3.1.2 (4.2.2 available)
+  js 0.6.7 (0.7.2 available)
+  lints 5.1.1 (6.1.0 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  objective_c 9.6.2 (9.6.3 available)
+  share_plus 11.1.0 (13.3.1 available)
+  share_plus_platform_interface 6.1.0 (7.2.0 available)
+  synchronized 3.5.0 (3.6.1 available)
+  test_api 0.7.12 (0.7.15 available)
+  win32 5.15.0 (6.4.0 available)
+Got dependencies!
+21 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+Running Gradle task 'assembleDebug'...
+Picked up JAVA_TOOL_OPTIONS: -Dhttp.proxyHost=proxy -Dhttp.proxyPort=8080 -Dhttps.proxyHost=proxy -Dhttps.proxyPort=8080 -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts
+WARNING: Your app uses the following plugins that apply Kotlin Gradle Plugin (KGP): file_picker, firebase_auth, firebase_core, flutter_tts, share_plus
+Future versions of Flutter will fail to build if your app uses plugins that apply KGP.
+
+Please check the changelogs of these plugins and upgrade to a version that supports Built-in Kotlin.
+If no such version exists, report the issue to the plugin. If necessary, here is a guide on filing
+an issue against a plugin: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-app-developers#report-incompatible-kotlin-gradle-plugin-usage-to-plugin-authors
+
+If you are a plugin author, please migrate your plugin to Built-in Kotlin using this guide: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-plugin-authors
+Running Gradle task 'assembleDebug'...                              9.5s
+✓ Built build/app/outputs/flutter-apk/app-debug.apk
+Installing build/app/outputs/flutter-apk/app-debug.apk...           8.4s
+D/FlutterRenderer( 3731): Width is zero. 0,0
+D/FlutterRenderer( 3731): Width is zero. 0,0
+D/FlutterJNI( 3731): Sending viewport metrics to the engine.
+W/HWUI    ( 3731): Failed to initialize 101010-2 format, error = EGL_SUCCESS
+I/Gralloc4( 3731): mapper 4.x is not supported
+I/.lexmemoria.app( 3731): Background concurrent mark compact GC freed 1886KB AllocSpace bytes, 3(60KB) LOS objects, 49% free, 2740KB/5481KB, paused 2.937ms,12.303ms total 673.725ms
+VMServiceFlutterDriver: Connecting to Flutter application at http://127.0.0.1:[PORT]/[REDACTED]/
+I/Choreographer( 3731): Skipped 155 frames!  The application may be doing too much work on its main thread.
+D/FlutterJNI( 3731): Sending viewport metrics to the engine.
+VMServiceFlutterDriver: Isolate found with number: 8408662067957747
+VMServiceFlutterDriver: Isolate 8408662067957747 is runnable.
+VMServiceFlutterDriver: Isolate is paused at start.
+VMServiceFlutterDriver: Attempting to resume isolate
+VMServiceFlutterDriver: Flutter Driver extension is taking a long time to become available. Ensure your test app (often "lib/main.dart") imports "package:flutter_driver/driver_extension.dart" and calls enableFlutterDriverExtension() as the first call in main().
+I/flutter ( 3731): 00:00 +0: capture real private-study screens using only synthetic local data
+VMServiceFlutterDriver: Connected to Flutter application.
+I/Choreographer( 3731): Skipped 677 frames!  The application may be doing too much work on its main thread.
+VMServiceFlutterDriver: request_data message is taking a long time to complete...
+I/.lexmemoria.app( 3731): Compiler allocated 5174KB to compile void android.view.ViewRootImpl.performTraversals()
+I/Choreographer( 3731): Skipped 1046 frames!  The application may be doing too much work on its main thread.
+I/HWUI    ( 3731): Davey! duration=17890ms; Flags=1, FrameTimelineVsyncId=334192, IntendedVsync=2701962972007, Vsync=2719396304643, InputEventId=0, HandleInputStart=2719409377248, AnimationStart=2719409391068, PerformTraversalsStart=2719409397047, DrawStart=2719443912312, FrameDeadline=2701979638673, FrameInterval=2719399399364, FrameStartTime=16666666, SyncQueued=2719463639679, SyncStart=2719466106033, IssueDrawCommandsStart=2719495553979, SwapBuffers=2719750643880, FrameCompleted=2719855704121, DequeueBufferDuration=1909615, QueueBufferDuration=4024224, GpuCompleted=2719849898363, SwapBuffersCompleted=2719855704121, DisplayPresentTime=72904454231359566, CommandSubmissionCompleted=2719750643880,
+W/.lexmemoria.app( 3731): Verification of com.it_nomads.fluttersecurestorage.ciphers.StorageCipher com.it_nomads.fluttersecurestorage.ciphers.StorageCipherFactory.getCurrentStorageCipher(android.content.Context) took 115.255ms (147.50 bytecodes/s) (2952B approximate peak alloc)
+W/.lexmemoria.app( 3731): Verification of com.it_nomads.fluttersecurestorage.ciphers.KeyCipherAlgorithm[] com.it_nomads.fluttersecurestorage.ciphers.KeyCipherAlgorithm.$values() took 141.074ms (63.80 bytecodes/s) (2152B approximate peak alloc)
+W/.lexmemoria.app( 3731): Verification of void com.it_nomads.fluttersecurestorage.ciphers.StorageCipherAlgorithm$$ExternalSyntheticLambda1.<init>() took 129.386ms (30.92 bytecodes/s) (2176B approximate peak alloc)
+I/SQLiteConnection( 3731): Database keying operation returned:0
+W/.lexmemoria.app( 3731): JNI critical lock held for 21.132ms on Thread[15,tid=3793,Runnable,Thread*=0x7a5903282840,peer=0x14133508,"Sqflite"]
+W/.lexmemoria.app( 3731): Verification of io.flutter.embedding.android.FlutterView dev.flutter.plugins.integration_test.FlutterDeviceScreenshot.getFlutterView(android.app.Activity) took 108.240ms (258.68 bytecodes/s) (2864B approximate peak alloc)
+I/Choreographer( 3731): Skipped 37 frames!  The application may be doing too much work on its main thread.
+I/HWUI    ( 3731): Davey! duration=1053ms; Flags=0, FrameTimelineVsyncId=338888, IntendedVsync=2752646303313, Vsync=2753262969955, InputEventId=0, HandleInputStart=2753301672296, AnimationStart=2753301790923, PerformTraversalsStart=2753301825785, DrawStart=2753361117087, FrameDeadline=2752662969979, FrameInterval=2753272684285, FrameStartTime=16666666, SyncQueued=2753393099630, SyncStart=2753397636898, IssueDrawCommandsStart=2753408652978, SwapBuffers=2753486179284, FrameCompleted=2753704671127, DequeueBufferDuration=15437356, QueueBufferDuration=158564042, GpuCompleted=2753574069308, SwapBuffersCompleted=2753704671127, DisplayPresentTime=144115222452437076, CommandSubmissionCompleted=2753486179284,
+D/FlutterJNI( 3731): Sending viewport metrics to the engine.
+D/EGL_emulation( 3731): app_time_stats: avg=32585.90ms min=31350.06ms max=33821.73ms count=2
+W/.lexmemoria.app( 3731): Suspending all threads took: 7.945ms
+I/.lexmemoria.app( 3731): NativeAlloc concurrent mark compact GC freed 927KB AllocSpace bytes, 10(336KB) LOS objects, 49% free, 2975KB/5951KB, paused 17.118ms,48.357ms total 1.446s
+D/EGL_emulation( 3731): app_time_stats: avg=3555.96ms min=1093.59ms max=6018.33ms count=2
+D/EGL_emulation( 3731): app_time_stats: avg=4955.57ms min=4955.57ms max=4955.57ms count=1
+D/EGL_emulation( 3731): app_time_stats: avg=9985.79ms min=144.16ms max=19827.41ms count=2
+D/EGL_emulation( 3731): app_time_stats: avg=1461.70ms min=1461.70ms max=1461.70ms count=1
+D/EGL_emulation( 3731): app_time_stats: avg=21534.55ms min=21534.55ms max=21534.55ms count=1
+W/.lexmemoria.app( 3731): Suspending all threads took: 6.809ms
+I/.lexmemoria.app( 3731): NativeAlloc concurrent mark compact GC freed 204KB AllocSpace bytes, 14(1184KB) LOS objects, 49% free, 2967KB/5934KB, paused 15.051ms,18.315ms total 617.554ms
+D/EGL_emulation( 3731): app_time_stats: avg=1375.94ms min=175.54ms max=3652.36ms count=3
+D/EGL_emulation( 3731): app_time_stats: avg=4207.21ms min=4207.21ms max=4207.21ms count=1
+D/EGL_emulation( 3731): app_time_stats: avg=6332.97ms min=563.40ms max=12102.53ms count=2
+W/WindowOnBackDispatcher( 3731): OnBackInvokedCallback is not enabled for the application.
+W/WindowOnBackDispatcher( 3731): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+D/EGL_emulation( 3731): app_time_stats: avg=16022.44ms min=16022.44ms max=16022.44ms count=1
+D/EGL_emulation( 3731): app_time_stats: avg=3790.41ms min=3790.41ms max=3790.41ms count=1
+D/EGL_emulation( 3731): app_time_stats: avg=3384.29ms min=3384.29ms max=3384.29ms count=1
+D/EGL_emulation( 3731): app_time_stats: avg=3681.66ms min=3681.66ms max=3681.66ms count=1
+I/.lexmemoria.app( 3731): NativeAlloc concurrent mark compact GC freed 264KB AllocSpace bytes, 25(1952KB) LOS objects, 49% free, 2971KB/5942KB, paused 709us,14.954ms total 421.603ms
+D/EGL_emulation( 3731): app_time_stats: avg=2578.97ms min=175.32ms max=4982.62ms count=2
+D/EGL_emulation( 3731): app_time_stats: avg=6071.86ms min=6071.86ms max=6071.86ms count=1
+D/EGL_emulation( 3731): app_time_stats: avg=1799.86ms min=1799.86ms max=1799.86ms count=1
+D/EGL_emulation( 3731): app_time_stats: avg=4552.76ms min=4552.76ms max=4552.76ms count=1
+D/EGL_emulation( 3731): app_time_stats: avg=5533.88ms min=5533.88ms max=5533.88ms count=1
+D/EGL_emulation( 3731): app_time_stats: avg=3670.20ms min=515.62ms max=6824.77ms count=2
+D/EGL_emulation( 3731): app_time_stats: avg=329.73ms min=134.10ms max=669.24ms count=4
+D/EGL_emulation( 3731): app_time_stats: avg=8536.92ms min=8536.92ms max=8536.92ms count=1
+I/.lexmemoria.app( 3731): NativeAlloc concurrent mark compact GC freed 220KB AllocSpace bytes, 23(2532KB) LOS objects, 49% free, 2979KB/5958KB, paused 1.544ms,15.340ms total 238.318ms
+D/EGL_emulation( 3731): app_time_stats: avg=1871.27ms min=123.43ms max=3619.12ms count=2
+D/EGL_emulation( 3731): app_time_stats: avg=3949.14ms min=3949.14ms max=3949.14ms count=1
+D/EGL_emulation( 3731): app_time_stats: avg=2527.48ms min=514.19ms max=4540.78ms count=2
+W/TextToSpeech( 3731): stop failed: not bound to TTS engine
+D/EGL_emulation( 3731): app_time_stats: avg=1805.08ms min=1805.08ms max=1805.08ms count=1
+I/flutter ( 3731): 02:46 +1: (tearDownAll)
+I/Choreographer( 3731): Skipped 137 frames!  The application may be doing too much work on its main thread.
+D/EGL_emulation( 3731): app_time_stats: avg=9043.38ms min=9043.38ms max=9043.38ms count=1
+I/flutter ( 3731): 02:48 +2: All tests passed!
+I/HWUI    ( 3731): Davey! duration=2377ms; Flags=0, FrameTimelineVsyncId=348109, IntendedVsync=2866279632101, Vsync=2868562965343, InputEventId=0, HandleInputStart=2868586539463, AnimationStart=2868586551631, PerformTraversalsStart=2868586557240, DrawStart=2868594382487, FrameDeadline=2866296298767, FrameInterval=2868575627078, FrameStartTime=16666666, SyncQueued=2868594933257, SyncStart=2868595187746, IssueDrawCommandsStart=2868595632799, SwapBuffers=2868610350072, FrameCompleted=2868657700507, DequeueBufferDuration=56274, QueueBufferDuration=1339245, GpuCompleted=2868650442055, SwapBuffersCompleted=2868657700507, DisplayPresentTime=0, CommandSubmissionCompleted=2868610350072,
+All tests passed.

@@ -1,0 +1,10 @@
+Dato,Tratamiento previsto,Obligatorio para estudio local,Finalidad,Validación pendiente
+Identificador de cuenta Google y usuario,Remoto al iniciar sesión,no,Identidad y recuperación,Proveedor y formulario Play
+Nombre alias correo y foto opcional,Según cuenta perfil y acciones elegidas,no,Perfil y colaboración,Declarar campos y SDK reales del binario
+Tarjetas notas cursos y plan,Local y remoto si se sincroniza,no,Estudio y recuperación,Comparar workspace en dos dispositivos
+Respuestas eventos estados y simulacros,Local y remoto si se sincroniza,no,Repaso progreso y recuperación,Comparar historial y conflictos
+Marcadores y posiciones de lectura,Local y remoto si se sincroniza,no,Continuar estudio,Comparar edición y hash
+Invitaciones relaciones y contenido compartido,Remoto al usar colaboración privada,no,Permisos colaboración bloqueo y reportes,Aceptación y obligaciones UGC aplicables
+Dirección IP y datos técnicos de petición,Procesamiento por proveedores al conectar,no,Entrega seguridad y operación,Retención real de logs y declaraciones de proveedores
+Tokens de acceso y recuperación,Almacenamiento seguro y procesamiento de autenticación,no,Seguridad de cuenta,No aparecen en export educativo
+Publicidad y compras activas,No incorporadas en esta edición,no,No procede,Revisar binario final y ficha

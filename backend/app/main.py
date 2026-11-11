@@ -16,7 +16,7 @@ from sqlalchemy.orm.exc import StaleDataError
 from .identity import ExternalIdentity, FirebaseVerifier, IdentityError
 from .accounts import (UserSession, SessionToken, AliasClaim, session_for_token,
                        revoke_current, register_account_routes, effective_entitlements)
-from .collaboration import register_collaboration, Membership, Relationship, Invitation
+from .collaboration import register_collaboration, public_deck_publication_enabled, Membership, Relationship, Invitation
 from .editorial_security import require_editorial
 from .sync_clock import AccountSyncClock
 from .recovery_receipts import RecoveryReceipt, read_receipt, add_receipt
@@ -32,7 +32,7 @@ def create_app(database_url=None):
     engine, factory = connect(database_url)
     with factory() as session:
         rebuild_index(session)
-    app = FastAPI(title='LexMemoria', version='0.8.2')
+    app = FastAPI(title='LexMemoria', version='1.0.0')
     origins = [v.strip() for v in os.getenv('CORS_ORIGINS', '').split(',') if v.strip()]
     if origins:
         app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=False,
@@ -181,7 +181,8 @@ def create_app(database_url=None):
     def health(s=Depends(db)):
         s.execute(select(1))
         return {'status': 'ok', 'version': app.version, 'database': engine.dialect.name,
-                'firebaseProject': app.state.identity_verifier.project or None, 'coverage': 'not-certified'}
+                'firebaseProject': app.state.identity_verifier.project or None, 'coverage': 'not-certified',
+                'publicDeckPublicationEnabled': public_deck_publication_enabled()}
 
     @app.post('/v1/auth/guest', status_code=201)
     def guest(s=Depends(db)):

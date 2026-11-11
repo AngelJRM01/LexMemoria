@@ -1,0 +1,14 @@
+{
+  "Texto promocional": {
+    "characters": 131,
+    "limit": 170
+  },
+  "Descripción": {
+    "characters": 2022,
+    "limit": 4000
+  },
+  "Palabras clave": {
+    "characters": 84,
+    "limit": 100
+  }
+}

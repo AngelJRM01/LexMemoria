@@ -1,0 +1,13 @@
+{
+  "checkedAtUtc": "2026-11-10T14:11:23.762177+00:00",
+  "renderHealthUrl": "https://lexmemoria-api.onrender.com/health",
+  "probe": "blocked_before_origin_response",
+  "observedError": "ProxyError",
+  "renderConsoleAccess": false,
+  "productionPostgreSQLAccess": false,
+  "liveCommitVerified": false,
+  "productionBackupTaken": false,
+  "productionRestorationVerified": false,
+  "googlePlayConsoleAccess": false,
+  "providerGoogleEndToEndVerified": false
+}
