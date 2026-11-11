@@ -10,11 +10,11 @@ Configuración preparada fuera de Git: /workspace/lexmemoria-private-config/fire
 
 ## iOS
 
-El plist recibido corresponde a es.lexmemoria.ap; el proyecto de iPhone usa es.lexmemoria.app. Falta una p al final en el registro recibido. El archivo no se ha añadido al proyecto ni se ha habilitado el acceso Google con una identidad de otra aplicación.
+El segundo plist recibido y comprobado el 11 de noviembre de 2026 corresponde correctamente a es.lexmemoria.app y al proyecto lexmemoria-aa86a. Contiene los campos de configuración Firebase y OAuth de Google necesarios para preparar la integración. La diferencia del primer registro queda resuelta; no se solicita un nuevo registro.
 
-En Firebase → Configuración del proyecto → General → Añadir aplicación → iOS, registrar exactamente es.lexmemoria.app y descargar su GoogleService-Info.plist. El identificador de un registro Firebase existente no se arregla editando manualmente el plist. No es necesario borrar el registro anterior para crear el correcto.
+Configuración correcta conservada fuera de Git: /workspace/lexmemoria-private-config/firebase/ios/GoogleService-Info.plist. El archivo anterior de es.lexmemoria.ap se conserva separado como antecedente y no debe utilizarse en la compilación definitiva.
 
-Archivo recibido conservado para comprobación: /workspace/lexmemoria-private-config/firebase/ios-pending/GoogleService-Info.plist. La integración de Google iOS y Sign in with Apple siguen pendientes; registrar una aplicación no activa por sí solo esos proveedores ni la firma Apple.
+Esta comprobación no equivale a integración o acceso Google operativo en iOS: siguen pendientes el empaquetado del plist, esquema de retorno OAuth, habilitación del cliente iOS y aceptación real. Sign in with Apple y firma Apple son pasos distintos. Los archivos completos no se han publicado en Git ni se han presentado como claves de distribución.
 
 ## Estado de publicación
 
