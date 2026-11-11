@@ -1,0 +1,14 @@
+{
+  "runUrl": "https://github.com/AngelJRM01/LexMemoria/actions/runs/43119263369",
+  "sourceCommit": "6805de499fa167ef80ddeea52b5dff7cac238072",
+  "candidate": "es.lexmemoria.app 1.0.0 (18)",
+  "artifactDownloadPassed": true,
+  "candidateIntegrityAndMetadataPassed": true,
+  "temporaryApiKeyPreparationPassed": true,
+  "uploadCommandStatus": "in_progress_at_last_check",
+  "appleProcessingAccepted": false,
+  "submittedForReview": false,
+  "storePublished": false,
+  "physicalDeviceAcceptance": "not_tested",
+  "note": "Preparation is verified from public job step states. Apple receipt and processing are not yet established. Do not retry until the active upload result is known."
+}
