@@ -16,6 +16,8 @@ Responsable: Ángel Joaquín Rodríguez Mercado. Contacto: armcode.dev@gmail.com
 
 Revisar las categorías equivalentes a identificadores, información de contacto, contenido de usuario e interacción con el producto según las opciones que muestre Apple. Los datos guardados por cuenta para recuperar el estudio están asociados a esa cuenta; no declararlos anónimos por usar un UID en vez de mostrar un nombre.
 
+Las relaciones internas de compañeros/grupos pueden encajar en Contactos o grafo social según la definición de Apple, aunque la app no lea la agenda del teléfono; comprobar esa categoría en el formulario.
+
 Finalidad principal: funciones de la app y, cuando corresponda, seguridad/soporte. No hay publicidad ni compras activas en la primera edición. No hay seguimiento publicitario entre apps implementado en el cliente actual; confirmar los SDK y el comportamiento del build final antes de responder sobre tracking.
 
 Una preferencia de analítica no equivale a un proveedor conectado. No afirmar tampoco que todos los proveedores carecen de registros técnicos. La revisión tiene que incluir Firebase, Render y los SDK realmente empaquetados.

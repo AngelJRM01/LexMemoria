@@ -20,6 +20,8 @@ Actualizada el 11 de noviembre de 2026. Textos listos para copiar; no se han int
 | URL de marketing | Vacía; campo opcional |
 | Encaminamiento | Sin archivo; no es una app de navegación |
 | App Clip, iMessage y Game Center | Sin configurar; no se utilizan |
+| Archivo adjunto para revisión | Vacío salvo documentación específica solicitada; no adjuntar backups privados |
+| Compilación | Pendiente de firma y subida a TestFlight; un ZIP sin firma no se puede seleccionar como build |
 | Encabezado promocional personalizado | Opcional; no inventar capturas ni presentar imágenes Android como iPhone |
 
 ## Texto promocional

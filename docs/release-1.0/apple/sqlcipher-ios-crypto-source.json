@@ -1,0 +1,12 @@
+{
+  "pinnedPod": "SQLCipher 4.10.0",
+  "publishedPodspecDefaultSubspec": "standard",
+  "cryptoDefinition": "SQLCIPHER_CRYPTO_CC",
+  "frameworks": [
+    "Foundation",
+    "Security"
+  ],
+  "sourceType": "published CocoaPods spec",
+  "compiledArtifactCryptoInventoryVerified": false,
+  "exportExemptionDetermined": false
+}
