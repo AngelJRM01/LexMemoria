@@ -1,0 +1,65 @@
+name: Apple upload to TestFlight
+on:
+  push:
+    branches: [release/1.0.0-rc1]
+    paths:
+      - '.github/workflows/apple-testflight-upload.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  upload-testflight:
+    runs-on: macos-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download previously verified signed IPA
+        uses: actions/download-artifact@v4
+        with:
+          name: LexMemoria-1.0.0-SIGNED-IPA-3
+          path: apple-signed-artifacts
+          repository: AngelJRM01/LexMemoria
+          run-id: '43105880193'
+          github-token: ${{ github.token }}
+      - name: Verify exact candidate before upload
+        run: |
+          set -euo pipefail
+          shasum -a 256 -c apple-signed-artifacts/SHA256SUMS.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          import plistlib,zipfile
+          files=list(Path('apple-signed-artifacts').glob('*.ipa'))
+          assert len(files)==1,'Expected exactly one signed IPA'
+          with zipfile.ZipFile(files[0]) as z:
+              assert z.testzip() is None
+              names=[n for n in z.namelist() if n.startswith('Payload/') and n.endswith('.app/Info.plist') and n.count('/')==2]
+              assert len(names)==1
+              info=plistlib.loads(z.read(names[0]))
+              assert info['CFBundleIdentifier']=='es.lexmemoria.app'
+              assert info['CFBundleShortVersionString']=='1.0.0'
+              assert info['CFBundleVersion']=='18'
+          print('Verified signed candidate: es.lexmemoria.app 1.0.0 (18)')
+          PY
+      - name: Prepare temporary App Store Connect key
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          ASC_PRIVATE_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_BASE64 }}
+        run: |
+          set -euo pipefail
+          umask 077
+          python3 scripts/prepare_testflight_key.py
+      - name: Upload IPA to App Store Connect only
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          API_PRIVATE_KEYS_DIR: ${{ runner.temp }}/lexmemoria-asc/private_keys
+        run: |
+          set -euo pipefail
+          IPA="$(find "$GITHUB_WORKSPACE/apple-signed-artifacts" -maxdepth 1 -name '*.ipa' -type f)"
+          xcrun altool --upload-app --type ios --file "$IPA" --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID" --output-format json
+          echo 'Upload command completed. Apple processing, export compliance and device acceptance remain pending.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove temporary App Store Connect key
+        if: ${{ always() }}
+        run: rm -rf "$RUNNER_TEMP/lexmemoria-asc"
