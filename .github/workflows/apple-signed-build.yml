@@ -8,9 +8,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
-concurrency:
-  group: apple-signed-${{ github.ref }}
-  cancel-in-progress: false
+# Signing uses isolated ephemeral runners; a retry need not wait on an older run.
 jobs:
   signed-ipa:
     runs-on: macos-latest
