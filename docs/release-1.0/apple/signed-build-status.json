@@ -1,16 +1,17 @@
 {
-  "runUrl": "https://github.com/AngelJRM01/LexMemoria/actions/runs/43094524563",
-  "sourceCommit": "0272ce9ee3405d193c33f3a63fea3f8162496010",
+  "runUrl": "https://github.com/AngelJRM01/LexMemoria/actions/runs/43105880193",
+  "sourceCommit": "c94d95b637b38f7d6c53a9986ba0ce790c9c0c84",
   "checkedAtDate": "2026-11-11",
-  "evidence": "Public GitHub job step conclusions and owner-provided upload log",
+  "evidence": "Public GitHub job step conclusions: signing validation, IPA build, signature verification, artifact upload and temporary cleanup all success",
   "signingIdentityAndProfileValidated": true,
   "signedIpaBuildPassed": true,
   "signatureAndPackageVerificationPassed": true,
-  "artifactUploadPassed": false,
-  "failure": "CreateArtifact returned HTML instead of JSON after five attempts",
+  "artifactUploadPassed": true,
+  "failure": null,
   "temporarySigningCleanupPassed": true,
   "ipaDownloadedLocally": false,
   "testFlightUploaded": false,
   "physicalDeviceTested": false,
-  "nextAction": "Fresh workflow execution with one additional artifact action attempt; no certificate replacement"
+  "nextAction": "Download signed IPA from GitHub Artifacts; configure secure App Store Connect authentication before uploading to TestFlight",
+  "artifactName": "LexMemoria-1.0.0-SIGNED-IPA-3"
 }

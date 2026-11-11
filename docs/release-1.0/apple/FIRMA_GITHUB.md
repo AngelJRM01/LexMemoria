@@ -19,3 +19,7 @@ Validación local del cambio: 11 pruebas específicas superadas (10 de preflight
 Ejecución 43094524563: importación/validación, compilación de IPA y verificación de firma superadas según los estados públicos del job. La subida falló en CreateArtifact al recibir HTML en vez de JSON tras cinco intentos. La limpieza terminó correctamente. No hay IPA descargada ni subida TestFlight acreditada. Evidencia: signed-build-status.json.
 
 Se añade un segundo intento de upload-artifact condicionado al fallo del primero, con overwrite para evitar un artefacto parcial y sin compresión adicional sobre la IPA. Si también falla, el job falla: no se oculta la ausencia del artefacto. Se lanza una ejecución nueva, porque el runner temporal anterior ya no conserva una copia recuperable desde este entorno. La causa concreta de la respuesta HTML no se conoce; el reintento no garantiza resolver una indisponibilidad persistente del servicio.
+
+## Tercera ejecución: IPA disponible
+
+La ejecución 43105880193 del commit c94d95b superó importación del certificado, validación del perfil, compilación, verificación de firma y subida del artefacto. Limpieza completada. Artefacto `LexMemoria-1.0.0-SIGNED-IPA-3`, 38,2 MB según GitHub. No se ha descargado/verificado localmente ni subido a TestFlight. La segunda ejecución no se usa como evidencia de éxito.
