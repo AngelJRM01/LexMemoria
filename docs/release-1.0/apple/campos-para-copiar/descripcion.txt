@@ -1,0 +1,22 @@
+Estudia legislación y organiza tus repasos con LexMemoria, una herramienta para estudiantes de Derecho, opositores y otras personas interesadas en aprender leyes.
+
+CONSULTA Y LEE
+Explora una biblioteca de legislación española y europea, busca normas y consulta sus referencias oficiales. Descarga los textos que necesites para leer el contenido guardado sin conexión. El lector separa artículos y apartados para facilitar el estudio.
+
+PRACTICA CON TARJETAS
+Empieza con tarjetas preparadas y genera ejercicios de recuerdo, completar huecos, test literal e identificación de artículos cuando el texto permite hacerlo. Crea y modifica tus propias tarjetas, añade notas y organiza tus mazos.
+
+REPASA Y PLANIFICA
+Utiliza el repaso espaciado, consulta tu progreso y organiza objetivos, asignaturas y simulacros personales con tus tarjetas test.
+
+EMPIEZA SIN CUENTA
+Las funciones principales de estudio local no requieren registro. Puedes exportar una copia de tus datos. La primera descarga de contenido y los servicios online necesitan conexión; el contenido ya guardado se puede estudiar sin red.
+
+FUENTES Y ALCANCE
+Fuentes oficiales de referencia: https://www.boe.es/ y https://eur-lex.europa.eu/.
+
+LexMemoria es una aplicación educativa independiente, sin vinculación con BOE, la Unión Europea ni otras administraciones. No ofrece asesoramiento jurídico ni garantiza resultados académicos o en oposiciones. Los textos consolidados son informativos; la fecha de edición no garantiza por sí sola la aplicabilidad a un caso. Algunas fichas pueden contener solo metadatos o requerir consultar la fuente oficial.
+
+Los ejercicios generados son literales y automáticos: no son preguntas oficiales ni material revisado jurídicamente de forma íntegra. Contrasta las respuestas con el texto y la fuente citados.
+
+La edición inicial es gratuita, sin publicidad ni compras activas. El catálogo público de mazos está desactivado. Dirigida a personas desde los 16 años; la clasificación de contenido de App Store se completa por separado.

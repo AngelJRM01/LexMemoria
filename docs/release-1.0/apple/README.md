@@ -28,3 +28,7 @@ No hace falta un Mac propio para la compilación remota, pero una app de simulad
 Compilación real completada y ejecución marcada Success: https://github.com/AngelJRM01/LexMemoria/actions/runs/42981920967. Tanto iPhone release sin firma como simulador compilaron y superaron verificación de metadatos, ejecutable y ZIP.
 
 En la sección Artifacts, iniciar sesión en GitHub y descargar LexMemoria-1.0.0-Apple-1 (97,6 MB según GitHub). Contiene los dos ZIP y sus informes. El SHA-256 del artefacto externo informado por GitHub consta en build-status.json; no se presenta como descarga/hash verificados en este entorno Linux. El estado de compilación no acredita instalación física ni firma de distribución.
+
+## Ficha y soporte preparados
+
+FICHA_APP_STORE.md, Word/PDF y campos-para-copiar/ contienen los textos para App Store Connect. La página pública SOPORTE.md ofrece contacto y ayuda; no es la política de privacidad definitiva. PRIVACIDAD_APPLE.md y CIFRADO_APPLE.md separan los hechos técnicos de las decisiones y verificaciones pendientes. Las capturas Android no se deben presentar como capturas iPhone.

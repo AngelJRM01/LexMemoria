@@ -1,0 +1,13 @@
+Las funciones principales de lectura y estudio local no requieren cuenta ni credenciales.
+
+1. En la bienvenida, seleccionar «Explorar sin cuenta».
+2. En Inicio, pulsar «Comenzar repaso». Mostrar una respuesta y valorar Otra vez, Difícil, Bien o Fácil.
+3. En Biblioteca, abrir «Constitución Española», seleccionar un artículo y consultar sus fragmentos o el artículo completo. La Constitución forma parte de los textos incluidos.
+4. En Estudiar, el menú ofrece «Crear tarjeta propia»; crear una tarjeta con datos de prueba y comprobar el repaso.
+5. Para otros textos no incluidos, la primera descarga necesita conexión. Las fuentes se enlazan a BOE/EUR-Lex.
+
+No hay compras activas ni publicidad. El catálogo público de mazos está desactivado. Los ejercicios son automáticos y literales; no se anuncian como preguntas oficiales ni como revisión jurídica completa.
+
+No se necesita usuario/contraseña para este recorrido local. Si la entrega final incluye funciones de cuenta que necesiten acceso adicional para la revisión, deberán añadirse instrucciones operativas antes del envío. No inventar una contraseña para Google/Apple. La configuración y aceptación de proveedores iOS siguen pendientes en la compilación inicial.
+
+Este texto debe repetirse sobre el build firmado de TestFlight antes de usarse como instrucción definitiva de revisión. La publicación pública de la página de soporte no acredita funcionamiento de los servicios online.
