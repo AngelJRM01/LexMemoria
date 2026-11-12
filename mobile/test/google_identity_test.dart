@@ -259,4 +259,31 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     s.dispose();
   });
+  testWidgets(
+      'Google stays available after session creation and becomes verification after linking',
+      (tester) async {
+    final s = await store(MockClient((_) async => http.Response('{}', 200)));
+    final identity = Identity(() async => null);
+    await tester.pumpWidget(
+        MaterialApp(home: AccountPage(store: s, googleIdentity: identity)));
+    expect(find.text('Continuar con Google'), findsOneWidget);
+    s.data['remoteUserId'] = 'existing-study-account';
+    s.data['localDataOwnerId'] = 'existing-study-account';
+    s.syncStatusChanged();
+    await tester.pump();
+    expect(find.text('Vincular Google a mi cuenta'), findsOneWidget);
+    expect(
+        tester
+            .widget<OutlinedButton>(find.widgetWithText(
+                OutlinedButton, 'Vincular Google a mi cuenta'))
+            .onPressed,
+        isNotNull);
+    s.data['remoteGoogleLinked'] = true;
+    s.syncStatusChanged();
+    await tester.pump();
+    expect(find.text('Verificar cuenta de Google'), findsOneWidget);
+    expect(s.data['remoteUserId'], 'existing-study-account');
+    await tester.pumpWidget(const SizedBox());
+    s.dispose();
+  });
 }
