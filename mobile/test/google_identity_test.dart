@@ -207,4 +207,56 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     s.dispose();
   });
+  test('stalled Google login times out without accepting a late token',
+      () async {
+    final token = Completer<String?>();
+    var requests = 0;
+    final s = await store(MockClient((_) async {
+      requests++;
+      return http.Response('{}', 200);
+    }));
+    final operation = connectGoogleIdentity(
+        s, Identity(() => token.future), RemoteSync(s, secure: Vault()),
+        authenticationTimeout: const Duration(milliseconds: 10));
+    await expectLater(operation, throwsA(isA<TimeoutException>()));
+    token.complete('late-firebase-token');
+    await Future<void>.delayed(Duration.zero);
+    expect(requests, 0);
+    expect(s.data['remoteUserId'], isNull);
+    expect(s.data['notes']['a'], 'private');
+    s.dispose();
+  });
+  testWidgets(
+      'account screen stays navigable and releases stalled Google login',
+      (tester) async {
+    final token = Completer<String?>();
+    var requests = 0;
+    final s = await store(MockClient((_) async {
+      requests++;
+      return http.Response('{}', 200);
+    }));
+    await tester.pumpWidget(MaterialApp(
+        home: AccountPage(
+            store: s, googleIdentity: Identity(() => token.future))));
+    await tester.tap(find.text('Continuar con Google'));
+    await tester.pump();
+    expect(find.text('Conectando con el servidor…'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 8));
+    expect(find.textContaining('Puedes seguir estudiando'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 83));
+    await tester.pump();
+    expect(
+        tester
+            .widget<OutlinedButton>(
+                find.widgetWithText(OutlinedButton, 'Continuar con Google'))
+            .onPressed,
+        isNotNull);
+    expect(find.textContaining('Google no ha terminado el acceso'),
+        findsOneWidget);
+    token.complete('late-token');
+    await tester.pump();
+    expect(requests, 0);
+    await tester.pumpWidget(const SizedBox());
+    s.dispose();
+  });
 }

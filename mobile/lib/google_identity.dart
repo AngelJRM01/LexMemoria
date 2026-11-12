@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -118,14 +119,17 @@ class NativeGoogleIdentity implements GoogleIdentity {
 
 Future<bool> connectGoogleIdentity(
     AppStore store, GoogleIdentity identity, RemoteSync remote,
-    {bool confirmAccountChange = false}) async {
+    {bool confirmAccountChange = false,
+    Duration authenticationTimeout = const Duration(seconds: 90)}) async {
   if (!identity.available) {
     throw StateError('Google no está configurado en esta versión.');
   }
   final server = store.apiBase;
   final current = store.data['remoteUserId'];
   final owner = store.data['localDataOwnerId'];
-  final token = await identity.authenticate();
+  final token = await identity.authenticate().timeout(authenticationTimeout,
+      onTimeout: () => throw TimeoutException(
+          'Google no ha terminado el acceso. Reintenta; no se han enviado tus datos de estudio.'));
   if (token == null) return false;
   if (store.apiBase != server ||
       store.data['remoteUserId'] != current ||

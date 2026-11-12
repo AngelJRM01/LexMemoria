@@ -144,6 +144,36 @@ class RemoteSyncFailure extends StateError {
   RemoteSyncFailure(this.status, String message) : super(message);
 }
 
+class SyncStopped extends StateError {
+  SyncStopped()
+      : super(
+            'Subida detenida. Tus datos locales se conservan; puedes continuar después.');
+}
+
+class _SyncActivity {
+  final stopped = Completer<void>();
+  String detail = 'Comprobando la cuenta en el servidor…';
+  void check() {
+    if (stopped.isCompleted) throw SyncStopped();
+  }
+
+  Future<T> wait<T>(Future<T> operation) => Future.any([
+        operation,
+        stopped.future.then<T>((_) => throw SyncStopped()),
+      ]);
+  Future<void> delay(Duration duration) async {
+    final elapsed = Completer<void>();
+    final timer = Timer(duration, () => elapsed.complete());
+    try {
+      await wait(elapsed.future);
+    } finally {
+      timer.cancel();
+    }
+  }
+}
+
+final _activities = Expando<_SyncActivity>();
+
 final _refreshes = Expando<Map<String, Future<Json>>>();
 final _uploads = Expando<Future<void>>();
 final _pulls = Expando<Future<void>>();
@@ -151,6 +181,7 @@ final _pulls = Expando<Future<void>>();
 class RemoteSync {
   final AppStore store;
   final CredentialVault secure;
+  _SyncActivity? _activity;
   RemoteSync(this.store, {this.secure = const NativeCredentialVault()});
   String get base {
     final value = store.apiBase;
@@ -168,6 +199,24 @@ class RemoteSync {
     final value = _cachedProgressFingerprint(store);
     _fingerprintCache[store] = _FingerprintCache(store, value);
     return value;
+  }
+
+  String? get uploadDetail => _activities[store]?.detail;
+  bool get canStopUpload => _activities[store] != null;
+  void stopUpload() {
+    final activity = _activities[store];
+    if (activity != null && !activity.stopped.isCompleted) {
+      activity.stopped.complete();
+      store.syncStatusChanged();
+    }
+  }
+
+  void _uploadDetail(String text) {
+    _activity?.check();
+    if (_activity != null) {
+      _activity!.detail = text;
+      store.syncStatusChanged();
+    }
   }
 
   String get progressStatus {
@@ -294,8 +343,10 @@ class RemoteSync {
       bool retry = true,
       int rateRetries = 2,
       Json extraHeaders = const {}}) async {
+    _activity?.check();
     final server = base;
     final session = auth ? await _boundSession(server) : null;
+    _activity?.check();
     if (base != server) throw StateError('El servidor ha cambiado. Reintenta.');
     final token = session?['accessToken'] as String?;
     if (auth && token == null) {
@@ -307,15 +358,21 @@ class RemoteSync {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token'
     };
-    final outgoing = http.Request(method, uri)
+    final outgoing = http.AbortableRequest(method, uri,
+        abortTrigger: _activity?.stopped.future)
       ..followRedirects = false
       ..headers.addAll(headers);
     if (method != 'GET' && method != 'DELETE') {
       outgoing.body = jsonEncode(body ?? {});
     }
-    final response = await (() async =>
+    final pendingResponse = (() async =>
             http.Response.fromStream(await store.client.send(outgoing)))()
-        .timeout(Duration(seconds: path.startsWith('/v1/auth/') ? 90 : 30));
+        .timeout(Duration(seconds: path.startsWith('/v1/auth/') ? 90 : 30),
+            onTimeout: () => throw TimeoutException(
+                'El servidor no responde. Puede estar arrancando; reintenta en unos instantes. Tus datos locales se conservan.'));
+    final response =
+        await (_activity?.wait(pendingResponse) ?? pendingResponse);
+    _activity?.check();
     if (base != server ||
         (auth &&
             (store.data['remoteUserId'] != session!['userId'] ||
@@ -336,7 +393,15 @@ class RemoteSync {
       final seconds =
           (int.tryParse(response.headers['retry-after'] ?? '') ?? 60)
               .clamp(1, 120);
-      await Future<void>.delayed(Duration(seconds: seconds));
+      final previousDetail = _activity?.detail;
+      _uploadDetail(
+          'El servidor limita las peticiones. Reintento en $seconds s…');
+      if (_activity != null) {
+        await _activity!.delay(Duration(seconds: seconds));
+      } else {
+        await Future<void>.delayed(Duration(seconds: seconds));
+      }
+      if (previousDetail != null) _uploadDetail(previousDetail);
       if (base != server ||
           (auth && store.data['remoteUserId'] != session!['userId'])) {
         throw StateError('La cuenta ha cambiado durante la espera.');
@@ -872,6 +937,9 @@ class RemoteSync {
     if (existing != null) return existing;
     final operationOwner = store.data['remoteUserId'];
     final operationServer = base;
+    final activity = _SyncActivity();
+    _activity = activity;
+    _activities[store] = activity;
     final operation = _performUpload();
     _uploads[store] = operation;
     store.syncStatusChanged();
@@ -884,9 +952,11 @@ class RemoteSync {
           await store.setSyncQueue({
             'userId': owner,
             'server': base,
-            'state': error is RemoteSyncFailure && error.status == 409
-                ? 'conflict'
-                : 'error',
+            'state': error is SyncStopped
+                ? 'pending'
+                : error is RemoteSyncFailure && error.status == 409
+                    ? 'conflict'
+                    : 'error',
             'connection':
                 error is http.ClientException || error is TimeoutException,
           });
@@ -897,6 +967,8 @@ class RemoteSync {
       rethrow;
     } finally {
       if (identical(_uploads[store], operation)) _uploads[store] = null;
+      if (identical(_activities[store], activity)) _activities[store] = null;
+      if (identical(_activity, activity)) _activity = null;
       store.syncStatusChanged();
     }
   }
@@ -909,6 +981,7 @@ class RemoteSync {
       throw StateError('El servidor no confirmó la cuenta de la copia.');
     }
     void checkOwner() {
+      _activity?.check();
       if (store.data['remoteUserId'] != owner || base != server) {
         throw StateError(
             'La cuenta cambió durante la subida. Tus datos se conservan.');
@@ -921,6 +994,8 @@ class RemoteSync {
         .map((c) => c.id)
         .toList();
     for (var offset = 0; offset < unknown.length; offset += 100) {
+      _uploadDetail(
+          'Comprobando tarjetas ${offset + 1}–${min(offset + 100, unknown.length)} de ${unknown.length}…');
       final batch = unknown.skip(offset).take(100).toList();
       final result = await send('/v1/cards/lookup', body: {'clientIds': batch});
       checkOwner();
@@ -980,7 +1055,11 @@ class RemoteSync {
     final remoteCards = <String, String>{};
     final conflictCards =
         store.list('syncConflicts').map((c) => c['cardId']).toSet();
-    for (final c in store.cards) {
+    final cardsToUpload = store.cards.toList();
+    var checkedCards = 0;
+    for (final c in cardsToUpload) {
+      _uploadDetail(
+          'Guardando tarjeta ${++checkedCards} de ${cardsToUpload.length}…');
       checkOwner();
       if (conflictCards.contains(c.id)) continue;
       var alias = (store.data['remoteCardIds'] as Map? ?? {})[c.id] as String?;
@@ -1072,6 +1151,7 @@ class RemoteSync {
     final events = store.list('reviews');
     for (var i = 0; i < events.length; i++) {
       checkOwner();
+      _uploadDetail('Comprobando repaso ${i + 1} de ${events.length}…');
       final e = events[i];
       if (e['syncedUserId'] == store.data['remoteUserId'] ||
           remoteCards[e['cardId']] == null) {
@@ -1094,6 +1174,7 @@ class RemoteSync {
       store.data['reviews'] = events;
       await store.save();
     }
+    _uploadDetail('Terminando la copia…');
     await uploadReports();
     checkOwner();
     if (conflictCards.isNotEmpty) {

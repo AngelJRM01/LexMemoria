@@ -73,7 +73,7 @@ jobs:
           ent=plistlib.loads((Path(os.environ['RUNNER_TEMP'])/'lexmemoria-signed-entitlements.plist').read_bytes())
           assert info['CFBundleIdentifier']=='es.lexmemoria.app'
           assert info['CFBundleShortVersionString']=='1.0.0'
-          assert info['CFBundleVersion']=='19'
+          assert info['CFBundleVersion']=='20'
           assert ent['application-identifier']=='ZR9YWRMKC8.es.lexmemoria.app'
           assert ent.get('get-task-allow',False) is False
           assert (app/'embedded.mobileprovision').is_file()

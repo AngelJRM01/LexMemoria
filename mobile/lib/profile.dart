@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart' hide Badge;
 import 'package:flutter/services.dart';
@@ -102,6 +103,35 @@ class AccountPage extends StatefulWidget {
 class _AccountPageState extends State<AccountPage> {
   bool busy = false;
   String? code;
+  bool waitingLong = false;
+  Timer? _waitingTimer;
+  void startWaiting() {
+    _waitingTimer?.cancel();
+    setState(() {
+      busy = true;
+      waitingLong = false;
+    });
+    _waitingTimer = Timer(const Duration(seconds: 8), () {
+      if (mounted && busy) setState(() => waitingLong = true);
+    });
+  }
+
+  void stopWaiting() {
+    _waitingTimer?.cancel();
+    if (mounted) {
+      setState(() {
+        busy = false;
+        waitingLong = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _waitingTimer?.cancel();
+    super.dispose();
+  }
+
   late final GoogleIdentity google =
       widget.googleIdentity ?? NativeGoogleIdentity();
   Future<void> deleteGoogleAccount() async {
@@ -123,7 +153,7 @@ class _AccountPageState extends State<AccountPage> {
           'Vuelve al servidor donde solicitaste la eliminación pendiente.');
       return;
     }
-    setState(() => busy = true);
+    startWaiting();
     await perform(context, () async {
       final completed = await (google as NativeGoogleIdentity).deleteAccount(
           (token, subject) async {
@@ -148,7 +178,7 @@ class _AccountPageState extends State<AccountPage> {
         }
       }
     });
-    if (mounted) setState(() => busy = false);
+    stopWaiting();
   }
 
   Future<void> connectGoogle() async {
@@ -160,7 +190,7 @@ class _AccountPageState extends State<AccountPage> {
           'Al guardar en la cuenta elegida podrás unir las tarjetas y el progreso de este espacio. Guarda una copia si quieres mantenerlos separados.');
       if (!confirmed || !mounted) return;
     }
-    setState(() => busy = true);
+    startWaiting();
     await perform(context, () async {
       final connected = await connectGoogleIdentity(
           widget.store, google, remote,
@@ -170,11 +200,11 @@ class _AccountPageState extends State<AccountPage> {
             'Cuenta conectada. Puedes guardar o recuperar tu progreso.');
       }
     });
-    if (mounted) setState(() => busy = false);
+    stopWaiting();
   }
 
   Future<void> protect() async {
-    setState(() => busy = true);
+    startWaiting();
     await perform(context, () async {
       final remote = RemoteSync(widget.store);
       if (widget.store.data['remoteUserId'] == null) {
@@ -197,7 +227,7 @@ class _AccountPageState extends State<AccountPage> {
         toast(context, 'Tarjetas y progreso guardados en tu cuenta.');
       }
     });
-    if (mounted) setState(() => busy = false);
+    stopWaiting();
   }
 
   @override
@@ -218,7 +248,21 @@ class _AccountPageState extends State<AccountPage> {
               : 'Las cuentas en la nube todavía no están disponibles en esta instalación. Puedes conservar todo tu progreso con una copia de tus datos.'),
           const SizedBox(height: 24),
           if (configured) ...[
-            Text(busy ? 'Sincronizando…' : RemoteSync(s).progressStatus),
+            Text(RemoteSync(s).uploadDetail ??
+                (busy
+                    ? 'Conectando con el servidor…'
+                    : RemoteSync(s).progressStatus)),
+            if (waitingLong)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                    'La primera copia puede tardar. El servidor gratuito puede necesitar arrancar. Puedes seguir estudiando; tus datos están en este dispositivo.'),
+              ),
+            if (RemoteSync(s).canStopUpload)
+              TextButton(
+                onPressed: () => RemoteSync(s).stopUpload(),
+                child: const Text('Detener esta subida'),
+              ),
             if (google.available) ...[
               OutlinedButton.icon(
                   onPressed: busy ? null : connectGoogle,

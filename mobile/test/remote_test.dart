@@ -543,4 +543,101 @@ void main() {
     expect(store.data['localDataOwnerId'], 'alice');
     store.dispose();
   });
+  test('stopping a pending upload preserves cards and ignores late replies',
+      () async {
+    final entered = Completer<void>();
+    final reply = Completer<http.Response>();
+    var posted = 0;
+    final card = StudyCard(
+        id: 'stop-card', deck: 'Private', front: 'Question', back: 'Answer');
+    late RemoteSync sync;
+    final s = AppStore(await SharedPreferences.getInstance(),
+        {'apiUrl': 'https://example.test'}, client: MockClient((r) async {
+      if (r.url.path == '/v1/auth/session') {
+        return http.Response('{"userId":"u"}', 200);
+      }
+      if (r.url.path == '/v1/cards/lookup') {
+        return http.Response(
+            jsonEncode({
+              'items': posted == 0
+                  ? []
+                  : [
+                      {
+                        ...sync.cardPayload(card, 'd'),
+                        'id': 'remote-card',
+                        'revision': 1,
+                        'deckTitle': 'Private',
+                        'lookupClientId': card.id
+                      }
+                    ]
+            }),
+            200);
+      }
+      if (r.url.path == '/v1/decks') return http.Response('{"id":"d"}', 200);
+      if (r.url.path == '/v1/cards') {
+        posted++;
+        entered.complete();
+        return reply.future;
+      }
+      throw StateError('Unexpected request: ${r.url.path}');
+    }));
+    sync = RemoteSync(s, secure: Vault());
+    await sync
+        .saveSession({'userId': 'u', 'accessToken': 'a', 'refreshToken': 'r'});
+    await s.addCard(card);
+    final operation = sync.upload();
+    final stopped = expectLater(operation, throwsA(isA<SyncStopped>()));
+    await entered.future;
+    expect(sync.uploadDetail, contains('1 de 1'));
+    RemoteSync(s).stopUpload();
+    await stopped;
+    expect(sync.canStopUpload, isFalse);
+    expect(sync.progressStatus, isNot('Sincronizando'));
+    expect(s.data['syncOutbox']['state'], 'pending');
+    expect(s.cards.single.front, 'Question');
+    expect(s.data['lastProgressSync'], isNull);
+    reply.complete(
+        http.Response('{"id":"remote-card","revision":1,"deckId":"d"}', 200));
+    await Future<void>.delayed(Duration.zero);
+    expect((s.data['remoteCardIds'] as Map?)?['stop-card'], isNull);
+    await sync.upload();
+    expect(posted, 1,
+        reason:
+            'Recover a server-accepted response through lookup, without duplicate cards');
+    expect(sync.progressStatus, 'Sincronizado');
+    s.dispose();
+  });
+
+  test('server rate limit shows a cancellable wait without retrying early',
+      () async {
+    final limited = Completer<void>();
+    var lookups = 0;
+    final s = AppStore(await SharedPreferences.getInstance(),
+        {'apiUrl': 'https://example.test'}, client: MockClient((r) async {
+      if (r.url.path == '/v1/auth/session') {
+        return http.Response('{"userId":"u"}', 200);
+      }
+      lookups++;
+      limited.complete();
+      return http.Response('{}', 429, headers: {'retry-after': '60'});
+    }));
+    final sync = RemoteSync(s, secure: Vault());
+    await sync
+        .saveSession({'userId': 'u', 'accessToken': 'a', 'refreshToken': 'r'});
+    await s.addCard(StudyCard(id: 'c', deck: 'D', front: 'Q', back: 'A'));
+    final operation = sync.upload();
+    final stopped = expectLater(operation, throwsA(isA<SyncStopped>()));
+    await limited.future;
+    // Allow the HTTP response body to reach the rate-limit handler.
+    while (!(sync.uploadDetail ?? '').contains('limita')) {
+      await Future<void>.delayed(Duration.zero);
+    }
+    expect(sync.uploadDetail, contains('60 s'));
+    sync.stopUpload();
+    await stopped;
+    expect(lookups, 1);
+    expect(s.cards, hasLength(1));
+    expect(s.data['lastProgressSync'], isNull);
+    s.dispose();
+  });
 }
