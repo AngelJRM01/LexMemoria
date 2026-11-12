@@ -1,0 +1,11 @@
+{
+  "package": "es.lexmemoria.app.preview",
+  "version": "1.0.0",
+  "build": 20,
+  "bytes": 90075317,
+  "sha256": "0cc220b403005b157db90a784a553b950eddd47b97798f49a819d84490dd206c",
+  "googleConfigAndExistingSignerCheckedByBuildScript": true,
+  "physicalDeviceAcceptance": false,
+  "sourceCommit": "1006494445b9640d7452f0cc58853040e23a51b8",
+  "iosRunUrl": "https://github.com/AngelJRM01/LexMemoria/actions/runs/43177696302"
+}
