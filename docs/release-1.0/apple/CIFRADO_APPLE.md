@@ -23,3 +23,7 @@ Antes de completar el cuestionario, revisar sus opciones concretas con esta desc
 Podspec publicado en CocoaPods Specs: https://raw.githubusercontent.com/CocoaPods/Specs/master/Specs/1/2/7/SQLCipher/4.10.0/SQLCipher.podspec.json
 
 El subspec estándar depende del común, que declara SQLCIPHER_CRYPTO_CC y los frameworks Foundation/Security. Deben contrastarse los ajustes y componentes del artefacto firmado antes de fijar su declaración.
+
+## Informe técnico preparado el 12 de noviembre de 2026
+
+ENCRYPTION_TECHNICAL_DESCRIPTION.md y su PDF describen la candidata 1.0.0 (19), AES/SQLCipher, Keychain, HTTPS/TLS y hashing. No son licencia, justificante ANSSI ni declaración de exención. No se ha presentado documentación en la cuenta Apple. La consulta de la página oficial Apple de cumplimiento ha quedado bloqueada por CONNECT 403; no se afirma verificación normativa actual. Antes de cargar el PDF debe leerse el tipo exacto de documento que solicita el formulario.
