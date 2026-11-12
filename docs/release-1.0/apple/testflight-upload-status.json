@@ -5,10 +5,13 @@
   "artifactDownloadPassed": true,
   "candidateIntegrityAndMetadataPassed": true,
   "temporaryApiKeyPreparationPassed": true,
-  "uploadCommandStatus": "in_progress_at_last_check",
+  "uploadCommandStatus": "success",
   "appleProcessingAccepted": false,
   "submittedForReview": false,
   "storePublished": false,
   "physicalDeviceAcceptance": "not_tested",
-  "note": "Preparation is verified from public job step states. Apple receipt and processing are not yet established. Do not retry until the active upload result is known."
+  "note": "Preparation is verified from public job step states. Apple receipt and processing are not yet established. Do not retry until the active upload result is known.",
+  "processingResult": "Rejected build 18: ITMS-90683 missing photo library/camera purpose strings; additional location warning",
+  "evidence": "Public GitHub job step success for transfer and owner-provided Apple rejection email",
+  "nextAction": "Build and upload corrected 1.0.0 (19) with unused media dependencies removed"
 }

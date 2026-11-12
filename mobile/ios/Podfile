@@ -1,3 +1,8 @@
+# Use document selection only. file_picker's default media dependency bundles
+# camera/photo/location APIs that LexMemoria does not use.
+Pod::PICKER_MEDIA = false
+Pod::PICKER_AUDIO = false
+Pod::PICKER_DOCUMENT = true
 platform :ios, '15.0'
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 project 'Runner', { 'Debug' => :debug, 'Profile' => :release, 'Release' => :release }

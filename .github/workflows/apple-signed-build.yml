@@ -19,6 +19,8 @@ jobs:
         with:
           flutter-version: '3.47.9'
           cache: true
+      - name: Use CocoaPods configuration for document-only picker
+        run: flutter config --no-enable-swift-package-manager
       - name: Resolve locked dependencies
         working-directory: mobile
         run: flutter pub get --enforce-lockfile
@@ -71,10 +73,15 @@ jobs:
           ent=plistlib.loads((Path(os.environ['RUNNER_TEMP'])/'lexmemoria-signed-entitlements.plist').read_bytes())
           assert info['CFBundleIdentifier']=='es.lexmemoria.app'
           assert info['CFBundleShortVersionString']=='1.0.0'
-          assert info['CFBundleVersion']=='18'
+          assert info['CFBundleVersion']=='19'
           assert ent['application-identifier']=='ZR9YWRMKC8.es.lexmemoria.app'
           assert ent.get('get-task-allow',False) is False
           assert (app/'embedded.mobileprovision').is_file()
+          lock=Path('mobile/ios/Podfile.lock').read_text()
+          for unused in ['DKImagePickerController','DKPhotoGallery','DKCamera']:
+              assert unused not in lock, 'Unused media dependency still linked: '+unused
+              assert not list(app.rglob(unused+'.framework')), 'Unused media framework still bundled'
+
           PY
           mkdir -p apple-signed-artifacts
           cp mobile/build/ios/ipa/*.ipa apple-signed-artifacts/
@@ -99,9 +106,25 @@ jobs:
           compression-level: 0
           overwrite: true
           retention-days: 14
+      - name: Prepare temporary App Store Connect upload key
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          ASC_PRIVATE_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_BASE64 }}
+        run: python3 scripts/prepare_testflight_key.py
+      - name: Upload corrected build to Apple without submission for review
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          API_PRIVATE_KEYS_DIR: ${{ runner.temp }}/lexmemoria-asc/private_keys
+        run: |
+          set -euo pipefail
+          IPA="$(find "$GITHUB_WORKSPACE/apple-signed-artifacts" -maxdepth 1 -name '*.ipa' -type f)"
+          xcrun altool --upload-app --type ios --file "$IPA" --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID" --output-format json
       - name: Remove temporary signing material
         if: ${{ always() }}
         run: |
+          rm -rf "$RUNNER_TEMP/lexmemoria-asc"
           security delete-keychain "$RUNNER_TEMP/lexmemoria-signing.keychain-db" 2>/dev/null || true
           rm -f "$RUNNER_TEMP"/lexmemoria-signing.p12 "$RUNNER_TEMP"/lexmemoria-profile.* "$RUNNER_TEMP"/lexmemoria-identities.txt "$RUNNER_TEMP"/lexmemoria-export.plist "$RUNNER_TEMP"/lexmemoria-signed-entitlements.plist
           rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles/"*.mobileprovision

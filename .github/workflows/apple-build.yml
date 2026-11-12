@@ -24,6 +24,8 @@ jobs:
           xcodebuild -version
           flutter --version
           pod --version
+      - name: Use document-only CocoaPods picker configuration
+        run: flutter config --no-enable-swift-package-manager
       - name: Resolve locked dependencies
         working-directory: mobile
         run: flutter pub get --enforce-lockfile
