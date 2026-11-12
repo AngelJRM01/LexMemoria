@@ -232,6 +232,7 @@ Json decodeStudyBackup(String text) {
     'remoteUserId',
     'remoteServer',
     'remoteGoogleLinked',
+    'remoteAppleLinked',
     'autoSyncConsent',
     'autoWorkspaceConsent',
     'workspaceOutbox',

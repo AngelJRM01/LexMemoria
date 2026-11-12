@@ -61,3 +61,11 @@ def test_artifact_retry_does_not_hide_failure_or_include_private_material():
     assert first['with']['path']==retry['with']['path']=='apple-signed-artifacts/'
     assert retry['with']['overwrite']=='true'
     assert steps[-1]['if']=='${{ always() }}'
+
+
+def test_apple_enabled_build_requires_regenerated_profile():
+    p=profile()
+    with pytest.raises(ValueError,match='Regenera el perfil'):
+        signing.validate(p,FINGERPRINT,NOW,require_apple=True)
+    p['Entitlements']['com.apple.developer.applesignin']=['Default']
+    assert signing.validate(p,FINGERPRINT,NOW,require_apple=True)[0]==p['UUID']

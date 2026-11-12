@@ -7,7 +7,7 @@ from pathlib import Path
 def inspect(app,kind,archive):
     info=plistlib.loads((app/'Info.plist').read_bytes())
     assert info['CFBundleIdentifier']=='es.lexmemoria.app'
-    assert info['CFBundleShortVersionString']=='1.0.0' and str(info['CFBundleVersion'])=='20'
+    assert info['CFBundleShortVersionString']=='1.0.0' and str(info['CFBundleVersion'])=='21'
     expected='iPhoneOS' if kind=='device' else 'iPhoneSimulator'
     assert expected in info['CFBundleSupportedPlatforms']
     executable=app/info['CFBundleExecutable'];assert executable.is_file()

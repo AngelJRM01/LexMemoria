@@ -23,7 +23,7 @@ def test_signed_pipeline_rejects_media_dependencies_before_upload():
     config=next(s for s in steps if s.get('name')=='Use CocoaPods configuration for document-only picker')
     assert '--no-enable-swift-package-manager' in config['run']
     verify=next(s for s in steps if s.get('name')=='Verify signature and package IPA')
-    assert "assert info['CFBundleVersion']=='20'" in verify['run']
+    assert "assert info['CFBundleVersion']=='21'" in verify['run']
     assert 'DKImagePickerController' in verify['run'] and 'not in lock' in verify['run']
     assert names.index('Verify signature and package IPA') < names.index('Upload corrected build to Apple without submission for review')
     assert steps[-1]['if']=='${{ always() }}'

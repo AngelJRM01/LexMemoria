@@ -482,6 +482,7 @@ class RemoteSync {
         store.data.remove(key);
       }
       store.data.remove('remoteGoogleLinked');
+      store.data.remove('remoteAppleLinked');
       store.data.remove('progressSyncHash');
       store.data.remove('lastProgressSync');
     }
@@ -495,7 +496,10 @@ class RemoteSync {
   }
 
   Future<void> connectGoogle(String firebaseIdToken,
-      {bool confirmAccountChange = false}) async {
+      {bool confirmAccountChange = false, String provider = 'google'}) async {
+    if (!['google', 'apple'].contains(provider)) {
+      throw ArgumentError('Proveedor no admitido');
+    }
     if (firebaseIdToken.isEmpty) throw StateError('Identificación incompleta.');
     final initialUser = store.data['remoteUserId'];
     final initialOwner = store.data['localDataOwnerId'];
@@ -512,7 +516,9 @@ class RemoteSync {
       }
       await saveSession(session, confirmAccountChange: confirmAccountChange);
     }
-    store.data['remoteGoogleLinked'] = true;
+    store.data[provider == 'apple'
+        ? 'remoteAppleLinked'
+        : 'remoteGoogleLinked'] = true;
     await store.save();
   }
 
@@ -529,6 +535,7 @@ class RemoteSync {
     store.data.remove('remoteUserId');
     store.data.remove('remoteServer');
     store.data.remove('remoteGoogleLinked');
+    store.data.remove('remoteAppleLinked');
     // Keep data ownership after logout: another login must not silently upload it.
     await store.save();
   }

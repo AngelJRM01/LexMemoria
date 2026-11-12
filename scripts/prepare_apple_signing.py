@@ -11,7 +11,7 @@ BUNDLE = 'es.lexmemoria.app'
 TEAM = 'ZR9YWRMKC8'
 
 
-def validate(profile, identities, now=None):
+def validate(profile, identities, now=None, require_apple=False):
     now = now or dt.datetime.now(dt.timezone.utc)
     expiry = profile['ExpirationDate']
     if expiry.tzinfo is None:
@@ -25,6 +25,8 @@ def validate(profile, identities, now=None):
         raise ValueError('El perfil no corresponde al identificador de LexMemoria')
     if ent.get('get-task-allow') is not False or profile.get('ProvisionedDevices') or profile.get('ProvisionsAllDevices'):
         raise ValueError('Se necesita un perfil App Store Connect, no desarrollo/ad hoc/enterprise')
+    if require_apple and 'Default' not in ent.get('com.apple.developer.applesignin',[]):
+        raise ValueError('Regenera el perfil App Store con Sign in with Apple y actualiza IOS_PROVISIONING_PROFILE_BASE64')
     uuid = profile['UUID']
     if not re.fullmatch(r'[A-Fa-f0-9-]{36}', uuid):
         raise ValueError('UUID de perfil no válido')
@@ -57,12 +59,13 @@ def configure_project(text, uuid, fingerprint):
 
 def main():
     parser=argparse.ArgumentParser()
+    parser.add_argument('--require-apple',action='store_true')
     parser.add_argument('--profile',type=Path,required=True)
     parser.add_argument('--identities',type=Path,required=True)
     parser.add_argument('--project',type=Path,required=True)
     parser.add_argument('--export-options',type=Path,required=True)
     args=parser.parse_args()
-    uuid, fingerprint=validate(plistlib.loads(args.profile.read_bytes()),args.identities.read_text())
+    uuid, fingerprint=validate(plistlib.loads(args.profile.read_bytes()),args.identities.read_text(),require_apple=args.require_apple)
     project=configure_project(args.project.read_text(),uuid,fingerprint)
     options={'method':'app-store-connect','destination':'export','teamID':TEAM,
              'signingStyle':'manual','signingCertificate':fingerprint,

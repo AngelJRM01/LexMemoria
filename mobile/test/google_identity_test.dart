@@ -286,4 +286,72 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     s.dispose();
   });
+  test(
+      'Apple links to an existing study account without Google flags or data replacement',
+      () async {
+    final paths = <String>[];
+    final s = await store(MockClient((r) async {
+      paths.add(r.url.path);
+      expect(r.headers['Authorization'], 'Bearer a');
+      return http.Response('{"linked":true}', 200);
+    }));
+    final remote = RemoteSync(s, secure: Vault());
+    await remote.saveSession(
+        {'userId': 'existing', 'accessToken': 'a', 'refreshToken': 'r'});
+    await s.addCard(StudyCard(id: 'c', deck: 'D', front: 'Q', back: 'A'));
+    final before = s.cards.single.toJson();
+    await connectGoogleIdentity(
+        s, Identity(() async => 'apple-firebase-token'), remote,
+        provider: 'apple');
+    expect(paths, ['/v1/auth/link']);
+    expect(s.data['remoteUserId'], 'existing');
+    expect(s.data['remoteAppleLinked'], isTrue);
+    expect(s.data['remoteGoogleLinked'], isNull);
+    expect(s.cards.single.toJson(), before);
+    expect(s.export().contains('apple-firebase-token'), isFalse);
+    s.dispose();
+  });
+  test('Apple cancellation and link conflict preserve the current account',
+      () async {
+    var calls = 0;
+    final s = await store(MockClient((_) async {
+      calls++;
+      return http.Response('{}', 409);
+    }));
+    final remote = RemoteSync(s, secure: Vault());
+    await remote.saveSession(
+        {'userId': 'existing', 'accessToken': 'a', 'refreshToken': 'r'});
+    expect(
+        await connectGoogleIdentity(s, Identity(() async => null), remote,
+            provider: 'apple'),
+        isFalse);
+    expect(calls, 0);
+    await expectLater(
+        connectGoogleIdentity(s, Identity(() async => 'apple-token'), remote,
+            provider: 'apple'),
+        throwsStateError);
+    expect(calls, 1);
+    expect(s.data['remoteUserId'], 'existing');
+    expect(s.data['remoteAppleLinked'], isNull);
+    s.dispose();
+  });
+  testWidgets(
+      'Apple remains offered alongside Google after signing into the study account',
+      (tester) async {
+    final s = await store(MockClient((_) async => http.Response('{}', 200)));
+    s.data['remoteUserId'] = 'existing';
+    await tester.pumpWidget(MaterialApp(
+        home: AccountPage(
+            store: s,
+            googleIdentity: Identity(() async => null),
+            appleIdentity: Identity(() async => null))));
+    expect(find.text('Vincular Google a mi cuenta'), findsOneWidget);
+    expect(find.text('Continuar con Apple'), findsOneWidget);
+    await tester.tap(find.text('Continuar con Apple'));
+    await tester.pumpAndSettle();
+    expect(s.data['remoteUserId'], 'existing');
+    expect(find.text('Continuar con Apple'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    s.dispose();
+  });
 }

@@ -95,7 +95,12 @@ class ProfilePage extends StatelessWidget {
 class AccountPage extends StatefulWidget {
   final AppStore store;
   final GoogleIdentity? googleIdentity;
-  const AccountPage({super.key, required this.store, this.googleIdentity});
+  final GoogleIdentity? appleIdentity;
+  const AccountPage(
+      {super.key,
+      required this.store,
+      this.googleIdentity,
+      this.appleIdentity});
   @override
   State<AccountPage> createState() => _AccountPageState();
 }
@@ -134,10 +139,14 @@ class _AccountPageState extends State<AccountPage> {
 
   late final GoogleIdentity google =
       widget.googleIdentity ?? NativeGoogleIdentity();
-  Future<void> deleteGoogleAccount() async {
-    if (google is! NativeGoogleIdentity) return;
+  late final GoogleIdentity apple =
+      widget.appleIdentity ?? NativeAppleIdentity();
+  Future<void> deleteGoogleAccount({bool useApple = false}) async {
+    final identity = useApple ? apple : google;
+    final label = useApple ? 'Apple' : 'Google';
+    if (identity is! FirebaseAccountIdentity) return;
     if (!await confirm(context, 'Eliminar cuenta de LexMemoria',
-        'Se eliminarán los datos del servidor y la identidad de Firebase. No se elimina tu cuenta de Google ni los datos educativos locales. Guarda antes una copia.')) {
+        'Se eliminarán los datos del servidor y la identidad de Firebase. No se elimina tu cuenta de $label ni los datos educativos locales. Guarda antes una copia.')) {
       return;
     }
     if (!mounted) return;
@@ -155,8 +164,7 @@ class _AccountPageState extends State<AccountPage> {
     }
     startWaiting();
     await perform(context, () async {
-      final completed = await (google as NativeGoogleIdentity).deleteAccount(
-          (token, subject) async {
+      final completed = await identity.deleteAccount((token, subject) async {
         if (s.data['remoteUserId'] != owner || s.apiBase != server) {
           throw StateError('La cuenta cambió; repite la identificación.');
         }
@@ -181,20 +189,22 @@ class _AccountPageState extends State<AccountPage> {
     stopWaiting();
   }
 
-  Future<void> connectGoogle() async {
+  Future<void> connectGoogle() => connectProvider(google, 'google');
+  Future<void> connectProvider(GoogleIdentity identity, String provider) async {
+    final label = provider == 'apple' ? 'Apple' : 'Google';
     final remote = RemoteSync(widget.store);
     var confirmed = false;
     if (widget.store.data['remoteUserId'] == null &&
         remote.needsAccountConfirmation) {
-      confirmed = await confirm(context, 'Conectar estos datos con Google',
+      confirmed = await confirm(context, 'Conectar estos datos con $label',
           'Al guardar en la cuenta elegida podrás unir las tarjetas y el progreso de este espacio. Guarda una copia si quieres mantenerlos separados.');
       if (!confirmed || !mounted) return;
     }
     startWaiting();
     await perform(context, () async {
       final connected = await connectGoogleIdentity(
-          widget.store, google, remote,
-          confirmAccountChange: confirmed);
+          widget.store, identity, remote,
+          confirmAccountChange: confirmed, provider: provider);
       if (connected && mounted) {
         toast(context,
             'Cuenta conectada. Puedes guardar o recuperar tu progreso.');
@@ -272,6 +282,19 @@ class _AccountPageState extends State<AccountPage> {
                       : s.data['remoteUserId'] != null
                           ? 'Vincular Google a mi cuenta'
                           : 'Continuar con Google')),
+              const SizedBox(height: 12),
+            ],
+            if (apple.available) ...[
+              FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white),
+                  onPressed:
+                      busy ? null : () => connectProvider(apple, 'apple'),
+                  icon: const Icon(Icons.apple),
+                  label: const Text('Continuar con Apple')),
+              if (s.data['remoteAppleLinked'] == true)
+                const Text('Apple está vinculado a esta cuenta.'),
               const SizedBox(height: 12),
             ],
             FilledButton.icon(
@@ -393,6 +416,18 @@ class _AccountPageState extends State<AccountPage> {
                     child: Text(s.data['providerDeletionSubject'] != null
                         ? 'Completar eliminación pendiente'
                         : 'Eliminar cuenta e identidad Google')),
+              ]),
+            if (apple is FirebaseAccountIdentity &&
+                apple.available &&
+                (s.data['remoteAppleLinked'] == true ||
+                    s.data['providerDeletionSubject'] != null))
+              Details('Eliminar mi cuenta con Apple', children: [
+                const Text(
+                    'Requiere identificación reciente. Se revocará el acceso de Apple y se conservarán los datos locales.'),
+                TextButton(
+                    onPressed:
+                        busy ? null : () => deleteGoogleAccount(useApple: true),
+                    child: const Text('Eliminar cuenta e identidad Apple')),
               ]),
           ],
           OutlinedButton.icon(
@@ -680,7 +715,7 @@ class PrivacyPage extends StatelessWidget {
             'Se guardan perfiles, tarjetas, notas, respuestas de simulacros e historial hasta que los borres. En Android/iOS se utiliza SQLCipher con clave separada en Keychain/Keystore; en web se usan preferencias locales sin este cifrado adicional. Evita guardar datos especialmente sensibles. Exportar o compartir crea una copia JSON legible bajo tu control, incluida la copia anterior a la última restauración si existe.'),
         const Section('Conexiones'),
         const Text(
-            'Los textos del catálogo ampliado se descargan desde GitHub al solicitarlos, sin enviar tarjetas, notas ni progreso. Los paquetes públicos se guardan aparte y se pueden volver a descargar. Al sincronizar se consulta la API que configures. Al abrir una fuente sales al navegador y se aplica la privacidad del sitio de destino. La sincronización necesita un servidor configurado. La cuenta con código de recuperación permite trasladar tarjetas y progreso; el código debe guardarse fuera del móvil. El acceso con Google se muestra en Android cuando está configurado para esa versión. Apple todavía no está habilitado.'),
+            'Los textos del catálogo ampliado se descargan desde GitHub al solicitarlos, sin enviar tarjetas, notas ni progreso. Los paquetes públicos se guardan aparte y se pueden volver a descargar. Al sincronizar se consulta la API que configures. Al abrir una fuente sales al navegador y se aplica la privacidad del sitio de destino. La sincronización necesita un servidor configurado. La cuenta con código de recuperación permite trasladar tarjetas y progreso; el código debe guardarse fuera del móvil. El acceso con Google se muestra en Android o iOS cuando está configurado para esa versión. Apple se ofrece en iOS cuando está configurado.'),
         const Section('Fuentes y contenido'),
         const Text(
             'Las referencias iniciales son un inventario de normas del BOE, no una declaración de cobertura, vigencia o revisión jurídica. Los textos consolidados son informativos. Las tarjetas personales no son contenido editorial verificado.'),
