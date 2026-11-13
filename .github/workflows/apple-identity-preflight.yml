@@ -1,0 +1,60 @@
+name: Apple identity configuration preflight
+on:
+  push:
+    branches: [release/1.0.0-rc1]
+    paths:
+      - '.github/workflows/apple-identity-preflight.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  configuration:
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check required identity secrets
+        env:
+          IOS_FIREBASE_CONFIG_BASE64: ${{ secrets.IOS_FIREBASE_CONFIG_BASE64 }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          python3 - <<'PY'
+          import os
+          missing=[name for name in ['IOS_FIREBASE_CONFIG_BASE64','IOS_PROVISIONING_PROFILE_BASE64'] if not os.environ.get(name,'').strip()]
+          if missing:
+              print('::error::Faltan secretos de configuración: '+', '.join(missing))
+              raise SystemExit(1)
+          print('Los dos secretos de configuración están presentes; valores no mostrados.')
+          PY
+      - name: Validate supplied iOS Firebase client configuration
+        env:
+          IOS_FIREBASE_CONFIG_BASE64: ${{ secrets.IOS_FIREBASE_CONFIG_BASE64 }}
+        run: |
+          cp mobile/ios/Runner/Info.plist "$RUNNER_TEMP/lexmemoria-preflight-info.plist"
+          python3 scripts/prepare_ios_identity.py --info "$RUNNER_TEMP/lexmemoria-preflight-info.plist" --defines "$RUNNER_TEMP/lexmemoria-preflight-defines.json"
+      - name: Validate Sign in with Apple provisioning capability
+        env:
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          python3 - <<'PY'
+          import os,base64,plistlib,subprocess,datetime
+          from pathlib import Path
+          path=Path(os.environ['RUNNER_TEMP'])/'lexmemoria-preflight.mobileprovision'
+          path.write_bytes(base64.b64decode(os.environ['IOS_PROVISIONING_PROFILE_BASE64'],validate=True));path.chmod(0o600)
+          decoded=subprocess.run(['security','cms','-D','-i',str(path)],capture_output=True,check=True)
+          profile=plistlib.loads(decoded.stdout)
+          ent=profile['Entitlements']
+          if 'Default' not in ent.get('com.apple.developer.applesignin',[]):
+              print('::error::Regenera el perfil App Store con Sign in with Apple y sustituye IOS_PROVISIONING_PROFILE_BASE64.')
+              raise SystemExit(1)
+          assert profile['TeamIdentifier']==['ZR9YWRMKC8']
+          assert ent['application-identifier']=='ZR9YWRMKC8.es.lexmemoria.app'
+          assert ent.get('get-task-allow') is False
+          assert not profile.get('ProvisionedDevices') and not profile.get('ProvisionsAllDevices')
+          expires=profile['ExpirationDate']
+          assert expires.replace(tzinfo=datetime.timezone.utc)>datetime.datetime.now(datetime.timezone.utc)
+          print('Perfil de distribución compatible con el equipo, la app y Sign in with Apple. La identidad privada se comprobará al firmar.')
+          PY
+      - name: Remove temporary client configuration
+        if: ${{ always() }}
+        run: rm -f "$RUNNER_TEMP"/lexmemoria-preflight-info.plist "$RUNNER_TEMP"/lexmemoria-preflight-defines.json "$RUNNER_TEMP"/lexmemoria-preflight.mobileprovision

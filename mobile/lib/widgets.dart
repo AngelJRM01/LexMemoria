@@ -61,8 +61,8 @@ class PageBody extends StatelessWidget {
                   children: children))));
 }
 
-/// Search controls stay visible while results scroll. Compact landscape layouts
-/// let the whole page scroll so the keyboard never traps the results.
+/// Keep the same input subtree when the keyboard reduces the available height.
+/// Header, results and footer scroll independently on compact screens.
 class SearchPageBody extends StatelessWidget {
   final List<Widget> header, children;
   final IndexedWidgetBuilder? resultBuilder;
@@ -85,27 +85,11 @@ class SearchPageBody extends StatelessWidget {
           child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 840),
               child: LayoutBuilder(builder: (context, size) {
-                if (size.maxHeight < 440) {
-                  return Column(children: [
-                    Expanded(
-                        child: ListView.builder(
-                            controller: resultsController,
-                            padding: const EdgeInsets.fromLTRB(20, 16, 20, 56),
-                            itemCount:
-                                header.length + children.length + resultCount,
-                            itemBuilder: (context, i) => i < header.length
-                                ? header[i]
-                                : i < header.length + children.length
-                                    ? children[i - header.length]
-                                    : resultBuilder!(context,
-                                        i - header.length - children.length))),
-                    if (footer != null) footer!
-                  ]);
-                }
                 return Column(children: [
                   ConstrainedBox(
-                      constraints:
-                          BoxConstraints(maxHeight: size.maxHeight * .48),
+                      constraints: BoxConstraints(
+                          maxHeight: size.maxHeight *
+                              (size.maxHeight < 440 ? .65 : .48)),
                       child: SingleChildScrollView(
                           padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
                           child: Column(
@@ -119,7 +103,12 @@ class SearchPageBody extends StatelessWidget {
                           itemBuilder: (context, i) => i < children.length
                               ? children[i]
                               : resultBuilder!(context, i - children.length))),
-                  if (footer != null) footer!,
+                  if (footer != null)
+                    ConstrainedBox(
+                      constraints:
+                          BoxConstraints(maxHeight: size.maxHeight * .25),
+                      child: SingleChildScrollView(child: footer!),
+                    ),
                 ]);
               }))));
 }
