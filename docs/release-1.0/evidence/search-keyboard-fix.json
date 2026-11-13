@@ -1,0 +1,15 @@
+{
+  "sourceCommit": "c94ec471c6f61aaa44bc191b3060b0574629d2d7",
+  "reproducedBeforeFix": ["library search EditableTextState recreated on keyboard resize", "card search EditableTextState recreated on keyboard resize"],
+  "regressionCasesPassed": 4,
+  "regressionScope": "Widget tests with iOS/Android platform variants, keyboard insets, text entry, rotation and keyboard dismissal",
+  "flutterSuitePassed": 174,
+  "flutterSuiteSkipped": 1,
+  "flutterAnalysis": "clean",
+  "physicalDeviceAcceptance": false,
+  "candidate": "1.0.0 (21), not compiled with this fix yet",
+  "identityPreflightRun": "https://github.com/AngelJRM01/LexMemoria/actions/runs/43383609257",
+  "preflightResult": "Missing IOS_FIREBASE_CONFIG_BASE64; public GitHub error annotation verified",
+  "provisioningCapabilityValidation": "not_run_after_missing_secret",
+  "uploadedToApple": false
+}

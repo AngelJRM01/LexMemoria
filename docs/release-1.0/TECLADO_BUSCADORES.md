@@ -9,3 +9,7 @@ Corrección: una sola estructura estable para cabecera y resultados, con reparto
 Pruebas finales: cuatro casos superados (biblioteca/tarjetas con variantes de plataforma iOS/Android), apertura y variación de insets, escritura, rotación y cierre del teclado. Suite completa: 174 superadas, una omitida. Análisis Flutter limpio. Son pruebas de widgets con teclado simulado: no acreditan todavía el comportamiento sobre un iPhone físico.
 
 La corrección se incluye en la candidata 1.0.0 (21), aún pendiente de configuración y compilación. No afirmar que el build 19/20 instalado la contiene. El perfil actualizado con Sign in with Apple y IOS_FIREBASE_CONFIG_BASE64 de la integración anterior son requisitos para compilar esa candidata. Se añade un preflight remoto que valida presencia/configuración y capacidad del perfil sin compilar, importar claves privadas, subir a Apple ni publicar. Si pasa, se podrá lanzar la firma; si falla, atender el requisito real mostrado antes de compilar.
+
+## Resultado del preflight remoto
+
+Ejecución 43383609257: el paso de presencia de secretos falla con la anotación pública «Faltan secretos de configuración: IOS_FIREBASE_CONFIG_BASE64». IOS_PROVISIONING_PROFILE_BASE64 está presente, pero su capacidad Apple no se llegó a validar porque el paso anterior falló. La limpieza temporal terminó correctamente. No se lanzó una compilación ni una subida. Crear el secreto de cliente pendiente y repetir la comprobación antes de firmar; no pedir valores privados en el chat.
