@@ -23,6 +23,7 @@ class LibraryPage extends StatefulWidget {
 
 class _LibraryPageState extends State<LibraryPage> {
   String query = '', subject = 'Todas', scope = 'Todos', community = 'Todas';
+  DateTime? publishedFrom, publishedTo;
   int page = 0, pageSize = 20;
   final pagingController = ScrollController();
   void resetPage() {
@@ -47,13 +48,23 @@ class _LibraryPageState extends State<LibraryPage> {
 
   bool saved = false;
   Future<void> filters() async {
-    final result = await showCatalogueFilters(context, widget.store.catalogue,
-        CatalogueFilters(subject: subject, scope: scope, community: community));
+    final result = await showCatalogueFilters(
+        context,
+        widget.store.catalogue,
+        CatalogueFilters(
+            subject: subject,
+            scope: scope,
+            community: community,
+            publishedFrom: publishedFrom,
+            publishedTo: publishedTo),
+        publicationDates: true);
     if (result != null && mounted) {
       setState(() {
         subject = result.subject;
         scope = result.scope;
         community = result.community;
+        publishedFrom = result.publishedFrom;
+        publishedTo = result.publishedTo;
         resetPage();
       });
     }
@@ -65,7 +76,11 @@ class _LibraryPageState extends State<LibraryPage> {
     final rows = widget.store.catalogue
         .where((n) =>
             CatalogueFilters(
-                    subject: subject, scope: scope, community: community)
+                    subject: subject,
+                    scope: scope,
+                    community: community,
+                    publishedFrom: publishedFrom,
+                    publishedTo: publishedTo)
                 .matches(n) &&
             (!saved || widget.store.has('bookmarks', n['id'])) &&
             (needle.isEmpty || normSearchText(n).contains(needle)))
@@ -97,7 +112,7 @@ class _LibraryPageState extends State<LibraryPage> {
           const SizedBox(height: 12),
           TextField(
               decoration: InputDecoration(
-                  hintText: 'Título o referencia de norma',
+                  hintText: 'Título, referencia o fecha de publicación',
                   prefixIcon: const Icon(Icons.search),
                   suffixIcon: IconButton(
                       tooltip: 'Filtros de biblioteca',
@@ -141,6 +156,15 @@ class _LibraryPageState extends State<LibraryPage> {
                             community = 'Todas';
                             resetPage();
                           })),
+                if (publishedFrom != null || publishedTo != null)
+                  InputChip(
+                      label: Text(
+                          'Publicación: ${publicationRangeLabel(publishedFrom, publishedTo)}'),
+                      onDeleted: () => setState(() {
+                            publishedFrom = null;
+                            publishedTo = null;
+                            resetPage();
+                          })),
                 if (widget.store.hasRemoteServer)
                   IconButton(
                       tooltip: 'Sincronizar biblioteca',
@@ -170,6 +194,9 @@ class _LibraryPageState extends State<LibraryPage> {
                             const SizedBox(height: 8),
                             Text(n['id'],
                                 style: Theme.of(context).textTheme.bodySmall),
+                            if (normPublicationDate(n) case final date?)
+                              Text('Publicada: ${publicationDateLabel(date)}',
+                                  style: Theme.of(context).textTheme.bodySmall),
                             if (n['exhausted'] == true)
                               const Padding(
                                   padding: EdgeInsets.only(top: 8),

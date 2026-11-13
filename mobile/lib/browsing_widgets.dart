@@ -4,10 +4,12 @@ import 'catalogue.dart';
 import 'models.dart';
 
 Future<CatalogueFilters?> showCatalogueFilters(
-    BuildContext context, List<Json> norms, CatalogueFilters current) async {
+    BuildContext context, List<Json> norms, CatalogueFilters current,
+    {bool publicationDates = false}) async {
   var subject = current.subject,
       scope = current.scope,
       community = current.community;
+  var publishedFrom = current.publishedFrom, publishedTo = current.publishedTo;
   return showModalBottomSheet<CatalogueFilters>(
       context: context,
       isScrollControlled: true,
@@ -72,6 +74,68 @@ Future<CatalogueFilters?> showCatalogueFilters(
                                         scope = 'Autonómico';
                                       }
                                     })),
+                            if (publicationDates) ...[
+                              const SizedBox(height: 16),
+                              const Text('Fecha de publicación'),
+                              OutlinedButton.icon(
+                                  icon: const Icon(Icons.date_range),
+                                  label: Text(publishedFrom == null &&
+                                          publishedTo == null
+                                      ? 'Todas las fechas'
+                                      : publicationRangeLabel(
+                                          publishedFrom, publishedTo)),
+                                  onPressed: () async {
+                                    final dates = norms
+                                        .map(normPublicationDate)
+                                        .whereType<DateTime>()
+                                        .toList()
+                                      ..sort();
+                                    final now = DateTime.now();
+                                    final lower = [
+                                      DateTime(1800),
+                                      ...dates,
+                                      if (publishedFrom != null) publishedFrom!
+                                    ].reduce((a, b) => a.isBefore(b) ? a : b);
+                                    final upper = [
+                                      now,
+                                      ...dates,
+                                      if (publishedTo != null) publishedTo!
+                                    ].reduce((a, b) => a.isAfter(b) ? a : b);
+                                    final chosen = await showDateRangePicker(
+                                        context: context,
+                                        firstDate: lower,
+                                        lastDate: upper,
+                                        helpText: 'Fecha de publicación',
+                                        initialDateRange:
+                                            publishedFrom != null &&
+                                                    publishedTo != null
+                                                ? DateTimeRange(
+                                                    start: publishedFrom!,
+                                                    end: publishedTo!)
+                                                : null);
+                                    if (chosen != null && context.mounted) {
+                                      update(() {
+                                        publishedFrom = DateTime.utc(
+                                            chosen.start.year,
+                                            chosen.start.month,
+                                            chosen.start.day);
+                                        publishedTo = DateTime.utc(
+                                            chosen.end.year,
+                                            chosen.end.month,
+                                            chosen.end.day);
+                                      });
+                                    }
+                                  }),
+                              if (publishedFrom != null || publishedTo != null)
+                                TextButton(
+                                    onPressed: () => update(() {
+                                          publishedFrom = null;
+                                          publishedTo = null;
+                                        }),
+                                    child: const Text('Quitar fechas')),
+                              const Text(
+                                  'Se usa la publicación oficial, no la última actualización del texto. Las normas sin fecha quedan fuera del intervalo.'),
+                            ],
                             const SizedBox(height: 24),
                             FilledButton(
                                 onPressed: () => Navigator.pop(
@@ -79,7 +143,9 @@ Future<CatalogueFilters?> showCatalogueFilters(
                                     CatalogueFilters(
                                         subject: subject,
                                         scope: scope,
-                                        community: community)),
+                                        community: community,
+                                        publishedFrom: publishedFrom,
+                                        publishedTo: publishedTo)),
                                 child: const Text('Aplicar filtros')),
                           ])))));
 }
